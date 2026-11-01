@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071426">
+<title>CONTROL TIBURONES</title>
+<style>
+:root{--bg:#071426;--panel:#10233d;--blue:#1685ed;--gold:#c99a27;--red:#bd3544;--green:#138568;--purple:#7651ad;--cyan:#2187a7;--white:#f5f8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}
+header{padding:22px 18px;background:linear-gradient(120deg,#102b50,#071426);border-bottom:1px solid #263d5a}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:53px;height:53px;border:2px solid #2795e9;border-radius:15px;display:grid;place-items:center;font-size:28px}
+h1{font-size:21px;margin:0;letter-spacing:1px}
+header p{margin:5px 0 0;color:#9eb6d2;font-size:12px}
+main{padding:17px;max-width:1000px;margin:auto}
+.welcome{margin:8px 0 18px}
+.welcome h2{font-size:22px;margin:0 0 6px}
+.muted{color:#9eb0c7;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin:18px 0}
+.stat{background:var(--panel);padding:16px;border:1px solid #263d5a;border-radius:15px}
+.stat small{color:#a9bad0}
+.stat strong{display:block;font-size:27px;margin-top:9px}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{border:0;border-radius:15px;padding:17px 13px;color:white;text-align:left;min-height:105px;font-weight:bold;font-size:15px;cursor:pointer;box-shadow:0 5px 12px #0003}
+.tile span{display:block;font-size:26px;margin-bottom:10px}
+.tile small{display:block;font-weight:normal;font-size:11px;margin-top:5px;opacity:.85}
+.blue{background:#1556a0}.green{background:#087b64}
+.red{background:#b52d39}.purple{background:#6846a5}
+.gold{background:linear-gradient(135deg,#a87918,#72500d)}
+.cyan{background:#237d9c}
+.section{display:none}.section.active{display:block}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 20px}
+.topline h2{font-size:21px;margin:0}
+.btn{border:0;border-radius:10px;padding:12px 15px;background:var(--blue);color:white;font-weight:bold;cursor:pointer}
+.btn.secondary{background:#263b57}
+.btn.danger{background:#a72d3a}
+.btn.goldbtn{background:#a87918}
+.back{background:transparent;border:1px solid #48617e;color:white;border-radius:9px;padding:9px 12px}
+.item{background:var(--panel);padding:15px;border:1px solid #263d5a;border-radius:13px;margin:10px 0}
+.item strong{font-size:15px}
+.item p{margin:7px 0;color:#a9bad0;font-size:13px}
+.item button{margin:5px 5px 0 0}
+input,select,textarea{width:100%;padding:13px;background:#071426;border:1px solid #405674;border-radius:9px;color:white;margin:6px 0 13px;font-size:15px}
+label{font-size:13px;color:#b6c8dc}
+form{background:var(--panel);padding:16px;border-radius:14px;margin:15px 0}
+.formrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;background:#244363}
+.badge.ok{background:#12694f}.badge.warn{background:#855b15}.badge.late{background:#862d38}
+.empty{text-align:center;padding:35px 10px;color:#9eb0c7}
+footer{text-align:center;color:#70849d;font-size:11px;padding:30px}
+@media(min-width:650px){.stats{grid-template-columns:repeat(4,1fr)}.actions{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">
+  <div class="logo">🦈</div>
+  <div><h1>CONTROL TIBURONES</h1><p>ACADEMIA TIBURONES ENSENADA</p></div>
+ </div>
+</header>
+<main>
+<section id="home" class="section active">
+ <div class="welcome">
+  <h2>¡Bienvenido, Coach!</h2>
+  <div class="muted" id="today"></div>
+ </div>
+ <div class="stats">
+  <div class="stat"><small>Alumnos activos</small><strong id="totalStudents">0</strong></div>
+  <div class="stat"><small>Familias</small><strong id="totalFamilies">0</strong></div>
+  <div class="stat"><small>Pagos registrados</small><strong id="totalPayments">0</strong></div>
+  <div class="stat"><small>Asistencias del mes</small><strong id="totalAttendance">0</strong></div>
+ </div>
+ <h3>Administración de la academia</h3>
+ <div class="actions">
+  <button class="tile blue" onclick="show('families')"><span>👨‍👩‍👧</span>FAMILIAS<small>Responsables y alumnos</small></button>
+  <button class="tile green" onclick="show('payments')"><span>💳</span>PAGOS<small>Mensualidades y adeudos</small></button>
+  <button class="tile red" onclick="show('attendance')"><span>📋</span>ASISTENCIAS<small>Control de entrenamientos</small></button>
+  <button class="tile purple" onclick="show('evaluations')"><span>📈</span>EVALUACIONES<small>Progreso de jugadores</small></button>
+  <button class="tile gold" onclick="show('mvp')"><span>🏆</span>MVP DEL MES<small>Jugadores destacados</small></button>
+  <button class="tile cyan" onclick="show('reports')"><span>📊</span>REPORTES<small>Historial y estadísticas</small></button>
+ </div>
+ <div class="item" style="margin-top:20px">
+  <strong>⚡ Acciones rápidas</strong><br><br>
+  <button class="btn" onclick="show('families')">+ Registrar alumno</button>
+  <button class="btn secondary" onclick="show('payments')">+ Registrar pago</button>
+  <button class="btn danger" onclick="show('attendance')">Pasar asistencia</button>
+ </div>
+</section>
+
+<section id="families" class="section">
+ <div class="topline"><h2>👨‍👩‍👧 Familias y alumnos</h2><button class="back" onclick="show('home')">← Inicio</button></div>
+ <button class="btn" onclick="toggleForm('familyForm')">+ Registrar alumno</button>
+ <form id="familyForm" hidden onsubmit="addStudent(event)">
+  <h3>Nuevo alumno</h3>
+  <label>Nombre completo</label><input id="sname" required>
+  <div class="formrow">
+   <div><label>Edad</label><input id="sage" type="number" min="3" max="25" required></div>
+   <div><label>Categoría</label><select id="scat"><option>Inicial</option><option>Infantil</option><option>Juvenil</option></select></div>
+  </div>
+  <label>Nombre del responsable</label><input id="parent" required>
+  <label>Teléfono</label><input id="phone" type="tel">
+  <label>Horario</label><select id="schedule"><option>4:30–5:30 pm</option><option>5:30–6:30 pm</option><option>6:30–7:30 pm</option><option>8:30–9:45 am</option></select>
+  <label>Cuota mensual</label><input id="fee" type="number" value="500">
+  <button class="btn" type="submit">Guardar alumno</button>
+  <button class="btn secondary" type="button" onclick="toggleForm('familyForm')">Cancelar</button>
+ </form>
+ <div id="studentsList"></div>
+</section>
+
+<section id="payments" class="section">
+ <div class="topline"><h2>💳 Pagos</h2><button class="back" onclick="show('home')">← Inicio</button></div>
+ <button class="btn" onclick="toggleForm('paymentForm')">+ Registrar pago</button>
+ <form id="paymentForm" hidden onsubmit="addPayment(event)">
+  <h3>Registrar pago</h3>
+  <label>Alumno</label><select id="payStudent" required></select>
+  <label>Concepto</label><select id="concept"><option>Mensualidad</option><option>Uniforme</option><option>Reingreso</option><option>Otro</option></select>
+  <div class="formrow">
+   <div><label>Importe ($)</label><input id="amount" type="number" value="500" required></div>
+   <div><label>Fecha</label><input id="payDate" type="date" required></div>
+  </div>
+  <label>Método</label><select id="method"><option>Efectivo</option><option>Transferencia</option></select>
+  <button class="btn" type="submit">Guardar pago</button>
+  <button class="btn secondary" type="button" onclick="toggleForm('paymentForm')">Cancelar</button>
+ </form>
+ <div id="paymentsList"></div>
+</section>
+
+<section id="attendance" class="section">
+ <div class="topline"><h2>📋 Asistencias</h2><button class="back" onclick="show('home')">← Inicio</button></div>
+ <label>Fecha del entrenamiento</label><input id="attDate" type="date">
+ <label>Horario</label><select id="attSchedule"><option>4:30–5:30 pm</option><option>5:30–6:30 pm</option><option>6:30–7:30 pm</option><option>8:30–9:45 am</option></select>
+ <div id="attendanceList"></div>
+ <button class="btn" onclick="saveAttendance()">Guardar asistencia</button>
+</section>
+
+<section id="evaluations" class="section">
+ <div class="topline"><h2>📈 Evaluaciones</h2><button class="back" onclick="show('home')">← Inicio</button></div>
+ <form onsubmit="addEvaluation(event)">
+  <label>Jugador</label><select id="evalStudent" required></select>
+  <label>Técnica (1 a 10)</label><input id="tech" type="number" min="1" max="10" required>
+  <label>Disciplina (1 a 10)</label><input id="discipline" type="number" min="1" max="10" required>
+  <label>Esfuerzo (1 a 10)</label><input id="effort" type="number" min="1" max="10" required>
+  <label>Actitud y trabajo en equipo</label><input id="attitude" type="number" min="1" max="10" required>
+  <label>Observaciones del coach</label><textarea id="observations"></textarea>
+  <button class="btn" type="submit">Guardar evaluación</button>
+ </form>
+ <div id="evaluationsList"></div>
+</section>
+
+<section id="mvp" class="section">
+ <div class="topline"><h2 style="color:#e4bb55">🏆 MVP DEL MES</h2><button class="back" onclick="show('home')">← Inicio</button></div>
+ <div class="item" style="border-color:#a87918">
+  <h3 style="color:#e4bb55">⭐ Reconocimiento mensual</h3>
+  <p>Selecciona hasta tres jugadores destacados del mes.</p>
+  <label>Mes</label><input id="mvpMonth" type="month">
+  <label>Jugador destacado</label><select id="mvpStudent"></select>
+  <label>Reconocimiento</label><select id="mvpPlace"><option>MVP 1</option><option>MVP 2</option><option>MVP 3</option></select>
+  <label>Observación</label><textarea id="mvpNote"></textarea>
+  <button class="btn goldbtn" onclick="addMvp()">🏆 Guardar reconocimiento</button>
+ </div>
+ <div id="mvpList"></div>
+</section>
+
+<section id="reports" class="section">
+ <div class="topline"><h2>📊 Reportes</h2><button class="back" onclick="show('home')">← Inicio</button></div>
+ <div class="item" id="reportSummary"></div>
+ <button class="btn" onclick="exportData()">⬇ Descargar respaldo</button>
+ <p class="muted">Guarda una copia de tus datos periódicamente.</p>
+ <label>Restaurar respaldo JSON</label><input type="file" id="restoreFile" accept=".json">
+ <button class="btn secondary" onclick="restoreData()">Restaurar datos</button>
+</section>
+<footer>CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA 🦈</footer>
+</main>
+<script>
+const KEY="controlTiburonesV1";
+let db=JSON.parse(localStorage.getItem(KEY)||'{"students":[],"payments":[],"attendance":[],"evaluations":[],"mvps":[]}');
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function show(id){
+ document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+ document.getElementById(id).classList.add("active");render();
+}
+function toggleForm(id){let f=document.getElementById(id);f.hidden=!f.hidden}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function dateNow(){return new Date().toISOString().slice(0,10)}
+function addStudent(e){
+ e.preventDefault();
+ db.students.push({id:Date.now(),name:sname.value.trim(),age:sage.value,cat:scat.value,parent:parent.value.trim(),phone:phone.value, schedule:schedule.value,fee:Number(fee.value),active:true});
+ e.target.reset();fee.value=500;toggleForm("familyForm");save();alert("Alumno registrado correctamente.");
+}
+function addPayment(e){
+ e.preventDefault();
+ db.payments.push({id:Date.now(),student:Number(payStudent.value),concept:concept.value,amount:Number(amount.value),date:payDate.value,method:method.value});
+ toggleForm("paymentForm");e.target.reset();save();alert("Pago registrado.");
+}
+function saveAttendance(){
+ let date=attDate.value,schedule=attSchedule.value;
+ if(!date)return alert("Selecciona una fecha.");
+ document.querySelectorAll("[data-att]").forEach(el=>{
+  let id=Number(el.dataset.att),status=document.querySelector('[name="att'+id+'"]:checked')?.value||"Falta";
+  db.attendance=db.attendance.filter(a=>!(a.student===id&&a.date===date&&a.schedule===schedule));
+  db.attendance.push({student:id,date,schedule,status});
+ });
+ save();alert("Asistencia guardada.");
+}
+function addEvaluation(e){
+ e.preventDefault();
+ db.evaluations.push({student:Number(evalStudent.value),date:dateNow(),tech:Number(tech.value),discipline:Number(discipline.value),effort:Number(effort.value),attitude:Number(attitude.value),note:observations.value});
+ e.target.reset();save();alert("Evaluación guardada.");
+}
+function addMvp(){
+ let id=Number(mvpStudent.value);if(!id)return alert("Primero registra alumnos.");
+ let month=mvpMonth.value||dateNow().slice(0,7);
+ if(db.mvps.some(m=>m.month===month&&m.place===mvpPlace.value))return alert("Ese reconocimiento ya está asignado este mes.");
+ db.mvps.push({student:id,month,place:mvpPlace.value,note:mvpNote.value});
+ save();alert("¡Reconocimiento MVP guardado!");
+}
+function removeStudent(id){
+ if(!confirm("¿Dar de baja a este alumno? Se conservará su historial."))return;
+ let s=db.students.find(x=>x.id===id);if(s)s.active=false;save();
+}
+function render(){
+ document.getElementById("today").textContent=new Date().toLocaleDateString("es-MX",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+ totalStudents.textContent=db.students.filter(s=>s.active).length;
+ totalFamilies.textContent=new Set(db.students.filter(s=>s.active).map(s=>s.parent)).size;
+ totalPayments.textContent=db.payments.length;
+ totalAttendance.textContent=db.attendance.filter(a=>a.date.slice(0,7)===dateNow().slice(0,7)&&a.status==="Presente").length;
+ let active=db.students.filter(s=>s.active);
+ let opts=active.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+ ["payStudent","evalStudent","mvpStudent"].forEach(id=>document.getElementById(id).innerHTML=opts||'<option value="">Sin alumnos registrados</option>');
+ studentsList.innerHTML=active.length?active.map(s=>`<div class="item"><strong>${esc(s.name)}</strong> <span class="badge ok">${esc(s.cat)}</span><p>${s.age} años · ${esc(s.schedule)}</p><p>Responsable: ${esc(s.parent)} · Cuota: $${s.fee}</p><button class="btn secondary" onclick="alert('Teléfono: ${esc(s.phone)}')">Ver contacto</button><button class="btn danger" onclick="removeStudent(${s.id})">Dar de baja</button></div>`).join(""):'<div class="empty">Todavía no hay alumnos registrados.</div>';
+ paymentsList.innerHTML=db.payments.slice().reverse().map(p=>{let s=db.students.find(x=>x.id===p.student);return `<div class="item"><strong>${esc(s?.name||"Alumno")}</strong><p>${esc(p.concept)} · $${p.amount} · ${esc(p.date)} · ${esc(p.method)}</p></div>`}).join("")||'<div class="empty">No hay pagos registrados.</div>';
+ attendanceList.innerHTML=active.length?active.filter(s=>s.schedule===attSchedule.value).map(s=>`<div class="item" data-att data-id="${s.id}"><strong>${esc(s.name)}</strong><div style="margin-top:10px"><label><input style="width:auto" type="radio" name="att${s.id}" value="Presente" checked> Presente</label> <label><input style="width:auto" type="radio" name="att${s.id}" value="Falta"> Falta</label> <label><input style="width:auto" type="radio" name="att${s.id}" value="Justificada"> Justificada</label></div></div>`).join(""):'<div class="empty">No hay alumnos para este horario.</div>';
+ evaluationsList.innerHTML=db.evaluations.slice().reverse().map(v=>{let s=db.students.find(x=>x.id===v.student);return `<div class="item"><strong>${esc(s?.name||"Alumno")}</strong><p>${v.date} · Técnica ${v.tech} · Disciplina ${v.discipline} · Esfuerzo ${v.effort} · Actitud ${v.attitude}</p><p>${esc(v.note)}</p></div>`}).join("")||'<div class="empty">Todavía no hay evaluaciones.</div>';
+ mvpList.innerHTML=db.mvps.slice().reverse().map(m=>{let s=db.students.find(x=>x.id===m.student);return `<div class="item" style="border-color:#a87918"><strong style="color:#e4bb55">🏆 ${esc(m.place)} · ${esc(s?.name||"Alumno")}</strong><p>${m.month} · ${esc(m.note)}</p></div>`}).join("")||'<div class="empty">Todavía no hay reconocimientos.</div>';
+ reportSummary.innerHTML=`<h3>Resumen de la academia</h3><p>Alumnos activos: ${active.length}</p><p>Pagos registrados: ${db.payments.length}</p><p>Registros de asistencia: ${db.attendance.length}</p><p>Evaluaciones: ${db.evaluations.length}</p><p>Reconocimientos MVP: ${db.mvps.length}</p>`;
+}
+function exportData(){
+ let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="respaldo-control-tiburones.json";a.click();URL.revokeObjectURL(url);
+}
+function restoreData(){
+ let f=restoreFile.files[0];if(!f)return alert("Selecciona un archivo de respaldo.");
+ let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!d.students||!d.payments)throw Error();db=d;save();alert("Respaldo restaurado.");}catch(e){alert("El archivo no es un respaldo válido.");}};r.readAsText(f);
+}
+attDate.value=dateNow();payDate.value=dateNow();mvpMonth.value=dateNow().slice(0,7);
+attSchedule.addEventListener("change",render);
+render();
+</script>
+</body>
+</html>
