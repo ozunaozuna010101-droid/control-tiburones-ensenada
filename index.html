@@ -14,98 +14,52 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}
-header{
- padding:20px 17px;
- background:linear-gradient(120deg,#102d50,#075b91);
- box-shadow:0 5px 22px #0005;
-}
+header{padding:19px;background:linear-gradient(120deg,#102d50,#075b91);box-shadow:0 5px 20px #0005}
 .brand{display:flex;align-items:center;gap:14px}
-.logo{
- width:60px;height:60px;border-radius:17px;
- background:#168cf0;display:grid;place-items:center;font-size:35px;
-}
-h1{font-size:22px;margin:0;letter-spacing:.5px}
-header p{margin:6px 0 0;color:#d8eaff;font-size:12px;letter-spacing:1px}
+.logo{width:58px;height:58px;border-radius:16px;background:#168cf0;display:grid;place-items:center;font-size:34px}
+h1{font-size:21px;margin:0}
+header p{margin:5px 0 0;color:#d8eaff;font-size:12px;letter-spacing:1px}
 main{padding:15px;max-width:950px;margin:auto}
 h2{font-size:21px;margin:18px 0}
 h3{font-size:17px;margin:8px 0 14px}
 button,input,select,textarea{font:inherit}
-button{
- border:0;border-radius:11px;padding:13px 15px;color:white;
- background:var(--blue);font-weight:bold;cursor:pointer;
-}
+button{border:0;border-radius:11px;padding:13px 15px;color:white;background:var(--blue);font-weight:bold;cursor:pointer}
 button:active{transform:scale(.98)}
-input,select,textarea{
- width:100%;padding:13px;border-radius:11px;
- border:1px solid #42617e;background:#0b2037;color:white;
- margin:6px 0 14px;min-height:48px;
-}
+input,select,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid #42617e;background:#0b2037;color:white;margin:6px 0 14px;min-height:48px}
 label{font-size:13px;color:var(--muted);display:block}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
-.tile{
- min-height:105px;text-align:left;padding:16px;
- border-radius:15px;font-size:15px;box-shadow:0 5px 12px #0003;
-}
-.tile span{display:block;font-size:29px;margin-bottom:10px}
+.tile{min-height:100px;text-align:left;padding:15px;border-radius:15px;font-size:15px;box-shadow:0 5px 12px #0003}
+.tile span{display:block;font-size:28px;margin-bottom:9px}
 .blue{background:#176fc0}.green{background:#13875f}
 .orange{background:#b87519}.red{background:#a93643}
 .purple{background:#6846b6}.cyan{background:#087f91}
-.panel{
- background:var(--panel);padding:16px;border-radius:16px;
- margin:13px 0;box-shadow:0 5px 16px #0003;
-}
-.item{
- background:var(--card);padding:15px;border-radius:13px;
- margin:10px 0;border:1px solid #ffffff12;
-}
+.panel{background:var(--panel);padding:16px;border-radius:16px;margin:13px 0;box-shadow:0 5px 16px #0003}
+.item{background:var(--card);padding:14px;border-radius:13px;margin:10px 0;border:1px solid #ffffff12}
 .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 .row>*{flex:1}
 .small{font-size:12px;color:var(--muted)}
-.badge{
- display:inline-block;padding:7px 11px;border-radius:30px;
- font-size:12px;font-weight:bold;color:white;
-}
-.paid{background:#087c54}
-.pending{background:#a87512}
-.debt{background:#a92e3e}
-.scholar{background:#245b9a}
-.cancelled{background:#704c91}
+.badge{display:inline-block;padding:7px 11px;border-radius:30px;font-size:12px;font-weight:bold;color:white}
 .hidden{display:none!important}
 .back{background:#40566d;margin-bottom:10px}
 .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.actions button{flex:1;min-width:105px}
+.actions button{flex:1;min-width:100px}
 hr{border:0;border-top:1px solid #34516e;margin:15px 0}
-.stat{
- background:#193957;border-radius:12px;padding:14px;
- text-align:center;border:1px solid #ffffff12;
-}
-.stat b{font-size:23px;display:block;margin-top:7px}
-.notice{
- padding:13px;border-radius:11px;background:#263f59;
- margin:10px 0;font-size:13px;line-height:1.5;
-}
-.payment-card{
- padding:19px;border-radius:17px;margin:12px 0;
- border:2px solid transparent;box-shadow:0 6px 18px #0004;
-}
-.payment-card h3{font-size:19px;margin:0 0 12px}
-.payment-card .big{font-size:25px;font-weight:bold;margin:8px 0}
-.payment-card .line{font-size:16px;margin:7px 0}
+.stat{background:#193957;border-radius:12px;padding:13px;text-align:center;border:1px solid #ffffff12}
+.stat b{font-size:21px;display:block;margin-top:6px}
+.notice{padding:13px;border-radius:11px;background:#263f59;margin:10px 0;font-size:13px;line-height:1.5}
+.payment-card{padding:19px;border-radius:17px;margin:12px 0;border:2px solid transparent;box-shadow:0 6px 18px #0004}
+.payment-card h3{font-size:20px;margin:0 0 12px}
+.payment-card .line{font-size:16px;margin:8px 0}
+.payment-card .big{font-size:24px;font-weight:bold;margin:12px 0}
 .payment-card.good{background:linear-gradient(140deg,#075a40,#13875f);border-color:#31d59a}
 .payment-card.warning{background:linear-gradient(140deg,#76500b,#b17a17);border-color:#f2c45c}
 .payment-card.overdue{background:linear-gradient(140deg,#762431,#b93848);border-color:#fa7180}
 .payment-card.special{background:linear-gradient(140deg,#17456c,#2479b5);border-color:#58b8ff}
 .payment-card.neutral{background:linear-gradient(140deg,#263c56,#405a75);border-color:#7891aa}
-.calendar-day{
- display:flex;justify-content:space-between;gap:8px;
- align-items:center;padding:12px;background:var(--card);
- border-radius:10px;margin:7px 0;
-}
+.calendar-day{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:12px;background:var(--card);border-radius:10px;margin:7px 0}
 .calendar-day.cancel{border-left:5px solid var(--purple)}
 .calendar-day.normal{border-left:5px solid var(--green)}
-@media(min-width:650px){
- .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -118,8 +72,8 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 </div>
 </div>
 </header>
-
 <main>
+
 <section id="home">
 <h2>Panel principal</h2>
 <div class="grid">
@@ -136,10 +90,7 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 <h3>Resumen de la academia</h3>
 <div id="dashboard"></div>
 </div>
-<div class="notice">
-Entrenamientos habituales: lunes, miércoles y viernes.
-El calendario se actualiza automáticamente según la fecha actual.
-</div>
+<div class="notice">Entrenamientos habituales: lunes, miércoles y viernes. El calendario avanza automáticamente según la fecha actual.</div>
 </section>
 
 <section id="families" class="hidden">
@@ -194,9 +145,7 @@ El calendario se actualiza automáticamente según la fecha actual.
 <label>Cantidad recibida</label>
 <input id="payAmount" type="number" min="0" step="0.01" placeholder="Cantidad pagada">
 <label>Forma de pago</label>
-<select id="payMethod">
-<option>Efectivo</option><option>Transferencia</option><option>Depósito</option>
-</select>
+<select id="payMethod"><option>Efectivo</option><option>Transferencia</option><option>Depósito</option></select>
 <label>Concepto del pago</label>
 <select id="payConcept">
 <option value="mensualidad">Mensualidad</option>
@@ -231,9 +180,7 @@ El calendario se actualiza automáticamente según la fecha actual.
 <label>Cantidad recibida</label>
 <input id="incomeAmount" type="number" min="0" step="0.01">
 <label>Método de pago</label>
-<select id="incomeMethod">
-<option>Efectivo</option><option>Transferencia</option><option>Depósito</option>
-</select>
+<select id="incomeMethod"><option>Efectivo</option><option>Transferencia</option><option>Depósito</option></select>
 <button class="green" onclick="saveIncome()">Guardar ingreso</button>
 </div>
 <div id="incomeList"></div>
@@ -310,7 +257,11 @@ El calendario se actualiza automáticamente según la fecha actual.
 <button onclick="monthlyReport()">Consultar reporte</button>
 <div id="reportResults"></div>
 </div>
- </section>const KEY='controlTiburonesNuevoV2';
+</section>
+
+</main>
+
+<script>const KEY='controlTiburonesNuevoV2';
 
 let db={
  families:[],students:[],payments:[],
@@ -324,14 +275,10 @@ function todayISO(){
  const d=new Date();
  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function currentMonth(){return todayISO().slice(0,7);}
-function money(n){
- return '$'+Number(n||0).toLocaleString('es-MX',{maximumFractionDigits:2});
-}
+function currentMonth(){return todayISO().slice(0,7)}
+function money(n){return '$'+Number(n||0).toLocaleString('es-MX',{maximumFractionDigits:2})}
 function safe(v){
- return String(v??'').replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
- }[c]));
+ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function monthName(m){
  const [y,mo]=m.split('-').map(Number);
@@ -358,7 +305,7 @@ function loadDB(){
    });
   }
  }catch(e){
-  alert('No se pudo leer el respaldo local. No borres los datos del navegador.');
+  alert('No se pudo leer la información guardada. No borres los datos del navegador.');
  }
 }
 function saveDB(){
@@ -366,12 +313,15 @@ function saveDB(){
   localStorage.setItem(KEY,JSON.stringify(db));
   updateDashboard();
  }catch(e){
-  alert('No se pudo guardar. Descarga un respaldo y revisa el espacio del navegador.');
+  alert('No se pudo guardar. Descarga un respaldo y revisa el espacio disponible.');
  }
 }
 function show(id){
  document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
- document.getElementById(id).classList.remove('hidden');
+ const target=document.getElementById(id);
+ if(!target)return;
+ target.classList.remove('hidden');
+
  if(id==='families')renderFamilies();
  if(id==='payments'){refreshPaymentStudents();renderPaymentList();}
  if(id==='income')renderIncomeList();
@@ -380,6 +330,8 @@ function show(id){
  updateDashboard();
  window.scrollTo(0,0);
 }
+
+// FAMILIAS
 function feeTypeChanged(){
  const type=document.getElementById('feeType').value;
  const discount=document.getElementById('discount');
@@ -478,7 +430,7 @@ function addAnotherStudent(familyId){
  const name=prompt('Nombre del nuevo alumno:');if(!name?.trim())return;
  const fee=Number(prompt('Cuota mensual:',500));
  if(!Number.isFinite(fee)||fee<0)return;
- const schedule=prompt('Horario:', '4:30 a 5:30 pm');
+ const schedule=prompt('Horario:','4:30 a 5:30 pm');
  if(!schedule)return;
  db.students.push({
   id:uid(),familyId,name:name.trim(),birth:'',schedule,
@@ -488,7 +440,7 @@ function addAnotherStudent(familyId){
  saveDB();renderFamilies();
 }
 
-// PAGOS Y RECARGOS
+// PAGOS
 function monthPayments(id,month){
  return db.payments.filter(p=>p.studentId===id&&p.month===month)
   .reduce((n,p)=>n+Number(p.amount||0),0);
@@ -509,13 +461,11 @@ function monthInfo(s,month){
  let state='Pendiente';
  if(s.status==='temporal')state='Baja temporal';
  else if(s.status==='definitiva')state='Baja definitiva';
- else if(s.status==='suspendedDebt'&&remaining>0)state='Suspendido por adeudo';
  else if(s.feeType==='full')state='Becado 100%';
  else if(s.feeType==='courtesy')state='Cortesía / sin pago';
  else if(remaining===0)state='Liquidado';
  else if(suspended)state='Suspendido por adeudo';
  else if(late)state='Pendiente con recargo';
-
  return {due,paid,remaining,late,total:remaining+late,state,suspended};
 }
 function syncDebtStatuses(){
@@ -550,8 +500,7 @@ function showPayInfo(){
 
  box.innerHTML=`<div class="payment-card ${style}">
   <h3>${safe(s.name)}</h3>
-  <div class="line">${safe(s.schedule)}</div>
-  <hr>
+  <div class="line">${safe(s.schedule)}</div><hr>
   <div class="line">Mensualidad: <b>${money(x.due)}</b></div>
   <div class="line">Pagado: <b>${money(x.paid)}</b></div>
   <div class="line">Saldo: <b>${money(x.remaining)}</b></div>
@@ -619,7 +568,7 @@ function renderIncomeList(){
  ).join('')||'<p class="small">Todavía no hay ingresos registrados.</p>';
 }
 
-// CALENDARIO Y CANCELACIONES
+// CALENDARIO
 function trainingDates(month){
  const [year,mo]=month.split('-').map(Number);
  const dates=[];
@@ -661,8 +610,7 @@ function renderCalendar(){
   return `<div class="calendar-day ${cancel?'cancel':'normal'}">
    <div><b>${safe(label)}</b><br>
    <span class="small">${cancel?'ENTRENAMIENTO CANCELADO':'Entrenamiento programado'}</span></div>
-   <button class="${cancel?'purple':'red'}" onclick="cancelTraining('${date}')">
-   ${cancel?'Restaurar':'Cancelar'}</button>
+   <button class="${cancel?'purple':'red'}" onclick="cancelTraining('${date}')">${cancel?'Restaurar':'Cancelar'}</button>
   </div>`;
  }).join('');
 }// ASISTENCIA
@@ -672,11 +620,11 @@ function loadAttendance(){
  const box=document.getElementById('attendanceList');
 
  if(isCancelled(date)){
-  box.innerHTML='<div class="notice">Este entrenamiento está cancelado. No se registra asistencia.</div>';
+  box.innerHTML='<div class="notice">Entrenamiento cancelado. No se registra asistencia.</div>';
   return;
  }
  if(!trainingDates(date.slice(0,7)).includes(date)){
-  box.innerHTML='<div class="notice">La fecha no corresponde a lunes, miércoles o viernes.</div>';
+  box.innerHTML='<div class="notice">Selecciona lunes, miércoles o viernes.</div>';
   return;
  }
 
@@ -693,7 +641,7 @@ function loadAttendance(){
  box.innerHTML=students.map(s=>{
   const old=db.attendance.find(a=>a.studentId===s.id&&a.date===date);
   return `<div class="item">
-   <b>${safe(s.name)}</b>
+   <h3>${safe(s.name)}</h3>
    <div class="actions">
     <button class="green" onclick="markAttendance('${s.id}','${date}','Presente')">Presente</button>
     <button class="red" onclick="markAttendance('${s.id}','${date}','Falta')">Falta</button>
@@ -748,7 +696,7 @@ function loadEvaluations(){
   return;
  }
  if(!trainingDates(date.slice(0,7)).includes(date)){
-  box.innerHTML='<div class="notice">Selecciona un lunes, miércoles o viernes.</div>';
+  box.innerHTML='<div class="notice">Selecciona lunes, miércoles o viernes.</div>';
   return;
  }
 
@@ -775,7 +723,7 @@ function loadEvaluations(){
 
   return `<div class="item">
    <h3>${safe(s.name)}</h3>
-   <span class="badge scholar">Puntaje mensual: ${score}/100</span>
+   <span class="badge" style="background:#245b9a">Puntaje mensual: ${score}/100</span>
    <p class="small">Observaciones de esta fecha: ${todayRecords.length}</p>
    <div class="actions">
     ${evaluationOptions.map((o,i)=>
@@ -823,12 +771,9 @@ function calculateMVP(){
    const attended=db.attendance.filter(a=>
     a.studentId===s.id&&a.date.startsWith(month)&&a.status==='Presente'
    ).length;
-
    return {...s,score,positive,attended};
   })
-  .sort((a,b)=>
-   b.score-a.score||b.positive-a.positive||b.attended-a.attended
-  );
+  .sort((a,b)=>b.score-a.score||b.positive-a.positive||b.attended-a.attended);
 
  if(!ranked.length){
   box.innerHTML='No hay alumnos registrados.';
@@ -954,7 +899,7 @@ function updateDashboard(){
  </div><p class="small">${safe(monthName(currentMonth()))}</p>`;
 }
 
-// INICIO Y ACTUALIZACIÓN AUTOMÁTICA AL ABRIR
+// INICIO
 loadDB();
 syncDebtStatuses();
 
@@ -972,4 +917,4 @@ saveDB();
 updateDashboard();
 </script>
 </body>
- </html>
+</html>
