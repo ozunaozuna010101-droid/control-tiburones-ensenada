@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071629">
 <title>CONTROL TIBURONES</title>
 <style>
 :root{
---bg:#071629;--panel:#102641;--card:#173451;
+--bg:#071629;--panel:#102641;--card:#193957;
 --blue:#168cf0;--green:#12a875;--red:#d84b55;
 --yellow:#e6ad35;--purple:#8057d8;--cyan:#16b8c8;
 --white:#f5f8ff;--muted:#a9bfd4;
@@ -15,12 +15,12 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}
 header{padding:18px;background:linear-gradient(120deg,#102d50,#075b91)}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:55px;height:55px;border-radius:15px;background:#168cf0;display:grid;place-items:center;font-size:32px}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:58px;height:58px;border-radius:15px;background:#168cf0;display:grid;place-items:center;font-size:34px}
 h1{font-size:21px;margin:0}
 header p{margin:5px 0 0;color:#d8eaff;font-size:12px}
-main{padding:14px;max-width:850px;margin:auto}
-h2{font-size:19px}
+main{padding:14px;max-width:900px;margin:auto}
+h2{font-size:20px}
 h3{font-size:16px}
 button,input,select,textarea{font:inherit}
 button{border:0;border-radius:10px;padding:12px;color:white;background:var(--blue);font-weight:bold;cursor:pointer}
@@ -28,23 +28,28 @@ button:active{transform:scale(.98)}
 input,select,textarea{width:100%;padding:12px;border-radius:9px;border:1px solid #42617e;background:#0b2037;color:white;margin:5px 0 12px}
 label{font-size:13px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.tile{min-height:90px;text-align:left;padding:15px;border-radius:14px;font-size:15px}
-.tile span{display:block;font-size:25px;margin-bottom:8px}
-.blue{background:#176fc0}.green{background:#13875f}.orange{background:#b87519}
-.red{background:#a93643}.purple{background:#6846b6}.cyan{background:#087f91}
+.tile{min-height:92px;text-align:left;padding:15px;border-radius:14px;font-size:15px}
+.tile span{display:block;font-size:26px;margin-bottom:8px}
+.blue{background:#176fc0}.green{background:#13875f}
+.orange{background:#b87519}.red{background:#a93643}
+.purple{background:#6846b6}.cyan{background:#087f91}
 .panel{background:var(--panel);padding:15px;border-radius:14px;margin:12px 0}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row>*{flex:1}
 .small{font-size:12px;color:var(--muted)}
 .item{background:var(--card);padding:12px;border-radius:10px;margin:8px 0}
 .badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:12px;font-weight:bold;background:#34516e}
-.paid{background:#126b4e}.pending{background:#89651b}.debt{background:#8d303b}.scholar{background:#245b9a}
+.paid{background:#126b4e}.pending{background:#89651b}
+.debt{background:#8d303b}.scholar{background:#245b9a}
 .hidden{display:none!important}
 .back{background:#40566d;margin-bottom:10px}
 .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.actions button{flex:1;min-width:100px}
+.actions button{flex:1;min-width:105px}
 hr{border:0;border-top:1px solid #34516e;margin:15px 0}
-@media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.stat{background:#193957;border-radius:10px;padding:12px;text-align:center}
+.stat b{font-size:21px;display:block;margin-top:5px}
+.notice{padding:11px;border-radius:9px;background:#263f59;margin:10px 0;font-size:13px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -58,6 +63,7 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 </div>
 </header>
 <main>
+
 <section id="home">
 <h2>Panel de control</h2>
 <div class="grid">
@@ -70,8 +76,9 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 </div>
 <div class="panel">
 <h3>Resumen de la academia</h3>
-<div id="dashboard">Cargando información...</div>
+<div id="dashboard"></div>
 </div>
+<div class="notice">Calendario de entrenamiento: lunes, miércoles y viernes. Las fechas se calculan automáticamente según el mes seleccionado.</div>
 </section>
 
 <section id="families" class="hidden">
@@ -79,26 +86,36 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 <h2>Familias y alumnos</h2>
 <div class="panel">
 <h3>Registrar familia</h3>
-<label>Nombre del responsable</label><input id="responsible" placeholder="Nombre completo">
-<label>Teléfono</label><input id="phone" placeholder="Teléfono">
-<label>Notas</label><input id="familyNotes" placeholder="Observaciones">
+<label>Nombre del responsable</label>
+<input id="responsible" placeholder="Nombre completo">
+<label>Teléfono</label>
+<input id="phone" placeholder="Teléfono">
+<label>Notas</label>
+<input id="familyNotes" placeholder="Observaciones">
+
 <h3>Primer alumno</h3>
-<label>Nombre del alumno</label><input id="studentName" placeholder="Nombre completo">
-<label>Fecha de nacimiento</label><input id="birth" type="date">
+<label>Nombre del alumno</label>
+<input id="studentName" placeholder="Nombre completo">
+<label>Fecha de nacimiento</label>
+<input id="birth" type="date">
 <label>Horario</label>
 <select id="schedule">
-<option>4:30 a 5:30 pm</option><option>5:30 a 6:30 pm</option>
-<option>6:30 a 7:30 pm</option><option>8:30 a 9:45 am</option>
+<option>4:30 a 5:30 pm</option>
+<option>5:30 a 6:30 pm</option>
+<option>6:30 a 7:30 pm</option>
+<option>8:30 a 9:45 am</option>
 </select>
-<label>Cuota mensual en pesos</label><input id="fee" type="number" value="500">
+<label>Cuota mensual antes de beca</label>
+<input id="fee" type="number" min="0" value="500">
 <label>Tipo de cuota</label>
-<select id="feeType">
+<select id="feeType" onchange="feeTypeChanged()">
 <option value="normal">Cuota normal</option>
 <option value="partial">Beca parcial</option>
 <option value="full">Beca completa</option>
 <option value="courtesy">Cortesía / sin pago</option>
 </select>
-<label>Descuento de beca en pesos</label><input id="discount" type="number" value="0">
+<label>Descuento mensual de beca en pesos</label>
+<input id="discount" type="number" min="0" value="0">
 <button class="green" onclick="addFamily()">Guardar familia y alumno</button>
 </div>
 <div id="familyList"></div>
@@ -108,25 +125,37 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 <button class="back" onclick="show('home')">← Regresar</button>
 <h2>Pagos y mensualidades</h2>
 <div class="panel">
-<label>Alumno</label><select id="payStudent"></select>
-<label>Mes</label><input id="payMonth" type="month">
+<label>Alumno</label>
+<select id="payStudent" onchange="showPayInfo()"></select>
+<label>Mes que se va a cobrar</label>
+<input id="payMonth" type="month" onchange="showPayInfo()">
 <div id="payInfo"></div>
-<label>Cantidad recibida</label><input id="payAmount" type="number" min="0" placeholder="Cantidad pagada">
+<label>Cantidad recibida</label>
+<input id="payAmount" type="number" min="0" step="0.01" placeholder="Cantidad pagada">
 <label>Método de pago</label>
-<select id="payMethod"><option>Efectivo</option><option>Transferencia</option><option>Depósito</option></select>
-<label>Nota</label><input id="payNote" placeholder="Referencia u observación">
+<select id="payMethod">
+<option>Efectivo</option>
+<option>Transferencia</option>
+<option>Depósito</option>
+</select>
+<label>Nota o referencia</label>
+<input id="payNote" placeholder="Observación">
 <button class="green" onclick="savePayment()">Registrar pago</button>
 </div>
 <div id="paymentList"></div>
- </section><section id="attendance" class="hidden">
+</section>
+
+<section id="attendance" class="hidden">
 <button class="back" onclick="show('home')">← Regresar</button>
 <h2>Control de asistencia</h2>
 <div class="panel">
-<label>Fecha del entrenamiento</label><input id="attDate" type="date">
+<label>Fecha</label><input id="attDate" type="date">
 <label>Horario</label>
 <select id="attSchedule">
-<option>4:30 a 5:30 pm</option><option>5:30 a 6:30 pm</option>
-<option>6:30 a 7:30 pm</option><option>8:30 a 9:45 am</option>
+<option>4:30 a 5:30 pm</option>
+<option>5:30 a 6:30 pm</option>
+<option>6:30 a 7:30 pm</option>
+<option>8:30 a 9:45 am</option>
 </select>
 <button onclick="loadAttendance()">Mostrar alumnos</button>
 <div id="attendanceList"></div>
@@ -135,13 +164,15 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 
 <section id="evaluations" class="hidden">
 <button class="back" onclick="show('home')">← Regresar</button>
-<h2>Evaluación de jugadores</h2>
+<h2>Evaluaciones</h2>
 <div class="panel">
 <label>Fecha de entrenamiento</label><input id="evalDate" type="date">
 <label>Horario</label>
 <select id="evalSchedule">
-<option>4:30 a 5:30 pm</option><option>5:30 a 6:30 pm</option>
-<option>6:30 a 7:30 pm</option><option>8:30 a 9:45 am</option>
+<option>4:30 a 5:30 pm</option>
+<option>5:30 a 6:30 pm</option>
+<option>6:30 a 7:30 pm</option>
+<option>8:30 a 9:45 am</option>
 </select>
 <button onclick="loadEvaluations()">Mostrar alumnos</button>
 <div id="evaluationList"></div>
@@ -152,7 +183,7 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 <button class="back" onclick="show('home')">← Regresar</button>
 <h2>🏆 MVP del mes</h2>
 <div class="panel">
-<label>Mes a consultar</label><input id="mvpMonth" type="month">
+<label>Mes</label><input id="mvpMonth" type="month">
 <button onclick="calculateMVP()">Calcular resultados</button>
 <div id="mvpResults"></div>
 </div>
@@ -163,320 +194,739 @@ hr{border:0;border-top:1px solid #34516e;margin:15px 0}
 <h2>Reportes y respaldo</h2>
 <div class="panel">
 <h3>Respaldo de información</h3>
-<p class="small">Descarga una copia de las familias, alumnos, pagos, asistencias y evaluaciones.</p>
-<button class="green" onclick="backup()">Descargar respaldo</button>
+<p class="small">Guarda una copia de alumnos, familias, pagos, asistencias y evaluaciones.</p>
+<button class="green" onclick="backup()">Descargar respaldo JSON</button>
 <hr>
 <label>Restaurar respaldo JSON</label>
 <input type="file" id="restoreFile" accept=".json,application/json">
 <button class="blue" onclick="restoreBackup()">Restaurar información</button>
 </div>
 <div class="panel">
-<h3>Resumen mensual</h3>
+<h3>Reporte mensual</h3>
 <label>Mes</label><input id="reportMonth" type="month">
 <button onclick="monthlyReport()">Consultar</button>
 <div id="reportResults"></div>
 </div>
 </section>
-</main>
 
-<script>
-const KEY='controlTiburonesNuevoV2';
-const schedules=['4:30 a 5:30 pm','5:30 a 6:30 pm','6:30 a 7:30 pm','8:30 a 9:45 am'];
-let db={families:[],students:[],payments:[],attendance:[],evaluations:[]};
+</main>
+<script>const KEY='controlTiburonesNuevoV2';
+
+let db={
+ families:[],
+ students:[],
+ payments:[],
+ attendance:[],
+ evaluations:[]
+};
+
+function uid(){
+ return 'id-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
+}
+
+function todayISO(){
+ const d=new Date();
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function currentMonth(){
+ return todayISO().slice(0,7);
+}
+
+function money(n){
+ return '$'+Number(n||0).toLocaleString('es-MX',{maximumFractionDigits:2});
+}
+
+function safe(v){
+ return String(v??'').replace(/[&<>"']/g,c=>({
+ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+ }[c]));
+}
+
+function monthName(m){
+ const [y,mo]=m.split('-').map(Number);
+ return new Date(y,mo-1,1).toLocaleDateString('es-MX',{
+ month:'long',year:'numeric'
+ });
+}
 
 function loadDB(){
  try{
   const saved=localStorage.getItem(KEY);
   if(saved){
-   const parsed=JSON.parse(saved);
-   db={...db,...parsed};
+   const old=JSON.parse(saved);
+   db={
+    families:Array.isArray(old.families)?old.families:[],
+    students:Array.isArray(old.students)?old.students:[],
+    payments:Array.isArray(old.payments)?old.payments:[],
+    attendance:Array.isArray(old.attendance)?old.attendance:[],
+    evaluations:Array.isArray(old.evaluations)?old.evaluations:[]
+   };
+   db.students.forEach(s=>{
+    if(!s.status)s.status='active';
+    if(!s.feeType)s.feeType=Number(s.fee)===0?'full':'normal';
+    if(s.discount===undefined)s.discount=0;
+   });
   }
- }catch(e){alert('No se pudo leer la información guardada.');}
+ }catch(e){
+  alert('No se pudo leer la información guardada. No borres los datos del navegador.');
+ }
 }
+
 function saveDB(){
- localStorage.setItem(KEY,JSON.stringify(db));
- updateDashboard();
+ try{
+  localStorage.setItem(KEY,JSON.stringify(db));
+  updateDashboard();
+ }catch(e){
+  alert('No se pudo guardar. Puede faltar espacio en el navegador. Descarga un respaldo.');
+ }
 }
+
 function show(id){
  document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
  document.getElementById(id).classList.remove('hidden');
+
  if(id==='families')renderFamilies();
- if(id==='payments')refreshPaymentStudents();
+ if(id==='payments'){
+  refreshPaymentStudents();
+  renderPaymentList();
+ }
  if(id==='reports')monthlyReport();
+
  updateDashboard();
  window.scrollTo(0,0);
 }
-function todayISO(){
- const d=new Date();
- return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+function feeTypeChanged(){
+ const type=document.getElementById('feeType').value;
+ const discount=document.getElementById('discount');
+ if(type==='full'||type==='courtesy'){
+  discount.value=0;
+  discount.disabled=true;
+ }else{
+  discount.disabled=false;
+ }
 }
-function currentMonth(){
- return todayISO().slice(0,7);
-}
-function monthName(m){
- const [y,mo]=m.split('-').map(Number);
- return new Date(y,mo-1,1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});
-}
-function money(n){
- return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:2});
-}
-function safe(s){
- return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function studentName(id){
- const s=db.students.find(x=>x.id===id);
- return s?s.name:'Alumno eliminado';
-}
+
 function addFamily(){
  const responsible=document.getElementById('responsible').value.trim();
  const name=document.getElementById('studentName').value.trim();
- if(!responsible||!name){alert('Escribe el responsable y el nombre del alumno.');return;}
- const family={id:crypto.randomUUID(),responsible,phone:document.getElementById('phone').value.trim(),notes:document.getElementById('familyNotes').value.trim(),active:true};
- const feeType=document.getElementById('feeType').value;
- let fee=Number(document.getElementById('fee').value)||0;
- let discount=Number(document.getElementById('discount').value)||0;
- if(feeType==='full'||feeType==='courtesy'){fee=0;discount=0;}
- const student={id:crypto.randomUUID(),familyId:family.id,name,birth:document.getElementById('birth').value,schedule:document.getElementById('schedule').value,fee,discount,feeType,status:'active',created:todayISO()};
+
+ if(!responsible||!name){
+  alert('Escribe el responsable y el nombre del alumno.');
+  return;
+ }
+
+ const family={
+  id:uid(),
+  responsible,
+  phone:document.getElementById('phone').value.trim(),
+  notes:document.getElementById('familyNotes').value.trim(),
+  active:true
+ };
+
+ const type=document.getElementById('feeType').value;
+ const fee=Math.max(0,Number(document.getElementById('fee').value)||0);
+ const discount=type==='partial'
+  ?Math.min(fee,Math.max(0,Number(document.getElementById('discount').value)||0))
+  :0;
+
+ const student={
+  id:uid(),
+  familyId:family.id,
+  name,
+  birth:document.getElementById('birth').value,
+  schedule:document.getElementById('schedule').value,
+  fee,
+  discount,
+  feeType:type,
+  status:'active',
+  created:todayISO()
+ };
+
  db.families.push(family);
  db.students.push(student);
  saveDB();
- ['responsible','phone','familyNotes','studentName','birth'].forEach(id=>document.getElementById(id).value='');
+
+ ['responsible','phone','familyNotes','studentName','birth'].forEach(id=>{
+  document.getElementById(id).value='';
+ });
  document.getElementById('fee').value=500;
+ document.getElementById('feeType').value='normal';
  document.getElementById('discount').value=0;
+ document.getElementById('discount').disabled=false;
+
  renderFamilies();
- alert('Familia y alumno registrados.');
+ alert('Familia y alumno registrados correctamente.');
 }
-function renderFamilies(){
- const box=document.getElementById('familyList');
- if(!db.families.length){box.innerHTML='<p class="small">Todavía no hay familias registradas.</p>';return;}
- box.innerHTML=db.families.map(f=>{
-  const kids=db.students.filter(s=>s.familyId===f.id);
-  return `<div class="item"><b>${safe(f.responsible)}</b><div class="small">${safe(f.phone)}</div>${kids.map(s=>`<div class="item"><b>${safe(s.name)}</b><br>${safe(s.schedule)} · ${money(s.fee)} · ${safe(s.feeType)}<br><span class="badge">${safe(s.status)}</span><div class="actions"><button onclick="editStudent('${s.id}')">Editar</button><button class="orange" onclick="changeStatus('${s.id}')">Estado</button></div></div>`).join('')}</div>`;
- }).join('');
-}
-function editStudent(id){
- const s=db.students.find(x=>x.id===id);if(!s)return;
- const fee=prompt('Cuota mensual en pesos:',s.fee);if(fee===null)return;
- const discount=prompt('Beca o descuento en pesos:',s.discount||0);if(discount===null)return;
- const schedule=prompt('Horario exacto:',s.schedule);if(schedule===null)return;
- s.fee=Math.max(0,Number(fee)||0);
- s.discount=Math.max(0,Number(discount)||0);
- s.schedule=schedule;
- if(s.fee===0&&s.feeType==='normal')s.feeType='full';
- saveDB();renderFamilies();
-}
-function changeStatus(id){
- const s=db.students.find(x=>x.id===id);if(!s)return;
- const choice=prompt('Escribe: active, temporal o definitiva',s.status);
- if(!['active','temporal','definitiva'].includes(choice))return;
- s.status=choice;saveDB();renderFamilies();
-}
+
 function studentCharge(s){
  if(s.feeType==='full'||s.feeType==='courtesy')return 0;
  return Math.max(0,Number(s.fee||0)-Number(s.discount||0));
 }
-function monthPayments(id,month){
- return db.payments.filter(p=>p.studentId===id&&p.month===month).reduce((sum,p)=>sum+Number(p.amount||0),0);
+
+function studentName(id){
+ const s=db.students.find(x=>x.id===id);
+ return s?s.name:'Alumno no encontrado';
 }
+
+function editStudent(id){
+ const s=db.students.find(x=>x.id===id);
+ if(!s)return;
+
+ const name=prompt('Nombre del alumno:',s.name);
+ if(name===null)return;
+ if(!name.trim()){alert('El nombre no puede quedar vacío.');return;}
+
+ const fee=prompt('Cuota mensual:',s.fee);
+ if(fee===null)return;
+ const discount=prompt('Descuento de beca en pesos:',s.discount||0);
+ if(discount===null)return;
+
+ const type=prompt(
+  'Tipo: normal, partial, full o courtesy',
+  s.feeType
+ );
+ if(type===null)return;
+ if(!['normal','partial','full','courtesy'].includes(type)){
+  alert('Tipo de cuota no válido.');return;
+ }
+
+ const schedule=prompt('Horario:',s.schedule);
+ if(schedule===null)return;
+
+ s.name=name.trim();
+ s.fee=Math.max(0,Number(fee)||0);
+ s.discount=type==='partial'
+  ?Math.min(s.fee,Math.max(0,Number(discount)||0)):0;
+ s.feeType=type;
+ s.schedule=schedule;
+
+ saveDB();
+ renderFamilies();
+}
+
+function changeStatus(id){
+ const s=db.students.find(x=>x.id===id);
+ if(!s)return;
+
+ const choice=prompt(
+  'Escribe exactamente: active, temporal o definitiva',
+  s.status
+ );
+ if(!['active','temporal','definitiva'].includes(choice))return;
+
+ s.status=choice;
+ saveDB();
+ renderFamilies();
+}
+
+function addAnotherStudent(familyId){
+ const f=db.families.find(x=>x.id===familyId);
+ if(!f)return;
+
+ const name=prompt('Nombre del nuevo alumno:');
+ if(!name||!name.trim())return;
+
+ const fee=Number(prompt('Cuota mensual:',500));
+ if(!Number.isFinite(fee)||fee<0)return;
+
+ const schedule=prompt(
+  'Horario: 4:30 a 5:30 pm, 5:30 a 6:30 pm, 6:30 a 7:30 pm o 8:30 a 9:45 am',
+  '4:30 a 5:30 pm'
+ );
+ if(!schedule)return;
+
+ db.students.push({
+  id:uid(),
+  familyId,
+  name:name.trim(),
+  birth:'',
+  schedule,
+  fee,
+  discount:0,
+  feeType:fee===0?'full':'normal',
+  status:'active',
+  created:todayISO()
+ });
+
+ saveDB();
+ renderFamilies();
+}
+
+function renderFamilies(){
+ const box=document.getElementById('familyList');
+ if(!db.families.length){
+  box.innerHTML='<p class="small">Todavía no hay familias registradas.</p>';
+  return;
+ }
+
+ box.innerHTML=db.families.map(f=>{
+  const kids=db.students.filter(s=>s.familyId===f.id);
+  return `<div class="item">
+   <b>${safe(f.responsible)}</b>
+   <div class="small">${safe(f.phone)}</div>
+   ${kids.map(s=>`
+    <div class="item">
+     <b>${safe(s.name)}</b><br>
+     ${safe(s.schedule)} · ${money(studentCharge(s))}
+     <br><span class="badge">${safe(s.feeType)} · ${safe(s.status)}</span>
+     <div class="actions">
+      <button onclick="editStudent('${s.id}')">Editar</button>
+      <button class="orange" onclick="changeStatus('${s.id}')">Estado</button>
+     </div>
+    </div>
+   `).join('')}
+   <button class="cyan" onclick="addAnotherStudent('${f.id}')">+ Agregar otro hijo</button>
+  </div>`;
+ }).join('');
+}
+
+function monthPayments(id,month){
+ return db.payments
+  .filter(p=>p.studentId===id&&p.month===month)
+  .reduce((sum,p)=>sum+Number(p.amount||0),0);
+}
+
 function monthInfo(s,month){
  const due=studentCharge(s);
  const paid=monthPayments(s.id,month);
  const remaining=Math.max(0,due-paid);
- const day=month===currentMonth()?new Date().getDate():1;
- const late=remaining>0&&day>=6?100:0;
- const suspended=remaining>0&&day>=12&&s.status==='active';
- let state;
+
+ const current=currentMonth();
+ const day=month<current
+  ?new Date(Number(month.slice(0,4)),Number(month.slice(5,7)),0).getDate()
+  :month>current?0:new Date().getDate();
+
+ const late=remaining>0&&day>=6&&due>0?100:0;
+ const suspended=remaining>0&&day>=12&&due>0;
+
+ let state='Pendiente';
+
  if(s.status==='temporal')state='Baja temporal';
  else if(s.status==='definitiva')state='Baja definitiva';
  else if(s.feeType==='full')state='Becado 100%';
  else if(s.feeType==='courtesy')state='Cortesía / sin pago';
  else if(remaining===0)state='Liquidado';
  else if(suspended)state='Suspendido por adeudo';
- else if(day>=6)state='Pendiente con recargo';
- else state='Pendiente';
- return {due,paid,remaining,late,total:remaining+late,state};
+ else if(late)state='Pendiente con recargo';
+
+ return {
+  due,paid,remaining,late,
+  total:remaining+late,
+  suspended: suspended&&s.status==='active',
+  state
+ };
 }
+
 function refreshPaymentStudents(){
  const sel=document.getElementById('payStudent');
- sel.innerHTML=db.students.map(s=>`<option value="${s.id}">${safe(s.name)} · ${safe(s.schedule)}</option>`).join('');
+ sel.innerHTML=db.students.map(s=>
+  `<option value="${s.id}">${safe(s.name)} · ${safe(s.schedule)}</option>`
+ ).join('');
+
  document.getElementById('payMonth').value=currentMonth();
- sel.onchange=showPayInfo;
- document.getElementById('payMonth').onchange=showPayInfo;
  showPayInfo();
- renderPaymentList();
 }
+
 function showPayInfo(){
  const s=db.students.find(x=>x.id===document.getElementById('payStudent').value);
- if(!s){document.getElementById('payInfo').innerHTML='No hay alumnos registrados.';return;}
- const m=document.getElementById('payMonth').value||currentMonth();
- const x=monthInfo(s,m);
- document.getElementById('payInfo').innerHTML=`<div class="item">Mensualidad: <b>${money(x.due)}</b><br>Pagado: ${money(x.paid)}<br>Saldo: ${money(x.remaining)}<br>Recargo: ${money(x.late)}<br><b>Total pendiente: ${money(x.total)}</b><hr><span class="badge">${safe(x.state)}</span></div>`;
+ const box=document.getElementById('payInfo');
+ if(!s){
+  box.innerHTML='No hay alumnos registrados.';
+  return;
+ }
+
+ const month=document.getElementById('payMonth').value||currentMonth();
+ const x=monthInfo(s,month);
+
+ let color=x.state==='Liquidado'?'paid':
+  x.state==='Becado 100%'||x.state==='Cortesía / sin pago'?'scholar':
+  x.suspended?'debt':'pending';
+
+ box.innerHTML=`<div class="item">
+  Mensualidad: <b>${money(x.due)}</b><br>
+  Pagado: ${money(x.paid)}<br>
+  Saldo: ${money(x.remaining)}<br>
+  Recargo: ${money(x.late)}<br>
+  <b>Total pendiente: ${money(x.total)}</b>
+  <hr><span class="badge ${color}">${safe(x.state)}</span>
+ </div>`;
 }
+
 function savePayment(){
  const id=document.getElementById('payStudent').value;
- const s=db.students.find(x=>x.id===id);if(!s){alert('Selecciona un alumno.');return;}
+ const s=db.students.find(x=>x.id===id);
+ if(!s){alert('Selecciona un alumno.');return;}
+
+ const month=document.getElementById('payMonth').value;
  const amount=Number(document.getElementById('payAmount').value);
- if(!Number.isFinite(amount)||amount<=0){alert('Escribe una cantidad válida.');return;}
- const month=document.getElementById('payMonth').value||currentMonth();
- db.payments.push({id:crypto.randomUUID(),studentId:id,month,amount,method:document.getElementById('payMethod').value,note:document.getElementById('payNote').value.trim(),date:todayISO()});
- if(month===currentMonth()&&monthInfo(s,month).remaining<=0&&s.status==='active')s.status='active';
+
+ if(!month){alert('Selecciona el mes.');return;}
+ if(!Number.isFinite(amount)||amount<=0){
+  alert('Escribe una cantidad válida.');return;
+ }
+
+ const info=monthInfo(s,month);
+ if(info.due===0){
+  alert('Este alumno está registrado con beca completa o cortesía. No tiene mensualidad por cobrar.');
+  return;
+ }
+ if(info.remaining===0){
+  alert('Esta mensualidad ya está liquidada.');
+  return;
+ }
+
+ db.payments.push({
+  id:uid(),
+  studentId:id,
+  month,
+  amount:Math.min(amount,info.total),
+  method:document.getElementById('payMethod').value,
+  note:document.getElementById('payNote').value.trim(),
+  date:todayISO()
+ });
+
  document.getElementById('payAmount').value='';
  document.getElementById('payNote').value='';
- saveDB();showPayInfo();renderPaymentList();
- alert('Pago registrado.');
+
+ saveDB();
+ showPayInfo();
+ renderPaymentList();
+ alert('Pago registrado correctamente.');
 }
+
 function renderPaymentList(){
  const box=document.getElementById('paymentList');
- box.innerHTML=db.payments.slice().reverse().slice(0,30).map(p=>`<div class="item">${safe(studentName(p.studentId))} · ${safe(p.month)}<br><b>${money(p.amount)}</b> · ${safe(p.method)} · ${safe(p.date)}</div>`).join('')||'<p class="small">Todavía no hay pagos registrados.</p>';
-}function trainingDates(month,schedule){
+ box.innerHTML=db.payments.slice().reverse().slice(0,50).map(p=>
+  `<div class="item">
+   <b>${safe(studentName(p.studentId))}</b> · ${safe(p.month)}<br>
+   ${money(p.amount)} · ${safe(p.method)} · ${safe(p.date)}
+  </div>`
+ ).join('')||'<p class="small">Todavía no hay pagos registrados.</p>';
+}function trainingDates(month){
  const [year,mo]=month.split('-').map(Number);
  const dates=[];
  const d=new Date(year,mo-1,1);
  while(d.getMonth()===mo-1){
-  if([1,3,5].includes(d.getDay()))dates.push(
-   `${year}-${String(mo).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-  );
+  if([1,3,5].includes(d.getDay())){
+   dates.push(
+    `${year}-${String(mo).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+   );
+  }
   d.setDate(d.getDate()+1);
  }
  return dates;
+}
+
+function syncDebtStatuses(){
+ const month=currentMonth();
+ const day=new Date().getDate();
+
+ db.students.forEach(s=>{
+  if(s.status==='temporal'||s.status==='definitiva')return;
+
+  const info=monthInfo(s,month);
+
+  if(info.due>0&&info.remaining>0&&day>=12){
+   s.status='suspendedDebt';
+  }else if(s.status==='suspendedDebt'&&info.remaining===0){
+   s.status='active';
+  }else if(s.status==='suspendedDebt'&&day<12){
+   s.status='active';
+  }
+ });
 }
 
 function loadAttendance(){
  const date=document.getElementById('attDate').value||todayISO();
  const schedule=document.getElementById('attSchedule').value;
  const box=document.getElementById('attendanceList');
- const students=db.students.filter(s=>s.schedule===schedule&&s.status==='active');
- if(!students.length){box.innerHTML='<p class="small">No hay alumnos activos en este horario.</p>';return;}
- box.innerHTML=`<p class="small">Fechas de entrenamiento del mes: ${trainingDates(date.slice(0,7),schedule).length}</p>`+
+
+ const students=db.students.filter(s=>
+  s.schedule===schedule&&
+  !['temporal','definitiva'].includes(s.status)
+ );
+
+ const dates=trainingDates(date.slice(0,7));
+
+ if(!dates.includes(date)){
+  box.innerHTML='<div class="notice">Esta fecha no corresponde a lunes, miércoles o viernes.</div>';
+  return;
+ }
+
+ if(!students.length){
+  box.innerHTML='No hay alumnos para este horario.';
+  return;
+ }
+
+ box.innerHTML=`<p class="small">${dates.length} entrenamientos programados este mes.</p>`+
  students.map(s=>{
   const old=db.attendance.find(a=>a.studentId===s.id&&a.date===date);
-  return `<div class="item"><b>${safe(s.name)}</b><div class="actions">
-  <button class="green" onclick="markAttendance('${s.id}','${date}','Presente')">Presente</button>
-  <button class="red" onclick="markAttendance('${s.id}','${date}','Falta')">Falta</button>
-  <button class="orange" onclick="markAttendance('${s.id}','${date}','Justificada')">Justificada</button>
-  </div><p class="small">Registro: ${old?safe(old.status):'Sin registrar'}</p></div>`;
+  return `<div class="item">
+   <b>${safe(s.name)}</b>
+   <div class="small">${s.status==='suspendedDebt'?'Suspendido por adeudo':''}</div>
+   <div class="actions">
+    <button class="green" onclick="markAttendance('${s.id}','${date}','Presente')">Presente</button>
+    <button class="red" onclick="markAttendance('${s.id}','${date}','Falta')">Falta</button>
+    <button class="orange" onclick="markAttendance('${s.id}','${date}','Justificada')">Justificada</button>
+   </div>
+   <p class="small">Registro: ${old?safe(old.status):'Sin registrar'}</p>
+  </div>`;
  }).join('');
 }
+
 function markAttendance(studentId,date,status){
  const old=db.attendance.find(a=>a.studentId===studentId&&a.date===date);
  if(old)old.status=status;
- else db.attendance.push({id:crypto.randomUUID(),studentId,date,status});
- saveDB();loadAttendance();
+ else db.attendance.push({id:uid(),studentId,date,status});
+ saveDB();
+ loadAttendance();
 }
 
 const evaluationOptions=[
- ['Excelente trabajo',2,'green'],['Muy buen trabajo',1,'green'],
- ['Excelente actitud',2,'green'],['Buena actitud',1,'green'],
- ['Buena disciplina',2,'green'],['Mucho esfuerzo',2,'green'],
- ['Trabajó en equipo',1,'green'],['Siguió indicaciones',1,'green'],
- ['Se distrajo',-1,'orange'],['Necesitó recordatorios',-1,'orange'],
- ['Platicó durante ejercicios',-1,'orange'],['Le faltó concentración',-1,'orange'],
- ['Platicó demasiado',-2,'red'],['No puso atención',-2,'red'],
- ['Estuvo jugando',-2,'red'],['Desobedeció indicaciones',-3,'red'],
- ['No quiso trabajar',-3,'red'],['Interrumpió el entrenamiento',-2,'red']
+ ['Excelente trabajo',2,'green'],
+ ['Muy buen trabajo',1,'green'],
+ ['Excelente actitud',2,'green'],
+ ['Buena actitud',1,'green'],
+ ['Buena disciplina',2,'green'],
+ ['Mucho esfuerzo',2,'green'],
+ ['Trabajó en equipo',1,'green'],
+ ['Siguió indicaciones',1,'green'],
+ ['Se distrajo',-1,'orange'],
+ ['Necesitó recordatorios',-1,'orange'],
+ ['Platicó durante ejercicios',-1,'orange'],
+ ['Le faltó concentración',-1,'orange'],
+ ['Platicó demasiado',-2,'red'],
+ ['No puso atención',-2,'red'],
+ ['Estuvo jugando',-2,'red'],
+ ['Desobedeció indicaciones',-3,'red'],
+ ['No quiso trabajar',-3,'red'],
+ ['Interrumpió el entrenamiento',-2,'red']
 ];
 
 function loadEvaluations(){
  const date=document.getElementById('evalDate').value||todayISO();
  const schedule=document.getElementById('evalSchedule').value;
  const box=document.getElementById('evaluationList');
- const students=db.students.filter(s=>s.schedule===schedule&&s.status==='active');
- if(!students.length){box.innerHTML='<p class="small">No hay alumnos activos en este horario.</p>';return;}
+
+ const dates=trainingDates(date.slice(0,7));
+ if(!dates.includes(date)){
+  box.innerHTML='<div class="notice">Selecciona un lunes, miércoles o viernes.</div>';
+  return;
+ }
+
+ const students=db.students.filter(s=>
+  s.schedule===schedule&&
+  !['temporal','definitiva'].includes(s.status)
+ );
+
+ if(!students.length){
+  box.innerHTML='No hay alumnos para este horario.';
+  return;
+ }
+
  box.innerHTML=students.map(s=>{
-  const records=db.evaluations.filter(e=>e.studentId===s.id&&e.date.slice(0,7)===date.slice(0,7));
-  const score=Math.max(0,Math.min(100,100+records.reduce((n,e)=>n+e.points,0)));
-  return `<div class="item"><b>${safe(s.name)}</b><br>
-  <span class="badge">Puntaje del mes: ${score}/100</span>
-  <p class="small">Selecciona cada observación que corresponda:</p>
-  <div class="actions">${evaluationOptions.map((o,i)=>`<button class="${o[2]}" onclick="addEvaluation('${s.id}','${date}',${i})">${safe(o[0])} (${o[1]>0?'+':''}${o[1]})</button>`).join('')}</div>
-  <p class="small">Observaciones registradas este mes: ${records.length}</p></div>`;
+  const records=db.evaluations.filter(e=>
+   e.studentId===s.id&&e.date.slice(0,7)===date.slice(0,7)
+  );
+  const score=Math.max(0,Math.min(100,
+   100+records.reduce((n,e)=>n+Number(e.points||0),0)
+  ));
+
+  const todayRecords=db.evaluations.filter(e=>
+   e.studentId===s.id&&e.date===date
+  );
+
+  return `<div class="item">
+   <b>${safe(s.name)}</b><br>
+   <span class="badge">Puntaje mensual: ${score}/100</span>
+   <p class="small">Observaciones de esta fecha: ${todayRecords.length}</p>
+   <div class="actions">
+    ${evaluationOptions.map((o,i)=>
+     `<button class="${o[2]}" onclick="addEvaluation('${s.id}','${date}',${i})">${safe(o[0])} (${o[1]>0?'+':''}${o[1]})</button>`
+    ).join('')}
+   </div>
+   <p class="small">${todayRecords.map(e=>safe(e.description)).join(' · ')}</p>
+  </div>`;
  }).join('');
 }
+
 function addEvaluation(studentId,date,index){
  const option=evaluationOptions[index];
  if(!option)return;
- db.evaluations.push({id:crypto.randomUUID(),studentId,date,description:option[0],points:option[1]});
- saveDB();loadEvaluations();
+
+ db.evaluations.push({
+  id:uid(),
+  studentId,
+  date,
+  description:option[0],
+  points:option[1]
+ });
+
+ saveDB();
+ loadEvaluations();
 }
 
 function calculateMVP(){
  const month=document.getElementById('mvpMonth').value||currentMonth();
  const box=document.getElementById('mvpResults');
- const active=db.students.filter(s=>s.status==='active');
- const ranked=active.map(s=>{
-  const records=db.evaluations.filter(e=>e.studentId===s.id&&e.date.startsWith(month));
-  const points=Math.max(0,Math.min(100,100+records.reduce((n,e)=>n+e.points,0)));
-  const positive=records.filter(e=>e.points>0).length;
-  const dates=trainingDates(month,s.schedule);
-  const attended=db.attendance.filter(a=>a.studentId===s.id&&a.date.startsWith(month)&&a.status==='Presente').length;
-  return {...s,points,positive,attended,scheduled:dates.length};
- }).sort((a,b)=>b.points-a.points||b.positive-a.positive||b.attended-a.attended);
- if(!ranked.length){box.innerHTML='No hay alumnos activos.';return;}
- box.innerHTML=`<h3>Los dos primeros del mes</h3>`+
- ranked.slice(0,2).map((s,i)=>`<div class="item"><b>${i===0?'🥇':'🥈'} ${safe(s.name)}</b><br>
- ${safe(s.schedule)}<br>Puntaje: ${s.points}/100<br>
- Reconocimientos positivos: ${s.positive}<br>Asistencias: ${s.attended}</div>`).join('')+
- `<hr><h3>Clasificación completa</h3>`+
- ranked.map((s,i)=>`<div class="item">${i+1}. ${safe(s.name)} · ${s.points}/100 · ${safe(s.schedule)}</div>`).join('');
+
+ const ranked=db.students
+  .filter(s=>!['temporal','definitiva'].includes(s.status))
+  .map(s=>{
+   const records=db.evaluations.filter(e=>
+    e.studentId===s.id&&e.date.startsWith(month)
+   );
+   const score=Math.max(0,Math.min(100,
+    100+records.reduce((n,e)=>n+Number(e.points||0),0)
+   ));
+   const positive=records.filter(e=>e.points>0).length;
+   const attended=db.attendance.filter(a=>
+    a.studentId===s.id&&a.date.startsWith(month)&&a.status==='Presente'
+   ).length;
+
+   return {...s,score,positive,attended};
+  })
+  .sort((a,b)=>
+   b.score-a.score||b.positive-a.positive||b.attended-a.attended
+  );
+
+ if(!ranked.length){
+  box.innerHTML='No hay alumnos registrados.';
+  return;
+ }
+
+ box.innerHTML='<h3>Clasificación del mes</h3>'+
+ ranked.map((s,i)=>`
+  <div class="item">
+   <b>${i===0?'🥇':i===1?'🥈':(i+1)+'.'} ${safe(s.name)}</b><br>
+   ${safe(s.schedule)}<br>
+   Puntaje: ${s.score}/100<br>
+   Reconocimientos: ${s.positive}<br>
+   Asistencias: ${s.attended}
+  </div>
+ `).join('');
 }
 
 function monthlyReport(){
- const month=document.getElementById('reportMonth').value||currentMonth();
- const active=db.students.filter(s=>s.status==='active');
- const paid=active.filter(s=>monthInfo(s,month).remaining===0&&studentCharge(s)>0).length;
- const owing=active.filter(s=>monthInfo(s,month).remaining>0).length;
- const attendance=db.attendance.filter(a=>a.date.startsWith(month));
- const present=attendance.filter(a=>a.status==='Presente').length;
- const total=active.reduce((n,s)=>n+studentCharge(s),0);
- const received=db.payments.filter(p=>p.month===month).reduce((n,p)=>n+p.amount,0);
+ const month=document.getElementById('reportMonth')?.value||currentMonth();
  const box=document.getElementById('reportResults');
  if(!box)return;
- box.innerHTML=`<div class="item"><b>${safe(monthName(month))}</b><hr>
- Alumnos activos: ${active.length}<br>
- Alumnos con mensualidad liquidada: ${paid}<br>
- Alumnos con saldo pendiente: ${owing}<br>
- Cuotas mensuales esperadas: ${money(total)}<br>
- Pagos registrados: ${money(received)}<br>
- Asistencias registradas: ${attendance.length}<br>
- Entrenamientos marcados como presentes: ${present}</div>`;
+
+ const active=db.students.filter(s=>s.status==='active');
+ const suspended=db.students.filter(s=>s.status==='suspendedDebt');
+ const owing=db.students.filter(s=>
+  !['temporal','definitiva'].includes(s.status)&&
+  monthInfo(s,month).remaining>0
+ );
+
+ const received=db.payments
+  .filter(p=>p.month===month)
+  .reduce((n,p)=>n+Number(p.amount||0),0);
+
+ const attendance=db.attendance.filter(a=>a.date.startsWith(month));
+ const present=attendance.filter(a=>a.status==='Presente').length;
+
+ box.innerHTML=`<div class="item">
+  <b>${safe(monthName(month))}</b><hr>
+  Alumnos activos: ${active.length}<br>
+  Suspendidos por adeudo: ${suspended.length}<br>
+  Con saldo pendiente: ${owing.length}<br>
+  Pagos recibidos: ${money(received)}<br>
+  Asistencias registradas: ${attendance.length}<br>
+  Presentes: ${present}<br>
+  Entrenamientos programados: ${trainingDates(month).length}
+ </div>`;
 }
 
 function backup(){
- const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+ const blob=new Blob([JSON.stringify(db,null,2)],{
+  type:'application/json'
+ });
  const url=URL.createObjectURL(blob);
  const a=document.createElement('a');
- a.href=url;a.download='respaldo-control-tiburones-'+todayISO()+'.json';
- a.click();URL.revokeObjectURL(url);
+ a.href=url;
+ a.download='respaldo-control-tiburones-'+todayISO()+'.json';
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ URL.revokeObjectURL(url);
 }
+
 function restoreBackup(){
  const file=document.getElementById('restoreFile').files[0];
- if(!file){alert('Selecciona primero un archivo JSON.');return;}
+ if(!file){
+  alert('Selecciona primero un archivo JSON.');
+  return;
+ }
+
  const reader=new FileReader();
  reader.onload=()=>{
   try{
    const data=JSON.parse(reader.result);
-   if(!data.families||!data.students||!data.payments)throw new Error();
-   if(!confirm('Esto reemplazará los datos actuales. ¿Continuar?'))return;
-   db={families:[],students:[],payments:[],attendance:[],evaluations:[],...data};
-   saveDB();alert('Respaldo restaurado correctamente.');show('home');
-  }catch(e){alert('El archivo no parece ser un respaldo válido de CONTROL TIBURONES.');}
+
+   if(!Array.isArray(data.families)||
+      !Array.isArray(data.students)||
+      !Array.isArray(data.payments)){
+    throw new Error('Formato incorrecto');
+   }
+
+   if(!confirm('Esto reemplazará la información actual. ¿Continuar?'))return;
+
+   db={
+    families:data.families,
+    students:data.students,
+    payments:data.payments,
+    attendance:Array.isArray(data.attendance)?data.attendance:[],
+    evaluations:Array.isArray(data.evaluations)?data.evaluations:[]
+   };
+
+   saveDB();
+   alert('Respaldo restaurado.');
+   show('home');
+  }catch(e){
+   alert('El archivo no es un respaldo válido.');
+  }
  };
  reader.readAsText(file);
 }
+
 function updateDashboard(){
- const active=db.students.filter(s=>s.status==='active').length;
- const pending=db.students.filter(s=>s.status==='active'&&monthInfo(s,currentMonth()).remaining>0).length;
- const paid=db.students.filter(s=>s.status==='active'&&studentCharge(s)>0&&monthInfo(s,currentMonth()).remaining===0).length;
  const box=document.getElementById('dashboard');
- if(box)box.innerHTML=`<div class="row"><div class="item">Alumnos activos<br><b>${active}</b></div><div class="item">Pendientes<br><b>${pending}</b></div><div class="item">Liquidado<br><b>${paid}</b></div></div><p class="small">${safe(monthName(currentMonth()))}</p>`;
+ if(!box)return;
+
+ const active=db.students.filter(s=>s.status==='active').length;
+ const suspended=db.students.filter(s=>s.status==='suspendedDebt').length;
+ const pending=db.students.filter(s=>
+  !['temporal','definitiva'].includes(s.status)&&
+  monthInfo(s,currentMonth()).remaining>0
+ ).length;
+
+ const paid=db.students.filter(s=>
+  s.status==='active'&&
+  studentCharge(s)>0&&
+  monthInfo(s,currentMonth()).remaining===0
+ ).length;
+
+ box.innerHTML=`<div class="grid">
+  <div class="stat">Activos<b>${active}</b></div>
+  <div class="stat">Pendientes<b>${pending}</b></div>
+  <div class="stat">Suspendidos<b>${suspended}</b></div>
+  <div class="stat">Liquidado<b>${paid}</b></div>
+ </div><p class="small">${safe(monthName(currentMonth()))}</p>`;
 }
 
 loadDB();
+syncDebtStatuses();
+
 document.getElementById('attDate').value=todayISO();
 document.getElementById('evalDate').value=todayISO();
 document.getElementById('mvpMonth').value=currentMonth();
 document.getElementById('reportMonth').value=currentMonth();
 document.getElementById('payMonth').value=currentMonth();
+
+saveDB();
 updateDashboard();
 </script>
 </body>
