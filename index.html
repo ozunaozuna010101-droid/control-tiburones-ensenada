@@ -1,86 +1,3 @@
-uarda una copia de tus datos periódicamente.</p>
- <label>Restaurar respaldo JSON</label><input type="file" id="restoreFile" accept=".json">
- <button class="btn secondary" onclick="restoreData()">Restaurar datos</button>
-</section>
-<footer>CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA 🦈</footer>
-</main>
-<script>
-const KEY="controlTiburonesV1";
-let db=JSON.parse(localStorage.getItem(KEY)||'{"students":[],"payments":[],"attendance":[],"evaluations":[],"mvps":[]}');
-function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
-function show(id){
- document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
- document.getElementById(id).classList.add("active");render();
-}
-function toggleForm(id){let f=document.getElementById(id);f.hidden=!f.hidden}
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function dateNow(){return new Date().toISOString().slice(0,10)}
-function addStudent(e){
- e.preventDefault();
- db.students.push({id:Date.now(),name:sname.value.trim(),age:sage.value,cat:scat.value,parent:parent.value.trim(),phone:phone.value, schedule:schedule.value,fee:Number(fee.value),active:true});
- e.target.reset();fee.value=500;toggleForm("familyForm");save();alert("Alumno registrado correctamente.");
-}
-function addPayment(e){
- e.preventDefault();
- db.payments.push({id:Date.now(),student:Number(payStudent.value),concept:concept.value,amount:Number(amount.value),date:payDate.value,method:method.value});
- toggleForm("paymentForm");e.target.reset();save();alert("Pago registrado.");
-}
-function saveAttendance(){
- let date=attDate.value,schedule=attSchedule.value;
- if(!date)return alert("Selecciona una fecha.");
- document.querySelectorAll("[data-att]").forEach(el=>{
-  let id=Number(el.dataset.att),status=document.querySelector('[name="att'+id+'"]:checked')?.value||"Falta";
-  db.attendance=db.attendance.filter(a=>!(a.student===id&&a.date===date&&a.schedule===schedule));
-  db.attendance.push({student:id,date,schedule,status});
- });
- save();alert("Asistencia guardada.");
-}
-function addEvaluation(e){
- e.preventDefault();
- db.evaluations.push({student:Number(evalStudent.value),date:dateNow(),tech:Number(tech.value),discipline:Number(discipline.value),effort:Number(effort.value),attitude:Number(attitude.value),note:observations.value});
- e.target.reset();save();alert("Evaluación guardada.");
-}
-function addMvp(){
- let id=Number(mvpStudent.value);if(!id)return alert("Primero registra alumnos.");
- let month=mvpMonth.value||dateNow().slice(0,7);
- if(db.mvps.some(m=>m.month===month&&m.place===mvpPlace.value))return alert("Ese reconocimiento ya está asignado este mes.");
- db.mvps.push({student:id,month,place:mvpPlace.value,note:mvpNote.value});
- save();alert("¡Reconocimiento MVP guardado!");
-}
-function removeStudent(id){
- if(!confirm("¿Dar de baja a este alumno? Se conservará su historial."))return;
- let s=db.students.find(x=>x.id===id);if(s)s.active=false;save();
-}
-function render(){
- document.getElementById("today").textContent=new Date().toLocaleDateString("es-MX",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
- totalStudents.textContent=db.students.filter(s=>s.active).length;
- totalFamilies.textContent=new Set(db.students.filter(s=>s.active).map(s=>s.parent)).size;
- totalPayments.textContent=db.payments.length;
- totalAttendance.textContent=db.attendance.filter(a=>a.date.slice(0,7)===dateNow().slice(0,7)&&a.status==="Presente").length;
- let active=db.students.filter(s=>s.active);
- let opts=active.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
- ["payStudent","evalStudent","mvpStudent"].forEach(id=>document.getElementById(id).innerHTML=opts||'<option value="">Sin alumnos registrados</option>');
- studentsList.innerHTML=active.length?active.map(s=>`<div class="item"><strong>${esc(s.name)}</strong> <span class="badge ok">${esc(s.cat)}</span><p>${s.age} años · ${esc(s.schedule)}</p><p>Responsable: ${esc(s.parent)} · Cuota: $${s.fee}</p><button class="btn secondary" onclick="alert('Teléfono: ${esc(s.phone)}')">Ver contacto</button><button class="btn danger" onclick="removeStudent(${s.id})">Dar de baja</button></div>`).join(""):'<div class="empty">Todavía no hay alumnos registrados.</div>';
- paymentsList.innerHTML=db.payments.slice().reverse().map(p=>{let s=db.students.find(x=>x.id===p.student);return `<div class="item"><strong>${esc(s?.name||"Alumno")}</strong><p>${esc(p.concept)} · $${p.amount} · ${esc(p.date)} · ${esc(p.method)}</p></div>`}).join("")||'<div class="empty">No hay pagos registrados.</div>';
- attendanceList.innerHTML=active.length?active.filter(s=>s.schedule===attSchedule.value).map(s=>`<div class="item" data-att data-id="${s.id}"><strong>${esc(s.name)}</strong><div style="margin-top:10px"><label><input style="width:auto" type="radio" name="att${s.id}" value="Presente" checked> Presente</label> <label><input style="width:auto" type="radio" name="att${s.id}" value="Falta"> Falta</label> <label><input style="width:auto" type="radio" name="att${s.id}" value="Justificada"> Justificada</label></div></div>`).join(""):'<div class="empty">No hay alumnos para este horario.</div>';
- evaluationsList.innerHTML=db.evaluations.slice().reverse().map(v=>{let s=db.students.find(x=>x.id===v.student);return `<div class="item"><strong>${esc(s?.name||"Alumno")}</strong><p>${v.date} · Técnica ${v.tech} · Disciplina ${v.discipline} · Esfuerzo ${v.effort} · Actitud ${v.attitude}</p><p>${esc(v.note)}</p></div>`}).join("")||'<div class="empty">Todavía no hay evaluaciones.</div>';
- mvpList.innerHTML=db.mvps.slice().reverse().map(m=>{let s=db.students.find(x=>x.id===m.student);return `<div class="item" style="border-color:#a87918"><strong style="color:#e4bb55">🏆 ${esc(m.place)} · ${esc(s?.name||"Alumno")}</strong><p>${m.month} · ${esc(m.note)}</p></div>`}).join("")||'<div class="empty">Todavía no hay reconocimientos.</div>';
- reportSummary.innerHTML=`<h3>Resumen de la academia</h3><p>Alumnos activos: ${active.length}</p><p>Pagos registrados: ${db.payments.length}</p><p>Registros de asistencia: ${db.attendance.length}</p><p>Evaluaciones: ${db.evaluations.length}</p><p>Reconocimientos MVP: ${db.mvps.length}</p>`;
-}
-function exportData(){
- let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download="respaldo-control-tiburones.json";a.click();URL.revokeObjectURL(url);
-}
-function restoreData(){
- let f=restoreFile.files[0];if(!f)return alert("Selecciona un archivo de respaldo.");
- let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!d.students||!d.payments)throw Error();db=d;save();alert("Respaldo restaurado.");}catch(e){alert("El archivo no es un respaldo válido.");}};r.readAsText(f);
-}
-attDate.value=dateNow();payDate.value=dateNow();mvpMonth.value=dateNow().slice(0,7);
-attSchedule.addEventListener("change",render);
-render();
-</script>
-</body>
-</html>
  <div class="section-head"><h2>📋 Asistencias</h2><button class="btn secondary" onclick="goHome()">← Inicio</button></div>
  <div class="card"><div class="formgrid"><div class="field"><label>Fecha</label><input type="date" id="attDate"></div><div class="field"><label>Horario</label><select id="attSchedule"><option>4:30–5:30 pm</option><option>5:30–6:30 pm</option><option>6:30–7:30 pm</option><option>8:30–9:45 am</option></select></div></div><button class="btn" onclick="loadAttendance()">Cargar lista</button></div>
  <div id="attendanceList" class="list"></div>
@@ -123,6 +40,28 @@ function editFamily(id){const f=db.families.find(x=>x.id===id);if(!f)return;docu
 function deleteFamily(id){if(!confirm('¿Dar de baja esta familia y sus alumnos? El historial de pagos y asistencias se conserva en los respaldos, pero dejarán de aparecer en las listas activas.'))return;const f=db.families.find(x=>x.id===id);if(f)f.children.forEach(c=>c.active=false);f.active=false;persist()}
 function renderFamilies(){const el=document.getElementById('familiesList');const fs=db.families.filter(f=>f.active!==false);if(!fs.length){el.innerHTML='<div class="empty">Todavía no hay familias registradas.</div>';return}el.innerHTML=fs.map(f=>`<article class="item"><h3>${esc(f.guardian)}</h3><p>📱 ${esc(f.phone||'Sin teléfono')}</p><p>${(f.children||[]).filter(c=>c.active!==false).map(c=>`<span class="tag">${esc(c.name)} · ${esc(c.category)} · ${esc(c.schedule)}</span>`).join('')}</p><p class="muted">${esc(f.notes||'')}</p><div class="actions"><button class="btn small" onclick="editFamily('${f.id}')">Editar</button><button class="btn danger small" onclick="deleteFamily('${f.id}')">Dar de baja</button></div></article>`).join('')}
  function fillStudentSelects(){const opts=students().filter(s=>s.active!==false).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.guardian)}</option>`).join('');['payStudent','evalStudent','mvp1','mvp2','mvp3'].forEach(id=>{const e=document.getElementById(id);const old=e.value;e.innerHTML='<option value="">Selecciona alumno</option>'+opts;if([...e.options].some(o=>o.value===old))e.value=old})}
+function savePayment(){const sid=document.getElementById('payStudent').value,month=document.getElementById('payMonth').value,amount=Number(document.getElementById('payAmount').value);if(!sid||!month||amount<=0){alert('Selecciona alumno, mes e importe válido.');return}const s=students().find(x=>x.id===sid);db.payments.unshift({id:uid(),studentId:sid,student:s.name,guardian:s.guardian,month,amount,method:document.getElementById('payMethod').value,note:document.getElementById('payNote').value,date:new Date().toISOString()});persist();document.getElementById('payNote').value='';alert('Pago registrado.')}
+function renderPayments(){const e=document.getElementById('paymentsList');e.innerHTML=db.payments.length?db.payments.map(p=>`<div class="item"><b>${esc(p.student)}</b><p>${esc(p.guardian)} · ${esc(p.month)} · $${p.amount}</p><p>${esc(p.method)} · ${new Date(p.date).toLocaleDateString('es-MX')}</p></div>`).join(''):'<div class="empty">Todavía no hay pagos registrados.</div>'}
+function loadAttendance(){const date=document.getElementById('attDate').value||new Date().toISOString().slice(0,10),time=document.getElementById('attSchedule').value;document.getElementById('attDate').value=date;const list=students().filter(s=>s.active!==false&&s.schedule===time);const e=document.getElementById('attendanceList');if(!list.length){e.innerHTML='<div class="empty">No hay alumnos activos en este horario.</div>';return}e.innerHTML=`<div class="card"><h3>${esc(time)} · ${date}</h3>${list.map(s=>{const old=db.attendance.find(a=>a.studentId===s.id&&a.date===date&&a.schedule===time);return `<div class="item"><b>${esc(s.name)}</b><div class="actions"><label><input type="radio" name="att_${s.id}" value="Presente" ${old?.status==='Presente'?'checked':''}> Presente</label><label><input type="radio" name="att_${s.id}" value="Falta" ${old?.status==='Falta'?'checked':''}> Falta</label><label><input type="radio" name="att_${s.id}" value="Justificada" ${old?.status==='Justificada'?'checked':''}> Justificada</label></div></div>`}).join('')}<button class="btn" onclick="saveAttendance('${date}','${time}')">Guardar asistencia</button></div>`}
+function saveAttendance(date,time){students().filter(s=>s.active!==false&&s.schedule===time).forEach(s=>{const chosen=document.querySelector(`input[name="att_${s.id}"]:checked`);if(!chosen)return;const a={studentId:s.id,student:s.name,date,schedule:time,status:chosen.value};const i=db.attendance.findIndex(x=>x.studentId===s.id&&x.date===date&&x.schedule===time);if(i>=0)db.attendance[i]=a;else db.attendance.push(a)});persist();alert('Asistencia guardada.')}
+function saveEvaluation(){const sid=document.getElementById('evalStudent').value;if(!sid){alert('Selecciona un alumno.');return}const s=students().find(x=>x.id===sid);db.evaluations.unshift({id:uid(),studentId:sid,student:s.name,date:document.getElementById('evalDate').value||new Date().toISOString().slice(0,10),technique:+document.getElementById('evalTechnique').value,attitude:+document.getElementById('evalAttitude').value,fitness:+document.getElementById('evalFitness').value,team:+document.getElementById('evalTeam').value,notes:document.getElementById('evalNotes').value});persist();document.getElementById('evalNotes').value='';alert('Evaluación guardada.')}
+function renderEvaluations(){const e=document.getElementById('evaluationsList');e.innerHTML=db.evaluations.length?db.evaluations.map(x=>`<div class="item"><b>${esc(x.student)}</b><p>${esc(x.date)} · Técnica ${x.technique}/5 · Actitud ${x.attitude}/5 · Condición ${x.fitness}/5 · Equipo ${x.team}/5</p><p>${esc(x.notes)}</p></div>`).join(''):'<div class="empty">Todavía no hay evaluaciones.</div>'}
+function saveMvp(){const month=document.getElementById('mvpMonth').value;if(!month){alert('Selecciona el mes.');return}const ids=['mvp1','mvp2','mvp3'].map(id=>document.getElementById(id).value).filter(Boolean);if(new Set(ids).size!==ids.length){alert('Selecciona tres alumnos diferentes.');return}const names=ids.map(id=>students().find(s=>s.id===id)?.name||'');db.mvps=db.mvps.filter(x=>x.month!==month);db.mvps.unshift({month,ids,names,note:document.getElementById('mvpNote').value});persist();alert('MVP mensual guardado.')}
+function renderMvp(){const el=document.getElementById('mvpList');el.innerHTML=db.mvps.length?db.mvps.map(m=>`<div class="item"><h3>🏆 ${esc(m.month)}</h3><p>${m.names.map((n,i)=>`${i+1}. ${esc(n)}`).join(' · ')}</p><p>${esc(m.note)}</p></div>`).join(''):'<div class="empty">Todavía no hay MVP registrados.</div>'}
+function refresh(){const active=students().filter(s=>s.active!==false);document.getElementById('statStudents').textContent=active.length;document.getElementById('statFamilies').textContent=db.families.filter(f=>f.active!==false).length;document.getElementById('statPayments').textContent=db.payments.length;const m=new Date().toISOString().slice(0,7);document.getElementById('statAttendance').textContent=db.attendance.filter(a=>a.date.startsWith(m)&&a.status==='Presente').length;renderFamilies();renderPayments();renderEvaluations();renderMvp();fillStudentSelects()}
+function renderReport(){document.getElementById('reportSummary').innerHTML=`<p>Familias activas: <b>${db.families.filter(f=>f.active!==false).length}</b></p><p>Alumnos activos: <b>${students().filter(s=>s.active!==false).length}</b></p><p>Pagos registrados: <b>${db.payments.length}</b></p><p>Registros de asistencia: <b>${db.attendance.length}</b></p><p>Evaluaciones: <b>${db.evaluations.length}</b></p><p>Meses con MVP: <b>${db.mvps.length}</b></p>`}
+function backup(){const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),data:db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='respaldo-control-tiburones-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+function restore(ev){const file=ev.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result),d=x.data||x;if(!Array.isArray(d.families)||!Array.isArray(d.payments))throw Error();if(!confirm('Restaurar reemplazará los datos actuales de esta app. ¿Continuar?'))return;db={families:d.families||[],payments:d.payments||[],attendance:d.attendance||[],evaluations:d.evaluations||[],mvps:d.mvps||[]};persist();alert('Respaldo restaurado.')}catch(e){alert('El archivo no parece ser un respaldo válido de Control Tiburones.')}};r.readAsText(file);ev.target.value=''}
+document.getElementById('today').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('payMonth').value=new Date().toISOString().slice(0,7);
+document.getElementById('mvpMonth').value=new Date().toISOString().slice(0,7);
+document.getElementById('attDate').value=new Date().toISOString().slice(0,10);
+document.getElementById('evalDate').value=new Date().toISOString().slice(0,10);
+refresh();
+</script>
+</body>
+</html>
+function fillStudentSelects(){const opts=students().filter(s=>s.active!==false).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.guardian)}</option>`).join('');['payStudent','evalStudent','mvp1','mvp2','mvp3'].forEach(id=>{const e=document.getElementById(id);const old=e.value;e.innerHTML='<option value="">Selecciona alumno</option>'+opts;if([...e.options].some(o=>o.value===old))e.value=old})}
 function savePayment(){const sid=document.getElementById('payStudent').value,month=document.getElementById('payMonth').value,amount=Number(document.getElementById('payAmount').value);if(!sid||!month||amount<=0){alert('Selecciona alumno, mes e importe válido.');return}const s=students().find(x=>x.id===sid);db.payments.unshift({id:uid(),studentId:sid,student:s.name,guardian:s.guardian,month,amount,method:document.getElementById('payMethod').value,note:document.getElementById('payNote').value,date:new Date().toISOString()});persist();document.getElementById('payNote').value='';alert('Pago registrado.')}
 function renderPayments(){const e=document.getElementById('paymentsList');e.innerHTML=db.payments.length?db.payments.map(p=>`<div class="item"><b>${esc(p.student)}</b><p>${esc(p.guardian)} · ${esc(p.month)} · $${p.amount}</p><p>${esc(p.method)} · ${new Date(p.date).toLocaleDateString('es-MX')}</p></div>`).join(''):'<div class="empty">Todavía no hay pagos registrados.</div>'}
 function loadAttendance(){const date=document.getElementById('attDate').value||new Date().toISOString().slice(0,10),time=document.getElementById('attSchedule').value;document.getElementById('attDate').value=date;const list=students().filter(s=>s.active!==false&&s.schedule===time);const e=document.getElementById('attendanceList');if(!list.length){e.innerHTML='<div class="empty">No hay alumnos activos en este horario.</div>';return}e.innerHTML=`<div class="card"><h3>${esc(time)} · ${date}</h3>${list.map(s=>{const old=db.attendance.find(a=>a.studentId===s.id&&a.date===date&&a.schedule===time);return `<div class="item"><b>${esc(s.name)}</b><div class="actions"><label><input type="radio" name="att_${s.id}" value="Presente" ${old?.status==='Presente'?'checked':''}> Presente</label><label><input type="radio" name="att_${s.id}" value="Falta" ${old?.status==='Falta'?'checked':''}> Falta</label><label><input type="radio" name="att_${s.id}" value="Justificada" ${old?.status==='Justificada'?'checked':''}> Justificada</label></div></div>`}).join('')}<button class="btn" onclick="saveAttendance('${date}','${time}')">Guardar asistencia</button></div>`}
