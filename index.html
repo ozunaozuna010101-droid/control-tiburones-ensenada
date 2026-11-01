@@ -3,363 +3,493 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#071426">
+<meta name="theme-color" content="#071629">
 <title>CONTROL TIBURONES</title>
 <style>
-:root{--bg:#071426;--panel:#10233d;--line:#294563;--blue:#1687ed;--green:#07866e;--red:#bd3042;--purple:#7047ad;--gold:#80601e;--cyan:#08788e;--white:#f5f8fc;--muted:#a9bbd0}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}header{padding:18px;background:linear-gradient(120deg,#102b4c,#071426);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:13px}.logo{width:58px;height:58px;border:3px solid var(--blue);border-radius:18px;display:grid;place-items:center;font-size:32px}header h1{font-size:20px;margin:0}header small{color:var(--muted)}.wrap{max-width:1000px;margin:auto;padding:20px 14px 40px}.muted{color:var(--muted)}.stats,.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.stat,.tile,.card,.item{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}.stat span{color:var(--muted)}.stat strong{display:block;font-size:30px;margin-top:8px}.tile{min-height:130px;color:white;text-align:left;border:0;cursor:pointer}.tile b{display:block;font-size:18px;margin:9px 0 5px}.tile small{color:#e0eaf5}.ico{font-size:28px}.blue{background:#185b9f}.green{background:#087b66}.red{background:#a92c3d}.purple{background:#67449d}.gold{background:#80601e}.cyan{background:#08788e}.section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 18px}.section-head h2{font-size:22px}.btn{border:0;border-radius:12px;padding:12px 15px;font-weight:bold;font-size:15px;color:white;background:var(--blue);cursor:pointer}.secondary{background:#263d59}.greenbtn{background:var(--green)}.danger{background:#9e2b3b}.goldbtn{background:var(--gold)}.small{padding:8px 10px;font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.hidden{display:none!important}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:7px;margin-bottom:11px}.full{grid-column:1/-1}label{color:#c3d2e3;font-size:14px}input,select,textarea{width:100%;background:#071426;color:white;border:1px solid #49617e;border-radius:10px;padding:12px;font-size:16px;min-height:46px}textarea{min-height:80px}.list{display:grid;gap:11px}.item p{margin:6px 0;color:var(--muted)}.tag{display:inline-block;background:#263d59;border-radius:18px;padding:5px 8px;font-size:12px;margin:3px}.childbox{background:#0b1b30;border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0}.empty{text-align:center;color:var(--muted);padding:28px}.notice{padding:12px;background:#102b48;border-radius:12px;color:#c9d9ea;font-size:14px;margin:14px 0}footer{text-align:center;color:#73869e;padding:28px 8px;font-size:13px}
-@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:480px){.formgrid{grid-template-columns:1fr}.full{grid-column:auto}}
+:root{
+--bg:#071629;--panel:#102641;--card:#142f4d;--line:#294967;
+--blue:#168cf0;--green:#12a875;--red:#d83d55;
+--yellow:#e6ad35;--purple:#8057d8;--cyan:#12a9c5;
+--white:#f5f8ff;--muted:#a9bfd4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,sans-serif}
+header{padding:18px;background:linear-gradient(120deg,#092342,#123b65);border-bottom:2px solid var(--line)}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:58px;height:58px;border:3px solid var(--blue);border-radius:17px;display:grid;place-items:center;font-size:34px}
+.brand h1{font-size:21px;margin:0;font-weight:900}
+.brand p{margin:5px 0 0;color:var(--muted);font-size:13px}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:14px}
+nav button{border:0;border-radius:13px;padding:13px 5px;color:white;font-weight:bold;font-size:13px;background:var(--card)}
+nav button:nth-child(1){background:#1765ad}
+nav button:nth-child(2){background:#087e68}
+nav button:nth-child(3){background:#a72d43}
+nav button:nth-child(4){background:#6843a6}
+nav button:nth-child(5){background:#89631c}
+nav button:nth-child(6){background:#087d91}
+main{padding:14px;max-width:850px;margin:auto}
+.page{display:none}.page.active{display:block}
+h2{font-size:23px;margin:12px 0 18px}
+h3{margin:0 0 15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:17px;margin-bottom:15px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:17px;border-radius:16px;background:#173553;border:1px solid var(--line)}
+.stat span{display:block;color:var(--muted);font-size:13px}
+.stat strong{font-size:30px;display:block;margin-top:7px}
+label{display:block;color:var(--muted);font-size:14px;margin:13px 0 7px}
+input,select,textarea{width:100%;padding:14px;background:#07182b;color:white;border:1px solid #45617d;border-radius:12px;font-size:16px}
+textarea{min-height:75px;resize:vertical}
+button{cursor:pointer}
+.btn{border:0;border-radius:12px;padding:13px 17px;background:var(--blue);color:white;font-weight:bold;font-size:15px;margin:8px 5px 5px 0}
+.green{background:var(--green)}.red{background:var(--red)}
+.yellow{background:#9b711b}.purple{background:var(--purple)}
+.gray{background:#29435f}.cyan{background:#087f98}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.item{background:#193754;border:1px solid var(--line);padding:14px;border-radius:13px;margin:9px 0}
+.item strong{display:block;margin-bottom:6px}
+.small{font-size:13px;color:var(--muted)}
+.pill{display:inline-block;padding:6px 10px;border-radius:20px;background:#294764;margin:3px;font-size:12px}
+.good{background:#125c43;color:#b9ffdc}
+.warn{background:#70551b;color:#fff0b6}
+.bad{background:#702b3a;color:#ffd5dc}
+.choice{border:2px solid transparent;border-radius:12px;padding:12px 9px;font-weight:bold;color:white;text-align:center;min-height:54px}
+.choice.selected{border-color:white;box-shadow:0 0 0 2px #168cf0}
+.choice.good{background:#146b49}.choice.warn{background:#866319}.choice.bad{background:#9d3044}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.progress{height:13px;background:#263d55;border-radius:20px;overflow:hidden;margin:8px 0}
+.progress div{height:100%;background:var(--green)}
+.hidden{display:none!important}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+footer{text-align:center;color:#829bb4;padding:25px;font-size:12px}
+@media(min-width:650px){nav{grid-template-columns:repeat(6,1fr)}.stats{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
-<header><div class="logo">🦈</div><div><h1>CONTROL TIBURONES</h1><small>ACADEMIA TIBURONES ENSENADA</small></div></header>
-<main class="wrap">
-<section id="home">
-<h2>¡Bienvenido, Coach!</h2><div class="muted" id="today"></div>
-<div class="stats">
-<div class="stat"><span>Alumnos activos</span><strong id="statStudents">0</strong></div>
-<div class="stat"><span>Familias</span><strong id="statFamilies">0</strong></div>
-<div class="stat"><span>Pagos registrados</span><strong id="statPayments">0</strong></div>
-<div class="stat"><span>Asistencias del mes</span><strong id="statAttendance">0</strong></div>
-</div>
-<h2>Administración de la academia</h2>
-<div class="grid">
-<button class="tile blue" onclick="openPage('familias')"><span class="ico">👨‍👩‍👧‍👦</span><b>FAMILIAS</b><small>Responsables y alumnos</small></button>
-<button class="tile green" onclick="openPage('pagos')"><span class="ico">💳</span><b>PAGOS</b><small>Mensualidades y adeudos</small></button>
-<button class="tile red" onclick="openPage('asistencias')"><span class="ico">📋</span><b>ASISTENCIAS</b><small>Control de entrenamientos</small></button>
-<button class="tile purple" onclick="openPage('evaluaciones')"><span class="ico">📈</span><b>EVALUACIONES</b><small>Progreso de jugadores</small></button>
-<button class="tile gold" onclick="openPage('mvp')"><span class="ico">🏆</span><b>MVP MENSUAL</b><small>Reconocimiento del mes</small></button>
-<button class="tile cyan" onclick="openPage('reportes')"><span class="ico">📊</span><b>REPORTES Y RESPALDO</b><small>Resumen y copias</small></button>
-</div>
-<div class="notice">La información se guarda en este navegador y dispositivo. Descarga respaldos periódicamente. No se sincroniza con otros teléfonos.</div>
-</section>
-<section id="familias" class="hidden">
-<div class="section-head"><h2>👨‍👩‍👧‍👦 Familias y alumnos</h2><button class="btn secondary" onclick="goHome()">← Inicio</button></div>
-<button class="btn" onclick="newFamily()">+ Registrar familia</button>
-<div id="familyForm" class="card hidden">
-<h3 id="familyTitle">Nueva familia</h3><input type="hidden" id="familyId">
-<div class="formgrid">
-<div class="field"><label>Nombre del responsable *</label><input id="guardian" placeholder="Nombre completo"></div>
-<div class="field"><label>Teléfono / WhatsApp</label><input id="phone" type="tel" placeholder="Teléfono"></div>
-<div class="field full"><label>Notas de la familia</label><textarea id="familyNotes"></textarea></div>
-</div>
-<h3>Alumnos de esta familia</h3><div id="childrenForms"></div>
-<div class="actions"><button class="btn secondary" onclick="addChild()">+ Agregar hijo/a</button><button class="btn greenbtn" onclick="saveFamily()">Guardar familia</button><button class="btn secondary" onclick="hide('familyForm')">Cancelar</button></div>
-</div>
-<div id="familiesList" class="list"></div>
-</section>
-<section id="pagos" class="hidden">
-<div class="section-head"><h2>💳 Pagos</h2><button class="btn secondary" onclick="goHome()">← Inicio</button></div>
-<div class="card"><h3>Registrar pago</h3><div class="formgrid">
-<div class="field"><label>Alumno</label><select id="payStudent"></select></div>
-<div class="field"><label>Mes que paga</label><input id="payMonth" type="month"></div>
-<div class="field"><label>Importe recibido ($)</label><input id="payAmount" type="number" value="500"></div>
-<div class="field"><label>Forma de pago</label><select id="payMethod"><option>Efectivo</option><option>Transferencia</option><option>Depósito</option><option>Otro</option></select></div>
-<div class="field full"><label>Nota / referencia</label><input id="payNote"></div>
-</div><button class="btn greenbtn" onclick="savePayment()">Registrar pago</button></div>
-<h3>Historial de pagos</h3><div id="paymentsList" class="list"></div>
-</section><section id="asistencias" class="hidden">
-<div class="section-head"><h2>📋 Asistencias</h2><button class="btn secondary" onclick="goHome()">← Inicio</button></div>
-<div class="card"><div class="formgrid">
-<div class="field"><label>Fecha</label><input type="date" id="attDate"></div>
-<div class="field"><label>Horario</label><select id="attSchedule"><option>4:30–5:30 pm</option><option>5:30–6:30 pm</option><option>6:30–7:30 pm</option><option>8:30–9:45 am</option></select></div>
-</div><button class="btn" onclick="loadAttendance()">Cargar lista</button></div>
-<div id="attendanceList" class="list"></div>
-</section>
-
-<section id="evaluaciones" class="hidden">
-<div class="section-head"><h2>📈 Evaluaciones</h2><button class="btn secondary" onclick="goHome()">← Inicio</button></div>
-<div class="card"><div class="formgrid">
-<div class="field"><label>Alumno</label><select id="evalStudent"></select></div>
-<div class="field"><label>Fecha</label><input type="date" id="evalDate"></div>
-<div class="field"><label>Técnica (1 a 5)</label><select id="evalTechnique"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="field"><label>Actitud (1 a 5)</label><select id="evalAttitude"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="field"><label>Condición física (1 a 5)</label><select id="evalFitness"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="field"><label>Trabajo en equipo (1 a 5)</label><select id="evalTeam"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-<div class="field full"><label>Observaciones del coach</label><textarea id="evalNotes"></textarea></div>
-</div><button class="btn" onclick="saveEvaluation()">Guardar evaluación</button></div>
-<div id="evaluationsList" class="list"></div>
-</section>
-
-<section id="mvp" class="hidden">
-<div class="section-head"><h2>🏆 MVP mensual</h2><button class="btn secondary" onclick="goHome()">← Inicio</button></div>
-<div class="card">
-<div class="field"><label>Mes</label><input type="month" id="mvpMonth"></div>
-<div class="field"><label>MVP 1</label><select id="mvp1"></select></div>
-<div class="field"><label>MVP 2</label><select id="mvp2"></select></div>
-<div class="field"><label>MVP 3</label><select id="mvp3"></select></div>
-<div class="field"><label>Motivo del reconocimiento</label><textarea id="mvpNote"></textarea></div>
-<button class="btn goldbtn" onclick="saveMvp()">Guardar MVP del mes</button>
-</div><div id="mvpList" class="list"></div>
-</section>
-
-<section id="reportes" class="hidden">
-<div class="section-head"><h2>📊 Reportes y respaldo</h2><button class="btn secondary" onclick="goHome()">← Inicio</button></div>
-<div class="card"><h3>Respaldo de información</h3>
-<p class="muted">Descarga una copia de seguridad de tus familias, alumnos, pagos, asistencias, evaluaciones y MVP.</p>
-<div class="actions"><button class="btn" onclick="backup()">⬇ Descargar respaldo</button><label class="btn secondary" for="restoreFile">Restaurar respaldo</label><input class="hidden" id="restoreFile" type="file" accept="application/json" onchange="restore(event)"></div>
-</div>
-<div class="card"><h3>Resumen general</h3><div id="reportSummary"></div></div>
-</section>
-<footer>CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA 🦈</footer>
-</main>
-
-<script>
-const KEY='controlTiburonesLocalV2';
-let db=loadDB();
-
-function loadDB(){
- try{return JSON.parse(localStorage.getItem(KEY))||{families:[],payments:[],attendance:[],evaluations:[],mvps:[]}}
- catch(e){return {families:[],payments:[],attendance:[],evaluations:[],mvps:[]}}
-}
-function persist(){localStorage.setItem(KEY,JSON.stringify(db));refresh()}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function students(){return db.families.flatMap(f=>(f.children||[]).map(c=>({...c,familyId:f.id,guardian:f.guardian,phone:f.phone})))}
-function openPage(id){
- document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
- document.getElementById(id).classList.remove('hidden');
- refresh();
- if(id==='asistencias')loadAttendance();
- if(id==='reportes')renderReport();
-}
-function goHome(){openPage('home')}
-function show(id){document.getElementById(id).classList.remove('hidden')}
-function hide(id){document.getElementById(id).classList.add('hidden')}
-
-function newFamily(){
- document.getElementById('familyId').value='';
- document.getElementById('guardian').value='';
- document.getElementById('phone').value='';
- document.getElementById('familyNotes').value='';
- document.getElementById('childrenForms').innerHTML='';
- document.getElementById('familyTitle').textContent='Nueva familia';
- addChild();
- show('familyForm');
-}
-function addChild(c={}){
- const d=document.createElement('div');
- d.className='childbox';
- d.innerHTML=`
- <div class="formgrid">
- <div class="field"><label>Nombre completo del alumno *</label><input class="cname" placeholder="Nombre del hijo/a" value="${esc(c.name||'')}"></div>
- <div class="field"><label>Edad</label><input class="cage" type="number" min="3" max="25" value="${esc(c.age||'')}"></div>
- <div class="field"><label>Categoría</label><select class="ccat">
- <option ${c.category==='Mini'?'selected':''}>Mini</option>
- <option ${c.category==='Inicial'?'selected':''}>Inicial</option>
- <option ${c.category==='Infantil'?'selected':''}>Infantil</option>
- <option ${c.category==='Juvenil'?'selected':''}>Juvenil</option>
- </select></div>
- <div class="field"><label>Horario</label><select class="ctime">
- ${['4:30–5:30 pm','5:30–6:30 pm','6:30–7:30 pm','8:30–9:45 am'].map(x=>`<option ${c.schedule===x?'selected':''}>${x}</option>`).join('')}
- </select></div>
- <div class="field"><label>Cuota mensual ($)</label><input class="cfee" type="number" value="${esc(c.fee??500)}"></div>
- <div class="field"><label>Beca / descuento ($)</label><input class="cscholar" type="number" min="0" value="${esc(c.scholarship??0)}"></div>
+<header>
+ <div class="brand">
+  <div class="logo">🦈</div>
+  <div><h1>CONTROL TIBURONES</h1>
+  <p>ACADEMIA TIBURONES ENSENADA</p></div>
  </div>
- <button class="btn danger small" type="button" onclick="this.parentElement.remove()">Quitar alumno</button>`;
- d.dataset.childid=c.id||'';
- document.getElementById('childrenForms').appendChild(d);
+</header>
+<nav>
+ <button onclick="go('inicio')">🏠 Inicio</button>
+ <button onclick="go('familias')">👨‍👩‍👧 Familias</button>
+ <button onclick="go('pagos')">💳 Pagos</button>
+ <button onclick="go('asistencia')">📋 Asistencia</button>
+ <button onclick="go('evaluaciones')">⭐ Evaluaciones</button>
+ <button onclick="go('mvp')">🏆 MVP / Reportes</button>
+</nav>
+<main>
+<section id="inicio" class="page active">
+ <h2>¡Bienvenido, Coach!</h2>
+ <p id="fechaHoy" class="small"></p>
+ <div class="stats">
+  <div class="stat"><span>Alumnos activos</span><strong id="totalAlumnos">0</strong></div>
+  <div class="stat"><span>Familias</span><strong id="totalFamilias">0</strong></div>
+  <div class="stat"><span>Pagos registrados</span><strong id="totalPagos">0</strong></div>
+  <div class="stat"><span>Evaluaciones del mes</span><strong id="totalEvaluaciones">0</strong></div>
+ </div>
+ <h2>Administración de la academia</h2>
+ <div class="grid2">
+  <button class="btn" onclick="go('familias')">👨‍👩‍👧 Familias y alumnos</button>
+  <button class="btn green" onclick="go('pagos')">💳 Registrar pago</button>
+  <button class="btn red" onclick="go('asistencia')">📋 Pasar asistencia</button>
+  <button class="btn purple" onclick="go('evaluaciones')">⭐ Evaluar jugadores</button>
+  <button class="btn yellow" onclick="go('mvp')">🏆 Ver MVP mensual</button>
+  <button class="btn cyan" onclick="go('respaldo')">📊 Reportes y respaldo</button>
+ </div>
+ <div class="card small">Tus datos se guardan en este navegador y dispositivo. Descarga respaldos periódicamente. No se sincronizan automáticamente con otros teléfonos.</div>
+</section>
+
+<section id="familias" class="page">
+ <h2>👨‍👩‍👧 Familias y alumnos</h2>
+ <div class="card">
+  <h3>Registrar familia</h3>
+  <label>Nombre del responsable *</label>
+  <input id="responsable" placeholder="Nombre completo">
+  <label>Teléfono / WhatsApp</label>
+  <input id="telefono" placeholder="Teléfono">
+  <label>Notas de la familia</label>
+  <textarea id="notasFamilia"></textarea>
+  <hr>
+  <h3>Alumnos de esta familia</h3>
+  <div id="hijosForm"></div>
+  <button class="btn gray" onclick="addChildForm()">＋ Agregar hijo/a</button>
+  <button class="btn green" onclick="saveFamily()">Guardar familia</button>
+ </div>
+ <div id="listaFamilias"></div>
+</section><section id="pagos" class="page">
+ <h2>💳 Control de pagos</h2>
+ <div class="card">
+  <h3>Registrar pago</h3>
+  <label>Selecciona alumno</label>
+  <select id="pAlumno" onchange="paymentFee()"></select>
+  <label>Mes que paga</label>
+  <input type="month" id="pMes">
+  <label>Cuota correspondiente ($)</label>
+  <input type="number" id="pCuota" readonly>
+  <label>Importe recibido ($)</label>
+  <input type="number" id="pImporte" min="0" placeholder="Cantidad recibida">
+  <label>Forma de pago</label>
+  <select id="pForma">
+   <option>Efectivo</option>
+   <option>Transferencia</option>
+   <option>Depósito</option>
+   <option>Otro</option>
+  </select>
+  <label>Nota o referencia</label>
+  <input id="pNota" placeholder="Opcional">
+  <button class="btn green" onclick="savePayment()">Registrar pago</button>
+ </div>
+ <div class="card">
+  <h3>Estado de mensualidades</h3>
+  <div id="estadoPagos"></div>
+ </div>
+ <h3>Historial de pagos</h3>
+ <div id="listaPagos"></div>
+</section>
+
+<section id="asistencia" class="page">
+ <h2>📋 Asistencia por entrenamiento</h2>
+ <div class="card">
+  <label>Fecha del entrenamiento</label>
+  <input type="date" id="attFecha">
+  <label>Horario</label>
+  <select id="attHorario" onchange="renderAttendance()">
+   <option>4:30–5:30 pm</option>
+   <option>5:30–6:30 pm</option>
+   <option>6:30–7:30 pm</option>
+   <option>8:30–9:45 am</option>
+  </select>
+  <p class="small">Verde: asistió. Rojo: no asistió. Amarillo: falta justificada.</p>
+  <div id="attLista"></div>
+  <button class="btn green" onclick="saveAttendance()">Guardar asistencia</button>
+ </div>
+ <div id="attHistorial"></div>
+</section>
+
+<section id="evaluaciones" class="page">
+ <h2>⭐ Evaluación rápida del jugador</h2>
+ <div class="card">
+  <label>Fecha de entrenamiento</label>
+  <input type="date" id="evalFecha">
+  <label>Horario</label>
+  <select id="evalHorario" onchange="renderEvalList()">
+   <option>4:30–5:30 pm</option>
+   <option>5:30–6:30 pm</option>
+   <option>6:30–7:30 pm</option>
+   <option>8:30–9:45 am</option>
+  </select>
+  <h3>Jugadores del horario</h3>
+  <div id="evalLista"></div>
+ </div>
+ <div id="evalPanel" class="card hidden">
+  <h3 id="evalNombre"></h3>
+  <p class="small">Selecciona todos los botones que correspondan a este entrenamiento.</p>
+  <div class="row">
+   <div class="stat">
+    <span>Puntuación mensual</span>
+    <strong id="evalPuntos">100%</strong>
+   </div>
+   <div class="stat">
+    <span>Resultado de hoy</span>
+    <strong id="evalHoy">100%</strong>
+   </div>
+  </div>
+  <div class="progress"><div id="evalBarra" style="width:100%"></div></div>
+  <h3 style="color:#49d58c">🟢 Reconocimientos</h3>
+  <div id="positivos" class="grid2"></div>
+  <hr>
+  <h3 style="color:#f2bd48">🟡 Por mejorar</h3>
+  <div id="amarillos" class="grid2"></div>
+  <hr>
+  <h3 style="color:#ff6c80">🔴 Conductas negativas</h3>
+  <div id="negativos" class="grid2"></div>
+  <label>Observación adicional (opcional)</label>
+  <textarea id="evalNota" placeholder="Escribe alguna observación importante..."></textarea>
+  <button class="btn green" onclick="saveEvaluation()">Guardar y siguiente jugador</button>
+  <button class="btn gray" onclick="closeEval()">Cancelar</button>
+ </div>
+ <h3>Evaluaciones registradas</h3>
+ <div id="evalHistorial"></div>
+</section>
+
+<section id="mvp" class="page">
+ <h2>🏆 MVP mensual</h2>
+ <div class="card">
+  <label>Mes a consultar</label>
+  <input type="month" id="mvpMes">
+  <button class="btn yellow" onclick="renderMVP()">Calcular clasificación</button>
+  <p class="small">La clasificación considera evaluaciones, conducta, progreso y asistencia registrada. Una falta justificada no resta puntos de conducta.</p>
+ </div>
+ <div id="mvpResultados"></div>
+</section>
+
+<section id="respaldo" class="page">
+ <h2>📊 Reportes y respaldo</h2>
+ <div class="card">
+  <h3>Respaldo de información</h3>
+  <p class="small">Descarga una copia de seguridad de tus familias, alumnos, pagos, asistencias y evaluaciones.</p>
+  <button class="btn" onclick="backup()">⬇ Descargar respaldo JSON</button>
+  <label>Restaurar respaldo JSON</label>
+  <input type="file" accept=".json,application/json" onchange="restore(event)">
+ </div>
+ <div class="card">
+  <h3>Resumen general</h3>
+  <div id="resumen"></div>
+ </div>
+</section>
+
+<footer>CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA 🦈</footer>
+</main><script>
+const KEY="controlTiburonesNuevoV2";
+let db=JSON.parse(localStorage.getItem(KEY)||'{"families":[],"payments":[],"attendance":[],"evaluations":[]}');
+let selectedChild=null;
+let selectedPositive=[];
+let selectedYellow=[];
+let selectedNegative=[];
+
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>new Date().toISOString().slice(0,10);
+const money=n=>"$"+Number(n||0).toLocaleString("es-MX");
+const children=()=>db.families.flatMap(f=>(f.children||[]).filter(c=>c.active!==false).map(c=>({...c,family:f.responsible,phone:f.phone})));
+function persist(){localStorage.setItem(KEY,JSON.stringify(db));refresh()}
+function go(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ $(id).classList.add("active");
+ window.scrollTo(0,0);
+ if(id==="pagos"){fillStudents("pAlumno");paymentFee();renderPayments()}
+ if(id==="asistencia"){renderAttendance();renderAttHistory()}
+ if(id==="evaluaciones")renderEvalList();
+ if(id==="mvp")renderMVP();
+ if(id==="respaldo")renderReports();
+}
+function addChildForm(){
+ const div=document.createElement("div");
+ div.className="item childForm";
+ div.innerHTML=`
+ <label>Nombre completo del alumno *</label><input class="cName" placeholder="Nombre del hijo/a">
+ <label>Edad</label><input class="cAge" type="number" min="3" max="25">
+ <label>Categoría</label><select class="cCat"><option>Mini</option><option>Inicial</option><option>Infantil</option><option>Juvenil</option></select>
+ <label>Horario</label><select class="cSchedule"><option>4:30–5:30 pm</option><option>5:30–6:30 pm</option><option>6:30–7:30 pm</option><option>8:30–9:45 am</option></select>
+ <label>Cuota mensual ($)</label><input class="cFee" type="number" value="500" min="0">
+ <label>Beca / descuento ($)</label><input class="cScholar" type="number" value="0" min="0">
+ <button class="btn red" onclick="this.parentElement.remove()">Quitar alumno</button>`;
+ $("hijosForm").appendChild(div);
 }
 function saveFamily(){
- const id=document.getElementById('familyId').value;
- const guardian=document.getElementById('guardian').value.trim();
- if(!guardian){alert('Escribe el nombre del responsable.');return}
- const children=[...document.querySelectorAll('.childbox')].map(b=>({
- id:b.dataset.childid||uid(),
- name:b.querySelector('.cname').value.trim(),
- age:Number(b.querySelector('.cage').value)||'',
- category:b.querySelector('.ccat').value,
- schedule:b.querySelector('.ctime').value,
- fee:Number(b.querySelector('.cfee').value)||500,
- scholarship:Number(b.querySelector('.cscholar').value)||0,
+ const responsible=$("responsable").value.trim();
+ if(!responsible){alert("Escribe el nombre del responsable.");return}
+ const forms=[...document.querySelectorAll(".childForm")];
+ if(!forms.length){alert("Agrega por lo menos un alumno.");return}
+ const kids=forms.map(x=>({
+ id:uid(),name:x.querySelector(".cName").value.trim(),
+ age:Number(x.querySelector(".cAge").value||0),
+ category:x.querySelector(".cCat").value,
+ schedule:x.querySelector(".cSchedule").value,
+ fee:Number(x.querySelector(".cFee").value||0),
+ scholarship:Number(x.querySelector(".cScholar").value||0),
  active:true
- })).filter(c=>c.name);
- if(!children.length){alert('Agrega al menos un alumno.');return}
- const f={id:id||uid(),guardian,phone:document.getElementById('phone').value.trim(),notes:document.getElementById('familyNotes').value.trim(),children,active:true};
- const i=db.families.findIndex(x=>x.id===f.id);
- if(i>=0)db.families[i]=f;else db.families.push(f);
- hide('familyForm');persist();renderFamilies();
- alert('Familia guardada correctamente.');
-}function editFamily(id){
- const f=db.families.find(x=>x.id===id);
- if(!f)return;
- document.getElementById('familyId').value=f.id;
- document.getElementById('guardian').value=f.guardian;
- document.getElementById('phone').value=f.phone||'';
- document.getElementById('familyNotes').value=f.notes||'';
- document.getElementById('childrenForms').innerHTML='';
- f.children.forEach(c=>addChild(c));
- document.getElementById('familyTitle').textContent='Editar familia';
- show('familyForm');
- window.scrollTo(0,0);
-}
-function deleteFamily(id){
- if(!confirm('¿Dar de baja esta familia?'))return;
- const f=db.families.find(x=>x.id===id);
- if(f)f.active=false;
- persist();
+ }));
+ if(kids.some(c=>!c.name)){alert("Escribe el nombre de todos los alumnos.");return}
+ db.families.push({id:uid(),responsible,phone:$("telefono").value.trim(),notes:$("notasFamilia").value.trim(),children:kids,active:true});
+ $("responsable").value=$("telefono").value=$("notasFamilia").value="";
+ $("hijosForm").innerHTML="";
+ addChildForm();persist();alert("Familia guardada correctamente.");
 }
 function renderFamilies(){
- const el=document.getElementById('familiesList');
- const fs=db.families.filter(f=>f.active!==false);
- if(!fs.length){el.innerHTML='<div class="empty">Todavía no hay familias registradas.</div>';return}
- el.innerHTML=fs.map(f=>`
- <article class="item">
- <h3>👨‍👩‍👧‍👦 ${esc(f.guardian)}</h3>
- <p>📱 ${esc(f.phone||'Sin teléfono')}</p>
- <p>${(f.children||[]).map(c=>`<span class="tag">${esc(c.name)} · ${esc(c.category)} · ${esc(c.schedule)}</span>`).join('')}</p>
- <p class="muted">${esc(f.notes||'')}</p>
- <div class="actions">
- <button class="btn small" onclick="editFamily('${f.id}')">Editar</button>
- <button class="btn danger small" onclick="deleteFamily('${f.id}')">Dar de baja</button>
- </div></article>`).join('');
+ $("listaFamilias").innerHTML=db.families.filter(f=>f.active!==false).map(f=>`
+ <div class="item"><strong>👨‍👩‍👧 ${esc(f.responsible)}</strong>
+ <div class="small">📱 ${esc(f.phone||"Sin teléfono")}</div>
+ ${(f.children||[]).filter(c=>c.active!==false).map(c=>`<div class="pill">${esc(c.name)} · ${esc(c.category)} · ${esc(c.schedule)} · ${money(c.fee-(c.scholarship||0))}</div>`).join("")}
+ <button class="btn gray" onclick="editFamily('${f.id}')">Editar</button>
+ <button class="btn red" onclick="removeFamily('${f.id}')">Dar de baja</button></div>`).join("")||'<p class="small">Todavía no hay familias registradas.</p>';
 }
-function fillStudentSelects(){
- const opts=students().filter(s=>s.active!==false).map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.guardian)}</option>`).join('');
- ['payStudent','evalStudent','mvp1','mvp2','mvp3'].forEach(id=>{
- const e=document.getElementById(id),old=e.value;
- e.innerHTML='<option value="">Selecciona alumno</option>'+opts;
- if([...e.options].some(o=>o.value===old))e.value=old;
+function editFamily(id){
+ const f=db.families.find(x=>x.id===id);if(!f)return;
+ const name=prompt("Nombre del responsable:",f.responsible);if(name===null)return;
+ const phone=prompt("Teléfono:",f.phone||"");if(phone===null)return;
+ f.responsible=name.trim()||f.responsible;f.phone=phone;
+ (f.children||[]).forEach(c=>{
+  const v=prompt("Cuota mensual de "+c.name,c.fee);if(v!==null&&v.trim()!=="")c.fee=Math.max(0,Number(v));
+  const b=prompt("Beca o descuento de "+c.name,c.scholarship||0);if(b!==null&&b.trim()!=="")c.scholarship=Math.max(0,Number(b));
  });
+ persist();
+}
+function removeFamily(id){
+ if(!confirm("¿Dar de baja esta familia y sus alumnos?"))return;
+ const f=db.families.find(x=>x.id===id);if(f){f.active=false;(f.children||[]).forEach(c=>c.active=false)}
+ persist();
+}
+function fillStudents(id){
+ const list=children();$(id).innerHTML='<option value="">Selecciona alumno</option>'+list.map(c=>`<option value="${c.id}">${esc(c.name)} — ${esc(c.family)}</option>`).join("");
+}
+function findChild(id){return children().find(c=>c.id===id)}
+function paymentFee(){
+ const c=findChild($("pAlumno").value);
+ $("pCuota").value=c?Math.max(0,c.fee-(c.scholarship||0)):0;
+ if(c)$("pImporte").value=Math.max(0,c.fee-(c.scholarship||0));
 }
 function savePayment(){
- const sid=document.getElementById('payStudent').value;
- const month=document.getElementById('payMonth').value;
- const amount=Number(document.getElementById('payAmount').value);
- if(!sid||!month||amount<=0){alert('Selecciona alumno, mes e importe válido.');return}
- const s=students().find(x=>x.id===sid);
- db.payments.unshift({id:uid(),studentId:sid,student:s.name,guardian:s.guardian,month,amount,method:document.getElementById('payMethod').value,note:document.getElementById('payNote').value,date:new Date().toISOString()});
- persist();
- document.getElementById('payNote').value='';
- alert('Pago registrado correctamente.');
+ const c=findChild($("pAlumno").value),month=$("pMes").value,amount=Number($("pImporte").value);
+ if(!c||!month||!Number.isFinite(amount)||amount<=0){alert("Selecciona alumno, mes e importe válido.");return}
+ db.payments.push({id:uid(),studentId:c.id,student:c.name,month,fee:Math.max(0,c.fee-(c.scholarship||0)),amount,method:$("pForma").value,note:$("pNota").value,date:today()});
+ $("pImporte").value="";$("pNota").value="";persist();alert("Pago registrado.");
 }
+function paid(c,month){return db.payments.filter(p=>p.studentId===c.id&&p.month===month).reduce((s,p)=>s+Number(p.amount),0)}
 function renderPayments(){
- const e=document.getElementById('paymentsList');
- e.innerHTML=db.payments.length?db.payments.map(p=>`
- <div class="item"><b>${esc(p.student)}</b>
- <p>${esc(p.guardian)} · ${esc(p.month)} · <b>$${p.amount}</b></p>
- <p>${esc(p.method)} · ${new Date(p.date).toLocaleDateString('es-MX')}</p>
- <p>${esc(p.note||'')}</p></div>`).join(''):'<div class="empty">Todavía no hay pagos registrados.</div>';
+ const month=today().slice(0,7);
+ $("estadoPagos").innerHTML=children().map(c=>{
+ const fee=Math.max(0,c.fee-(c.scholarship||0)),sum=paid(c,month),state=sum>=fee?"Liquidado":sum>0?"Abono":"Pendiente";
+ const cls=state==="Liquidado"?"good":sum>0?"warn":"bad";
+ return `<div class="item"><strong>${esc(c.name)}</strong><span class="pill ${cls}">${state}</span><div class="small">Cuota ${money(fee)} · Pagado ${money(sum)} · Saldo ${money(Math.max(0,fee-sum))}</div></div>`;
+ }).join("")||'<p class="small">Registra primero a tus alumnos.</p>';
+ $("listaPagos").innerHTML=[...db.payments].reverse().map(p=>`<div class="item"><strong>${esc(p.student)}</strong><span class="pill good">${money(p.amount)}</span><div class="small">${p.month} · ${esc(p.method)} · ${p.date}</div><div class="small">${esc(p.note||"")}</div></div>`).join("")||'<p class="small">Todavía no hay pagos registrados.</p>';
 }
-function loadAttendance(){
- const date=document.getElementById('attDate').value||new Date().toISOString().slice(0,10);
- const time=document.getElementById('attSchedule').value;
- document.getElementById('attDate').value=date;
- const list=students().filter(s=>s.active!==false&&s.schedule===time);
- const e=document.getElementById('attendanceList');
- if(!list.length){e.innerHTML='<div class="empty">No hay alumnos activos en este horario.</div>';return}
- e.innerHTML=`<div class="card"><h3>${esc(time)} · ${date}</h3>
- ${list.map(s=>{
- const old=db.attendance.find(a=>a.studentId===s.id&&a.date===date&&a.schedule===time);
- return `<div class="item"><b>${esc(s.name)}</b><div class="actions">
- <label><input type="radio" name="att_${s.id}" value="Presente" ${old?.status==='Presente'?'checked':''}> Presente</label>
- <label><input type="radio" name="att_${s.id}" value="Falta" ${old?.status==='Falta'?'checked':''}> Falta</label>
- <label><input type="radio" name="att_${s.id}" value="Justificada" ${old?.status==='Justificada'?'checked':''}> Justificada</label>
- </div></div>`}).join('')}
- <button class="btn" onclick="saveAttendance('${date}','${time}')">Guardar asistencia</button></div>`;
+function renderAttendance(){
+ if(!$("attFecha").value)$("attFecha").value=today();
+ const schedule=$("attHorario").value,date=$("attFecha").value;
+ const list=children().filter(c=>c.schedule===schedule);
+ $("attLista").innerHTML=list.map(c=>{
+ const old=db.attendance.find(a=>a.studentId===c.id&&a.date===date);
+ const status=old?old.status:"present";
+ return `<div class="item"><strong>${esc(c.name)}</strong><div class="grid3">
+ <button class="choice good ${status==="present"?"selected":""}" data-att="${c.id}" data-status="present" onclick="markAtt(this)">✓ Asistió</button>
+ <button class="choice bad ${status==="absent"?"selected":""}" data-att="${c.id}" data-status="absent" onclick="markAtt(this)">✕ Falta</button>
+ <button class="choice warn ${status==="excused"?"selected":""}" data-att="${c.id}" data-status="excused" onclick="markAtt(this)">! Justificada</button>
+ </div></div>`;
+ }).join("")||'<p class="small">No hay alumnos en este horario.</p>';
 }
-function saveAttendance(date,time){
- students().filter(s=>s.active!==false&&s.schedule===time).forEach(s=>{
- const chosen=document.querySelector(`input[name="att_${s.id}"]:checked`);
- if(!chosen)return;
- const a={studentId:s.id,student:s.name,date,schedule:time,status:chosen.value};
- const i=db.attendance.findIndex(x=>x.studentId===s.id&&x.date===date&&x.schedule===time);
- if(i>=0)db.attendance[i]=a;else db.attendance.push(a);
+function markAtt(btn){
+ const box=btn.parentElement;box.querySelectorAll("button").forEach(b=>b.classList.remove("selected"));btn.classList.add("selected");
+}
+function saveAttendance(){
+ const date=$("attFecha").value;if(!date){alert("Selecciona fecha.");return}
+ document.querySelectorAll("[data-att].selected").forEach(b=>{
+ const id=b.dataset.att;const old=db.attendance.find(a=>a.studentId===id&&a.date===date);
+ const record={studentId:id,student:findChild(id)?.name||"",date,schedule:$("attHorario").value,status:b.dataset.status};
+ if(old)Object.assign(old,record);else db.attendance.push(record);
  });
- persist();
- alert('Asistencia guardada.');
+ persist();renderAttendance();renderAttHistory();alert("Asistencia guardada.");
+}
+function renderAttHistory(){
+ $("attHistorial").innerHTML="<h3>Historial reciente</h3>"+[...db.attendance].reverse().slice(0,30).map(a=>`<div class="item">${esc(a.student)} · ${a.date} <span class="pill ${a.status==="present"?"good":a.status==="excused"?"warn":"bad"}">${a.status==="present"?"Asistió":a.status==="excused"?"Justificada":"No asistió"}</span></div>`).join("");
+}
+const POS=[
+ ["Excelente trabajo",2],["Muy buen trabajo",2],["Buen trabajo",1],
+ ["Excelente actitud",2],["Buena actitud",1],["Buena disciplina",2],
+ ["Mucho esfuerzo",2],["Trabajó en equipo",1],["Siguió indicaciones",1]
+];
+const YEL=[["Se distrajo",-1],["Necesitó recordatorios",-1],["Platicó durante ejercicios",-1],["Le faltó concentración",-1]];
+const NEG=[["Platicó demasiado",-2],["No puso atención",-2],["Estuvo jugando",-2],["Desobedeció indicaciones",-3],["No quiso trabajar",-3],["Interrumpió el entrenamiento",-2]];
+function monthKey(date){return date.slice(0,7)}
+function scoreFor(id,month){
+ let score=100;
+ db.evaluations.filter(e=>e.studentId===id&&monthKey(e.date)===month).forEach(e=>score+=e.delta);
+ return Math.max(0,Math.min(100,score));
+}
+function renderEvalList(){
+ if(!$("evalFecha").value)$("evalFecha").value=today();
+ const schedule=$("evalHorario").value,month=monthKey($("evalFecha").value);
+ $("evalLista").innerHTML=children().filter(c=>c.schedule===schedule).map(c=>{
+ const done=db.evaluations.some(e=>e.studentId===c.id&&e.date===$("evalFecha").value);
+ return `<button class="btn ${done?"green":"gray"}" style="width:100%;text-align:left" onclick="openEval('${c.id}')">${esc(c.name)} · ${scoreFor(c.id,month)}% ${done?"✓":""}</button>`;
+ }).join("")||'<p class="small">No hay alumnos en este horario.</p>';
+ renderEvalHistory();
+}
+function makeChoices(id,items,cls,selected){
+ $(id).innerHTML=items.map((it,i)=>`<button class="choice ${cls} ${selected.includes(i)?"selected":""}" onclick="toggleChoice('${id}',${i})">${it[0]}</button>`).join("");
+}
+function toggleChoice(id,i){
+ const arr=id==="positivos"?selectedPositive:id==="amarillos"?selectedYellow:selectedNegative;
+ const at=arr.indexOf(i);if(at>=0)arr.splice(at,1);else arr.push(i);
+ const data=id==="positivos"?POS:id==="amarillos"?YEL:NEG;
+ makeChoices(id,data,id==="positivos"?"good":id==="amarillos"?"warn":"bad",arr);
+ updatePreview();
+}
+function openEval(id){
+ selectedChild=id;selectedPositive=[];selectedYellow=[];selectedNegative=[];
+ const c=findChild(id);if(!c)return;
+ $("evalPanel").classList.remove("hidden");$("evalNombre").textContent=c.name+" · "+c.schedule;
+ $("evalNota").value="";
+ makeChoices("positivos",POS,"good",selectedPositive);
+ makeChoices("amarillos",YEL,"warn",selectedYellow);
+ makeChoices("negativos",NEG,"bad",selectedNegative);
+ updatePreview();$("evalPanel").scrollIntoView({behavior:"smooth"});
+}
+function updatePreview(){
+ const delta=selectedPositive.reduce((s,i)=>s+POS[i][1],0)+selectedYellow.reduce((s,i)=>s+YEL[i][1],0)+selectedNegative.reduce((s,i)=>s+NEG[i][1],0);
+ const date=$("evalFecha").value,month=monthKey(date);
+ const old=db.evaluations.find(e=>e.studentId===selectedChild&&e.date===date);
+ const base=scoreFor(selectedChild,month)-(old?old.delta:0);
+ const daily=Math.max(0,Math.min(100,100+delta));
+ const total=Math.max(0,Math.min(100,base+delta));
+ $("evalHoy").textContent=daily+"%";$("evalPuntos").textContent=total+"%";
+ $("evalBarra").style.width=total+"%";
 }
 function saveEvaluation(){
- const sid=document.getElementById('evalStudent').value;
- if(!sid){alert('Selecciona un alumno.');return}
- const s=students().find(x=>x.id===sid);
- db.evaluations.unshift({
- id:uid(),studentId:sid,student:s.name,
- date:document.getElementById('evalDate').value||new Date().toISOString().slice(0,10),
- technique:+document.getElementById('evalTechnique').value,
- attitude:+document.getElementById('evalAttitude').value,
- fitness:+document.getElementById('evalFitness').value,
- team:+document.getElementById('evalTeam').value,
- notes:document.getElementById('evalNotes').value
- });
- persist();
- document.getElementById('evalNotes').value='';
- alert('Evaluación guardada.');
+ if(!selectedChild||!$("evalFecha").value){alert("Selecciona jugador y fecha.");return}
+ const delta=selectedPositive.reduce((s,i)=>s+POS[i][1],0)+selectedYellow.reduce((s,i)=>s+YEL[i][1],0)+selectedNegative.reduce((s,i)=>s+NEG[i][1],0);
+ const date=$("evalFecha").value;
+ const record={id:uid(),studentId:selectedChild,student:findChild(selectedChild)?.name||"",schedule:$("evalHorario").value,date,delta,positive:selectedPositive.map(i=>POS[i][0]),yellow:selectedYellow.map(i=>YEL[i][0]),negative:selectedNegative.map(i=>NEG[i][0]),note:$("evalNota").value};
+ const index=db.evaluations.findIndex(e=>e.studentId===selectedChild&&e.date===date);
+ if(index>=0){record.id=db.evaluations[index].id;db.evaluations[index]=record}else db.evaluations.push(record);
+ const id=selectedChild;persist();$("evalPanel").classList.add("hidden");selectedChild=null;renderEvalList();
+ const list=children().filter(c=>c.schedule===$("evalHorario").value),next=list.find(c=>c.id!==id&&!db.evaluations.some(e=>e.studentId===c.id&&e.date===date));
+ if(next)openEval(next.id);
 }
-function renderEvaluations(){
- const e=document.getElementById('evaluationsList');
- e.innerHTML=db.evaluations.length?db.evaluations.map(x=>`
- <div class="item"><b>${esc(x.student)}</b>
- <p>${esc(x.date)} · Técnica ${x.technique}/5 · Actitud ${x.attitude}/5 · Condición ${x.fitness}/5 · Equipo ${x.team}/5</p>
- <p>${esc(x.notes||'')}</p></div>`).join(''):'<div class="empty">Todavía no hay evaluaciones.</div>';
+function closeEval(){$("evalPanel").classList.add("hidden");selectedChild=null}
+function renderEvalHistory(){
+ $("evalHistorial").innerHTML=[...db.evaluations].reverse().slice(0,20).map(e=>`<div class="item"><strong>${esc(e.student)} · ${e.date}</strong><span class="pill ${e.delta>=0?"good":"bad"}">${e.delta>0?"+":""}${e.delta} puntos</span><div class="small">${esc([...e.positive,...e.yellow,...e.negative].join(" · "))}</div><div class="small">${esc(e.note||"")}</div></div>`).join("")||'<p class="small">Todavía no hay evaluaciones.</p>';
 }
-function saveMvp(){
- const month=document.getElementById('mvpMonth').value;
- if(!month){alert('Selecciona el mes.');return}
- const ids=['mvp1','mvp2','mvp3'].map(id=>document.getElementById(id).value).filter(Boolean);
- if(new Set(ids).size!==ids.length){alert('No repitas al mismo alumno.');return}
- if(ids.length!==3){alert('Selecciona los tres alumnos reconocidos.');return}
- const names=ids.map(id=>students().find(s=>s.id===id)?.name||'');
- db.mvps=db.mvps.filter(x=>x.month!==month);
- db.mvps.unshift({month,ids,names,note:document.getElementById('mvpNote').value});
- persist();
- alert('MVP mensual guardado.');
+function renderMVP(){
+ if(!$("mvpMes").value)$("mvpMes").value=today().slice(0,7);
+ const month=$("mvpMes").value;
+ const rankings=children().map(c=>{
+ const evals=db.evaluations.filter(e=>e.studentId===c.id&&monthKey(e.date)===month);
+ const score=scoreFor(c.id,month);
+ const good=evals.reduce((s,e)=>s+e.positive.length,0);
+ const attended=db.attendance.filter(a=>a.studentId===c.id&&monthKey(a.date)===month&&a.status==="present").length;
+ const sessions=db.attendance.filter(a=>a.studentId===c.id&&monthKey(a.date)===month&&a.status!=="excused").length;
+ return {...c,score,good,attended,sessions,evalCount:evals.length};
+ }).sort((a,b)=>b.score-a.score||b.good-a.good||b.attended-a.attended);
+ $("mvpResultados").innerHTML=rankings.map((c,i)=>`<div class="item"><strong>${i===0?"🥇":i===1?"🥈":"🏀"} ${esc(c.name)}</strong><span class="pill ${i<2?"good":""}">${c.score}%</span><div class="progress"><div style="width:${c.score}%"></div></div><div class="small">${esc(c.schedule)} · Evaluaciones: ${c.evalCount} · Asistencias: ${c.attended}</div></div>`).join("")||'<p class="small">No hay jugadores registrados.</p>';
 }
-function renderMvp(){
- const el=document.getElementById('mvpList');
- el.innerHTML=db.mvps.length?db.mvps.map(m=>`
- <div class="item"><h3>🏆 ${esc(m.month)}</h3>
- <p>${m.names.map((n,i)=>`${i+1}. ${esc(n)}`).join(' · ')}</p>
- <p>${esc(m.note||'')}</p></div>`).join(''):'<div class="empty">Todavía no hay MVP registrados.</div>';
-}
-function refresh(){
- const active=students().filter(s=>s.active!==false);
- document.getElementById('statStudents').textContent=active.length;
- document.getElementById('statFamilies').textContent=db.families.filter(f=>f.active!==false).length;
- document.getElementById('statPayments').textContent=db.payments.length;
- const month=new Date().toISOString().slice(0,7);
- document.getElementById('statAttendance').textContent=db.attendance.filter(a=>a.date.startsWith(month)&&a.status==='Presente').length;
- renderFamilies();renderPayments();renderEvaluations();renderMvp();fillStudentSelects();
-}
-function renderReport(){
- document.getElementById('reportSummary').innerHTML=`
- <p>Familias activas: <b>${db.families.filter(f=>f.active!==false).length}</b></p>
- <p>Alumnos activos: <b>${students().filter(s=>s.active!==false).length}</b></p>
- <p>Pagos registrados: <b>${db.payments.length}</b></p>
- <p>Registros de asistencia: <b>${db.attendance.length}</b></p>
- <p>Evaluaciones: <b>${db.evaluations.length}</b></p>
- <p>Meses con MVP: <b>${db.mvps.length}</b></p>`;
+function renderReports(){
+ $("resumen").innerHTML=`Familias activas: <b>${db.families.filter(f=>f.active!==false).length}</b><hr>Alumnos activos: <b>${children().length}</b><hr>Pagos: <b>${db.payments.length}</b><hr>Asistencias: <b>${db.attendance.length}</b><hr>Evaluaciones: <b>${db.evaluations.length}</b>`;
 }
 function backup(){
- const data={version:2,exportedAt:new Date().toISOString(),data:db};
- const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
- const a=document.createElement('a');
- a.href=URL.createObjectURL(blob);
- a.download='respaldo-control-tiburones-'+new Date().toISOString().slice(0,10)+'.json';
- a.click();
- setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ const blob=new Blob([JSON.stringify({version:2,data:db},null,2)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="respaldo-control-tiburones-"+today()+".json";a.click();URL.revokeObjectURL(a.href);
 }
 function restore(ev){
  const file=ev.target.files[0];if(!file)return;
- const r=new FileReader();
- r.onload=()=>{
+ const r=new FileReader();r.onload=()=>{
  try{
  const x=JSON.parse(r.result),d=x.data||x;
  if(!Array.isArray(d.families)||!Array.isArray(d.payments))throw Error();
- if(!confirm('Restaurar reemplazará los datos actuales. ¿Continuar?'))return;
- db={families:d.families||[],payments:d.payments||[],attendance:d.attendance||[],evaluations:d.evaluations||[],mvps:d.mvps||[]};
- persist();alert('Respaldo restaurado.');
- }catch(e){alert('El archivo no parece ser un respaldo válido.')}
- };
- r.readAsText(file);ev.target.value='';
+ if(!confirm("Restaurar reemplazará los datos actuales. ¿Continuar?"))return;
+ db={families:d.families,payments:d.payments||[],attendance:d.attendance||[],evaluations:d.evaluations||[]};
+ persist();alert("Respaldo restaurado.");
+ }catch(e){alert("El archivo no parece ser un respaldo válido.");}
+ };r.readAsText(file);
 }
-document.getElementById('today').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-document.getElementById('payMonth').value=new Date().toISOString().slice(0,7);
-document.getElementById('mvpMonth').value=new Date().toISOString().slice(0,7);
-document.getElementById('attDate').value=new Date().toISOString().slice(0,10);
-document.getElementById('evalDate').value=new Date().toISOString().slice(0,10);
-refresh();
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function refresh(){
+ $("totalFamilias").textContent=db.families.filter(f=>f.active!==false).length;
+ $("totalAlumnos").textContent=children().length;
+ $("totalPagos").textContent=db.payments.length;
+ $("totalEvaluaciones").textContent=db.evaluations.filter(e=>monthKey(e.date)===today().slice(0,7)).length;
+ renderFamilies();renderReports();
+}
+$("fechaHoy").textContent=new Date().toLocaleDateString("es-MX",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+$("pMes").value=today().slice(0,7);
+$("attFecha").value=today();$("evalFecha").value=today();$("mvpMes").value=today().slice(0,7);
+addChildForm();refresh();
 </script>
 </body>
 </html>
