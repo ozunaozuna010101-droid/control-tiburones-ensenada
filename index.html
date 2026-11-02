@@ -1169,6 +1169,271 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
 
 })();
         </script>
+  <script>
+(function () {
+  "use strict";
+
+  const VAC_KEY = "tiburones_periodos_descanso_v1";
+  const MAIN_KEY = "control_tiburones_mvp_2026_v2";
+  const $ = id => document.getElementById(id);
+
+  function readVacations() {
+    try {
+      return JSON.parse(localStorage.getItem(VAC_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function saveVacations(list) {
+    localStorage.setItem(VAC_KEY, JSON.stringify(list));
+  }
+
+  function readDB() {
+    try {
+      return JSON.parse(localStorage.getItem(MAIN_KEY) || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function inVacation(date) {
+    return readVacations().some(v =>
+      date >= v.start && date <= v.end
+    );
+  }
+
+  const style = document.createElement("style");
+  style.textContent = `
+    .tc-status {
+      border-radius:18px;padding:18px;margin:14px 0;
+      color:white;box-shadow:0 5px 15px #0004;
+    }
+    .tc-status h3 {margin:0 0 9px;font-size:17px}
+    .tc-status strong {font-size:34px;display:block;margin:5px 0}
+    .tc-red {background:linear-gradient(135deg,#b52e43,#762536)}
+    .tc-green {background:linear-gradient(135deg,#168b61,#10583f)}
+    .tc-orange {background:linear-gradient(135deg,#bd781d,#805016)}
+    .tc-vacation {
+      background:#102d49;border:1px solid #477596;
+      border-radius:16px;padding:15px;margin:14px 0;
+    }
+    .tc-vacation input,.tc-vacation select {
+      display:block;width:100%;padding:12px;margin:7px 0;
+      border-radius:10px;background:#071d33;color:white;
+      border:1px solid #466783;font-size:16px;
+    }
+    .tc-vacation button {
+      padding:12px;border:0;border-radius:11px;
+      background:#087fbd;color:white;font-weight:bold;
+      margin-top:8px;width:100%;
+    }
+    .tc-vacation .tc-delete {background:#87333e}
+  `;
+  document.head.appendChild(style);
+
+  const home = $("page-inicio");
+  const heading = home.querySelector("h2");
+
+  heading.insertAdjacentHTML("afterend", `
+    <div id="tcCards">
+      <div class="tc-status tc-green">
+        <h3>✓ TODO COMPLETADO</h3>
+        <strong>0 pendientes</strong>
+        <div>Consultando los entrenamientos registrados...</div>
+      </div>
+    </div>
+
+    <div class="tc-vacation">
+      <h3>📅 CALENDARIO DE VACACIONES</h3>
+      <p>
+        Programa los días de descanso. La aplicación pausará
+        los registros durante esas fechas y retomará
+        automáticamente al día siguiente de la fecha final.
+      </p>
+      <label>Fecha de inicio</label>
+      <input type="date" id="tcStart">
+      <label>Fecha de regreso a entrenamientos</label>
+      <input type="date" id="tcEnd">
+      <label>Motivo del descanso</label>
+      <select id="tcReason">
+        <option>Navidad</option>
+        <option>Semana Santa</option>
+        <option>Verano</option>
+        <option>Otro</option>
+      </select>
+      <button id="tcSave">GUARDAR PERIODO DE DESCANSO</button>
+      <div id="tcVacationList"></div>
+    </div>
+  `);
+
+  function renderVacations() {
+    const list = readVacations();
+    $("tcVacationList").innerHTML = list.length
+      ? list.map((v,i) => `
+        <div>
+          <b>${v.reason}</b>
+          <div>${v.start} al ${v.end}</div>
+          <button class="tc-delete" data-tc-delete="${i}">
+            ELIMINAR PERIODO
+          </button>
+        </div>
+      `).join("")
+      : "<p>No hay vacaciones programadas.</p>";
+  }
+
+  $("tcSave").addEventListener("click", () => {
+    const start = $("tcStart").value;
+    const end = $("tcEnd").value;
+    const reason = $("tcReason").value;
+
+    if (!start || !end) {
+      alert("Selecciona las dos fechas.");
+      return;
+    }
+    if (end < start) {
+      alert("La fecha final no puede ser anterior a la inicial.");
+      return;
+    }
+
+    const list = readVacations();
+    list.push({start,end,reason});
+    list.sort((a,b) => a.start.localeCompare(b.start));
+    saveVacations(list);
+
+    $("tcStart").value = "";
+    $("tcEnd").value = "";
+    renderVacations();
+    renderCards();
+    alert("Periodo de descanso guardado correctamente.");
+  });
+
+  $("tcVacationList").addEventListener("click", e => {
+    const b = e.target.closest("[data-tc-delete]");
+    if (!b) return;
+    if (!confirm("¿Eliminar este periodo de descanso?")) return;
+    const list = readVacations();
+    list.splice(Number(b.dataset.tcDelete),1);
+    saveVacations(list);
+    renderVacations();
+    renderCards();
+  });
+
+  function renderCards() {
+    const db = readDB();
+    const sessions = db.sessions || [];
+    const evaluations = db.evaluations || [];
+    const vacations = readVacations();
+    const pending = [];
+
+    sessions.forEach(s => {
+      if (s.cancelled || inVacation(s.date)) return;
+
+      (s.records || []).forEach(r => {
+        if (!["Presente","Retardo","Justificada"].includes(r.status)) return;
+
+        const done = evaluations.some(e =>
+          e.playerId === r.playerId &&
+          e.date === s.date &&
+          e.schedule === s.schedule
+        );
+
+        if (!done) {
+          const player = (db.players || []).find(p => p.id === r.playerId);
+          pending.push({
+            name: player ? player.nombre || player.name : "Jugador",
+            date: s.date,
+            schedule: s.schedule
+          });
+        }
+      });
+    });
+
+    const today = new Date().toISOString().slice(0,10);
+    const current = vacations.find(v => today >= v.start && today <= v.end);
+    const next = vacations
+      .filter(v => v.start > today)
+      .sort((a,b) => a.start.localeCompare(b.start))[0];
+
+    let html = "";
+
+    if (pending.length) {
+      html += `
+        <div class="tc-status tc-red">
+          <h3>⚠️ EVALUACIONES PENDIENTES</h3>
+          <strong>${pending.length}</strong>
+          <div>Faltan evaluaciones de entrenamientos registrados.</div>
+          <div style="margin-top:9px;font-size:13px">
+            ${pending.slice(0,5).map(p =>
+              `${p.name} · ${p.date} · ${p.schedule}`
+            ).join("<br>")}
+            ${pending.length > 5 ? "<br>Y más pendientes..." : ""}
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="tc-status tc-green">
+          <h3>✓ TODO COMPLETADO</h3>
+          <strong>0 pendientes</strong>
+          <div>${sessions.length
+            ? "Todas las evaluaciones de los entrenamientos registrados están guardadas."
+            : "Aún no hay entrenamientos registrados para evaluar."}</div>
+        </div>
+      `;
+    }
+
+    if (current) {
+      html += `
+        <div class="tc-status tc-orange">
+          <h3>🏖️ PERIODO DE DESCANSO</h3>
+          <strong>${current.reason}</strong>
+          <div>Del ${current.start} al ${current.end}. La aplicación retomará sus actividades automáticamente al terminar el periodo.</div>
+        </div>
+      `;
+    } else if (next) {
+      html += `
+        <div class="tc-status tc-orange">
+          <h3>📅 PRÓXIMO DESCANSO</h3>
+          <strong>${next.reason}</strong>
+          <div>Del ${next.start} al ${next.end}.</div>
+        </div>
+      `;
+    }
+
+    $("tcCards").innerHTML = html;
+  }
+
+  document.addEventListener("click", e => {
+    const button = e.target.closest("#saveAtt,#saveEv,#noTraining");
+    if (!button) return;
+
+    const date = button.id === "saveEv"
+      ? $("evDate").value
+      : $("attDate").value;
+
+    if (date && inVacation(date)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      alert("La academia está en periodo de descanso. No se permiten registros en esta fecha.");
+    }
+  }, true);
+
+  document.addEventListener("click", e => {
+    if (e.target.closest("#saveAtt,#saveEv,#noTraining")) {
+      setTimeout(renderCards,300);
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) renderCards();
+  });
+
+  renderVacations();
+  renderCards();
+
+})();
+  </script>
   
 </body>
 </html>
