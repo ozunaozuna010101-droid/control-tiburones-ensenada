@@ -596,8 +596,97 @@ document.getElementById("historyClose").addEventListener("click",()=>{
  panel.style.display="none";
 });
 
-document.getElementById("historyPDF").addEventListener("click",()=>{
- window.print();
+document.getElementById("historyPDF").addEventListener("click", async () => {
+  const printable = document.getElementById("historyPrintable");
+  if (!printable) {
+    alert("Primero consulta el historial del jugador.");
+    return;
+  }
+
+  try {
+    if (!window.jspdf) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+    doc.setFillColor(7, 29, 53);
+    doc.rect(0, 0, 210, 38, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.text("ACADEMIA TIBURONES ENSENADA", 105, 16, { align: "center" });
+    doc.setFontSize(11);
+    doc.text("REPORTE DE SEGUIMIENTO DEPORTIVO", 105, 26, { align: "center" });
+
+    const contenido = printable.innerText
+      .replace(/ACADEMIA TIBURONES ENSENADA/g, "")
+      .replace(/REPORTE DE SEGUIMIENTO DEPORTIVO/g, "")
+      .trim();
+
+    const lineas = doc.splitTextToSize(contenido, 170);
+    doc.setTextColor(25, 45, 65);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    let y = 48;
+    lineas.forEach(linea => {
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(linea, 20, y);
+      y += 6;
+    });
+
+    const jugador = document.getElementById("evPlayer")
+      .selectedOptions[0]?.textContent || "Jugador";
+
+    const nombre = jugador.normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9_-]+/g, "_");
+
+    const archivo = "Historial_Tiburones_" + nombre + ".pdf";
+    const blob = doc.output("blob");
+    const file = new File([blob], archivo, { type: "application/pdf" });
+
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = archivo;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: "Historial deportivo Tiburones",
+          text: "Historial deportivo del jugador"
+        });
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          alert("El PDF quedó descargado. Puedes compartirlo desde Descargas.");
+        }
+      }
+    } else {
+      alert("PDF descargado. Puedes compartirlo desde la carpeta Descargas de tu teléfono.");
+    }
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo generar el PDF. Revisa tu conexión e inténtalo nuevamente.");
+  }
 });
 
 const now=new Date();
