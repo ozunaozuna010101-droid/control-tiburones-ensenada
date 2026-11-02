@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -26,33 +25,153 @@ footer{text-align:center;padding:20px;color:#8da8bf;font-size:11px}
 </head>
 <body>
 <header><div class="brand"><div class="logo">🦈</div><div><h1>CONTROL TIBURONES</h1><div class="sub">Academia Tiburones Ensenada · Asistencia y MVP</div></div></div></header>
-<nav id="tabs"><button class="active" data-page="jugadores">👥 JUGADORES</button><button data-page="asistencia">📋 ASISTENCIA</button><button data-page="evaluacion">⭐ EVALUACIÓN</button><button data-page="mvp">🏆 MVP DEL MES</button><button data-page="respaldo">💾 RESPALDO</button><button data-page="inicio">📊 RESUMEN</button></nav>
+<nav id="tabs">
+<button data-page="jugadores">👥 JUGADORES</button>
+<button data-page="asistencia">📋 ASISTENCIA</button>
+<button data-page="evaluacion">⭐ EVALUACIÓN</button>
+<button data-page="mvp">🏆 MVP DEL MES</button>
+<button data-page="respaldo">💾 RESPALDO</button>
+<button class="active" data-page="inicio">🏠 INICIO</button>
+</nav>
 <main>
-<section class="page active" id="page-jugadores">
+<section class="page active" id="page-inicio">
+<h2>Panel rápido del coach</h2>
+<div class="grid3">
+<div class="stat"><span>4:30 · Inicial</span><strong id="home430">0</strong></div>
+<div class="stat"><span>5:30 · Infantil</span><strong id="home530">0</strong></div>
+<div class="stat"><span>6:30 · Juvenil</span><strong id="home630">0</strong></div>
+</div>
+<div class="card" style="margin-top:13px">
+<h3>Acciones rápidas</h3>
+<div class="choice-grid">
+<button class="c-blue" data-quick="asistencia">📋<br>PASAR LISTA</button>
+<button class="c-green" data-quick="evaluacion">⭐<br>EVALUAR JUGADOR</button>
+<button class="c-gold" data-quick="mvp">🏆<br>MVP DEL MES</button>
+<button data-quick="jugadores">👥<br>JUGADORES</button>
+</div>
+</div>
+<div class="card">
+<h3>Entrar directamente al horario</h3>
+<div class="choice-grid">
+<button class="c-blue" data-quick="asistencia" data-schedule="4:30">4:30 · INICIAL<br>Pasar lista</button>
+<button class="c-blue" data-quick="asistencia" data-schedule="5:30">5:30 · INFANTIL<br>Pasar lista</button>
+<button class="c-blue" data-quick="asistencia" data-schedule="6:30">6:30 · JUVENIL<br>Pasar lista</button>
+</div>
+</div>
+<div class="card">
+<h3>Resumen de hoy</h3>
+<div class="grid3">
+<div class="stat"><span>Total jugadores</span><strong id="totalPlayers">0</strong></div>
+<div class="stat"><span>Presentes hoy</span><strong id="totalPresent">0</strong></div>
+<div class="stat"><span>Evaluados hoy</span><strong id="totalEvals">0</strong></div>
+</div>
+<div id="groupSummary"></div>
+</div>
+</section>
+<section class="page" id="page-jugadores">
 <h2>Jugadores por entrenamiento</h2>
-<div class="grid3"><div class="stat"><span>4:30 · Inicial</span><strong id="count430">0</strong></div><div class="stat"><span>5:30 · Infantil</span><strong id="count530">0</strong></div><div class="stat"><span>6:30 · Juvenil</span><strong id="count630">0</strong></div></div>
-<div class="card" style="margin-top:13px"><h3>Agregar jugador</h3><label>Nombre completo</label><input id="playerName" placeholder="Escribe el nombre del jugador"><label>Horario</label><select id="playerSchedule"><option value="4:30">4:30 a 5:30 PM · Inicial</option><option value="5:30">5:30 a 6:30 PM · Infantil</option><option value="6:30">6:30 a 7:30 PM · Juvenil</option></select><button class="btn primary full" id="addPlayer">＋ GUARDAR JUGADOR</button></div>
-<div class="card"><h3>Lista maestra</h3><label>Ver horario</label><select id="rosterFilter"><option value="todos">Todos los horarios</option><option value="4:30">4:30 · Inicial</option><option value="5:30">5:30 · Infantil</option><option value="6:30">6:30 · Juvenil</option></select><div id="roster"></div></div>
+<div class="grid3">
+<div class="stat"><span>4:30 · Inicial</span><strong id="count430">0</strong></div>
+<div class="stat"><span>5:30 · Infantil</span><strong id="count530">0</strong></div>
+<div class="stat"><span>6:30 · Juvenil</span><strong id="count630">0</strong></div>
+</div>
+<div class="card" style="margin-top:13px">
+<h3>Agregar jugador</h3>
+<label>Nombre completo</label><input id="playerName" placeholder="Escribe el nombre del jugador">
+<label>Horario</label>
+<select id="playerSchedule">
+<option value="4:30">4:30 a 5:30 PM · Inicial</option>
+<option value="5:30">5:30 a 6:30 PM · Infantil</option>
+<option value="6:30">6:30 a 7:30 PM · Juvenil</option>
+</select>
+<button class="btn primary full" id="addPlayer">＋ GUARDAR JUGADOR</button>
+</div>
+<div class="card">
+<h3>Lista maestra</h3>
+<label>Ver horario</label>
+<select id="rosterFilter">
+<option value="todos">Todos los horarios</option>
+<option value="4:30">4:30 · Inicial</option>
+<option value="5:30">5:30 · Infantil</option>
+<option value="6:30">6:30 · Juvenil</option>
+</select>
+<div id="roster"></div>
+</div>
 </section>
 <section class="page" id="page-asistencia">
-<h2>Asistencia del entrenamiento</h2><div class="card"><div class="hint">Entrenamos lunes, miércoles y viernes. Si ese día no hay entrenamiento, selecciona “NO HUBO ENTRENAMIENTO”. Ese día quedará excluido del cálculo del MVP.</div>
-<label>Fecha</label><input type="date" id="attDate"><label>Horario</label><select id="attSchedule"><option value="4:30">4:30 a 5:30 PM · Inicial</option><option value="5:30">5:30 a 6:30 PM · Infantil</option><option value="6:30">6:30 a 7:30 PM · Juvenil</option></select>
-<button class="btn red full" id="noTraining">NO HUBO ENTRENAMIENTO</button><div id="attPanel"></div><button class="btn primary full" id="saveAtt">GUARDAR ASISTENCIA</button></div><div class="card"><h3>Registro reciente</h3><div id="attHistory"></div></div>
+<h2>Asistencia del entrenamiento</h2>
+<div class="card">
+<div class="hint">Entrenamos lunes, miércoles y viernes. Marca a cada jugador como ASISTIÓ, NO ASISTIÓ o FALTA JUSTIFICADA. La falta justificada cuenta como asistencia y no resta puntos. Si no hubo entrenamiento, usa el botón correspondiente; esa fecha no contará. No podrás guardar hasta marcar a todos los jugadores del horario.</div>
+<label>Fecha</label><input type="date" id="attDate">
+<label>Horario</label>
+<select id="attSchedule">
+<option value="4:30">4:30 a 5:30 PM · Inicial</option>
+<option value="5:30">5:30 a 6:30 PM · Infantil</option>
+<option value="6:30">6:30 a 7:30 PM · Juvenil</option>
+</select>
+<button class="btn red full" id="noTraining">NO HUBO ENTRENAMIENTO</button>
+<div id="attPanel"></div>
+<button class="btn primary full" id="saveAtt">GUARDAR ASISTENCIA</button>
+</div>
+<div class="card"><h3>Registro reciente</h3><div id="attHistory"></div></div>
 </section>
 <section class="page" id="page-evaluacion">
-<h2>Evaluación del jugador</h2><div class="card"><label>Fecha del entrenamiento</label><input type="date" id="evDate"><label>Horario</label><select id="evSchedule"><option value="4:30">4:30 a 5:30 PM · Inicial</option><option value="5:30">5:30 a 6:30 PM · Infantil</option><option value="6:30">6:30 a 7:30 PM · Juvenil</option></select><label>Jugador</label><select id="evPlayer"></select>
-<div class="choice-title">1. Desempeño de hoy · elige uno</div><div class="choice-grid" id="performance"><button class="c-blue selected" data-value="Buen trabajo">BUEN TRABAJO</button><button class="c-green" data-value="Excelente trabajo">EXCELENTE TRABAJO</button></div>
-<div class="choice-title">2. Actitud y atención · elige uno</div><div class="choice-grid" id="attitude"><button class="c-green" data-value="Buena actitud">BUENA ACTITUD</button><button class="c-blue" data-value="Prestó atención">PRESTÓ ATENCIÓN</button><button class="c-gold" data-value="Estuvo platicador">ESTUVO PLATICADOR</button><button class="c-red" data-value="No prestó atención">NO PRESTÓ ATENCIÓN</button><button class="c-red" data-value="Estuvo jugando">ESTUVO JUGANDO</button><button class="c-gold" data-value="No siguió indicaciones">NO SIGUIÓ INDICACIONES</button></div>
-<div class="choice-title">3. Esfuerzo y mejora · elige uno</div><div class="choice-grid" id="effort"><button class="c-green" data-value="Se esforzó mucho">SE ESFORZÓ MUCHO</button><button class="c-blue" data-value="Va mejorando">VA MEJORANDO</button><button class="c-gold" data-value="Necesita mejorar">NECESITA MEJORAR</button><button class="c-red" data-value="Le costó realizar ejercicios">LE COSTÓ REALIZAR EJERCICIOS</button></div>
-<button class="btn primary full" id="saveEv">GUARDAR EVALUACIÓN</button></div><div class="card"><h3>Evaluaciones recientes</h3><div id="evHistory"></div></div>
+<h2>Evaluación del jugador</h2>
+<div class="card">
+<label>Fecha del entrenamiento</label><input type="date" id="evDate">
+<label>Horario</label>
+<select id="evSchedule">
+<option value="4:30">4:30 a 5:30 PM · Inicial</option>
+<option value="5:30">5:30 a 6:30 PM · Infantil</option>
+<option value="6:30">6:30 a 7:30 PM · Juvenil</option>
+</select>
+<label>Jugador</label><select id="evPlayer"></select>
+<div class="choice-title">1. Desempeño de hoy · elige uno</div>
+<div class="choice-grid" id="performance">
+<button class="c-blue selected" data-value="Buen trabajo">BUEN TRABAJO</button>
+<button class="c-green" data-value="Excelente trabajo">EXCELENTE TRABAJO</button>
+</div>
+<div class="choice-title">2. Actitud y atención · elige uno</div>
+<div class="choice-grid" id="attitude">
+<button class="c-green" data-value="Buena actitud">BUENA ACTITUD</button>
+<button class="c-blue" data-value="Prestó atención">PRESTÓ ATENCIÓN</button>
+<button class="c-gold" data-value="Estuvo platicador">ESTUVO PLATICADOR</button>
+<button class="c-red" data-value="No prestó atención">NO PRESTÓ ATENCIÓN</button>
+<button class="c-red" data-value="Estuvo jugando">ESTUVO JUGANDO</button>
+<button class="c-gold" data-value="No siguió indicaciones">NO SIGUIÓ INDICACIONES</button>
+</div>
+<div class="choice-title">3. Esfuerzo y mejora · elige uno</div>
+<div class="choice-grid" id="effort">
+<button class="c-green" data-value="Se esforzó mucho">SE ESFORZÓ MUCHO</button>
+<button class="c-blue" data-value="Va mejorando">VA MEJORANDO</button>
+<button class="c-gold" data-value="Necesita mejorar">NECESITA MEJORAR</button>
+<button class="c-red" data-value="Le costó realizar ejercicios">LE COSTÓ REALIZAR EJERCICIOS</button>
+</div>
+<button class="btn primary full" id="saveEv">GUARDAR EVALUACIÓN</button>
+</div>
+<div class="card"><h3>Evaluaciones recientes</h3><div id="evHistory"></div></div>
+  </section><section class="page" id="page-mvp">
+<h2>Jugador más valioso del mes</h2>
+<div class="card">
+<div class="hint">Cada jugador inicia el mes con 100 puntos. La falta injustificada resta solo 1 punto; la justificada cuenta como asistencia y no resta. La actitud, atención, seguimiento de indicaciones y esfuerzo tienen mayor peso. El cálculo solo se confirma cuando todas las fechas de lunes, miércoles y viernes hasta hoy (o todo el mes si ya terminó) están registradas por horario. Si no hubo entrenamiento, márcalo expresamente.</div>
+<label>Mes</label><input type="month" id="mvpMonth">
+<button class="btn gold full" id="runMvp">★ CALCULAR MVP DE LOS TRES HORARIOS</button>
+<div id="mvpOutput"></div>
+</div>
 </section>
-<section class="page" id="page-mvp">
-<h2>Jugador más valioso del mes</h2><div class="card"><div class="hint">El sistema revisa los entrenamientos que sí se realizaron, la asistencia y las tres selecciones de evaluación. Los días marcados “No hubo entrenamiento” no cuentan como faltas.</div><label>Mes</label><input type="month" id="mvpMonth"><button class="btn gold full" id="runMvp">★ CALCULAR MVP DE LOS TRES HORARIOS</button><div id="mvpOutput"></div></div>
+<section class="page" id="page-respaldo">
+<h2>Respaldo</h2>
+<div class="card">
+<p class="muted">Los datos se guardan en el navegador de este teléfono. Descarga una copia con frecuencia para no perder tu lista ni el historial.</p>
+<button class="btn primary full" id="backup">DESCARGAR RESPALDO</button>
+<label>Restaurar copia</label>
+<input type="file" id="restoreFile" accept=".json">
+<button class="btn full" id="restore">RESTAURAR RESPALDO</button>
+</div>
 </section>
-<section class="page" id="page-respaldo"><h2>Respaldo</h2><div class="card"><p class="muted">Los datos se guardan en el navegador de este teléfono. Descarga una copia con frecuencia para no perder tu lista ni el historial.</p><button class="btn primary full" id="backup">DESCARGAR RESPALDO</button><label>Restaurar copia</label><input type="file" id="restoreFile" accept=".json"><button class="btn full" id="restore">RESTAURAR RESPALDO</button></div></section>
-<section class="page" id="page-inicio"><h2>Resumen de la academia</h2><div class="grid3"><div class="stat"><span>Total jugadores</span><strong id="totalPlayers">0</strong></div><div class="stat"><span>Presentes hoy</span><strong id="totalPresent">0</strong></div><div class="stat"><span>Evaluados hoy</span><strong id="totalEvals">0</strong></div></div><div class="card"><h3>Estado de los grupos</h3><div id="groupSummary"></div></div></section>
-</main><footer>CONTROL TIBURONES · Academia Tiburones Ensenada</footer><div class="notice" id="notice"></div>
-
+</main>
+<footer>CONTROL TIBURONES · Academia Tiburones Ensenada</footer>
+<div class="notice" id="notice"></div>
 <script>
 "use strict";
 const $=id=>document.getElementById(id),KEY="control_tiburones_mvp_2026_v2";
@@ -66,20 +185,50 @@ function msg(t){$("notice").textContent=t;$("notice").style.display="block";setT
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){msg("No se pudieron guardar los datos. Descarga un respaldo.");return false}}
 function load(){try{let x=JSON.parse(localStorage.getItem(KEY)||"{}");["players","sessions","evaluations"].forEach(k=>{if(Array.isArray(x[k]))db[k]=x[k]})}catch(e){console.error(e)}}
 function go(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.page===p));renderAll()}
+document.getElementById("page-inicio").addEventListener("click",e=>{let b=e.target.closest("button[data-quick]");if(!b)return;let page=b.dataset.quick;if(b.dataset.schedule){$("attSchedule").value=b.dataset.schedule;$("evSchedule").value=b.dataset.schedule;renderAtt();renderEvPlayers()}go(page)});
 $("tabs").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
 function addPlayer(){let name=$("playerName").value.trim(),schedule=$("playerSchedule").value;if(!name)return msg("Escribe el nombre del jugador.");if(db.players.some(p=>p.name.toLowerCase()===name.toLowerCase()))return msg("Ese jugador ya está registrado.");db.players.push({id:Date.now().toString()+Math.random().toString(16).slice(2),name,schedule});if(!save())return;$("playerName").value="";renderAll();msg("Jugador agregado correctamente.")}
 $("addPlayer").addEventListener("click",addPlayer);
 $("rosterFilter").addEventListener("change",renderRoster);
 $("roster").addEventListener("click",e=>{let b=e.target.closest("[data-delete]");if(!b)return;if(!confirm("¿Eliminar jugador y sus registros?"))return;let id=b.dataset.delete;db.players=db.players.filter(p=>p.id!==id);db.sessions.forEach(s=>s.records=s.records.filter(r=>r.playerId!==id));db.evaluations=db.evaluations.filter(v=>v.playerId!==id);save();renderAll();msg("Jugador eliminado.")});
 function renderRoster(){let f=$("rosterFilter").value,ps=db.players.filter(p=>f==="todos"||p.schedule===f).sort((a,b)=>a.schedule.localeCompare(b.schedule)||a.name.localeCompare(b.name,"es"));$("roster").innerHTML=ps.length?ps.map(p=>`<div class="item row"><div><b>${esc(p.name)}</b><div class="muted">${p.schedule} · ${labels[p.schedule]}</div></div><button class="btn red small" data-delete="${esc(p.id)}">Eliminar</button></div>`).join(""):'<div class="empty">No hay jugadores en este grupo.</div>'}
-function renderCounts(){schedules.forEach(s=>$("count"+s.replace(":","")).textContent=db.players.filter(p=>p.schedule===s).length)}
+function renderCounts(){schedules.forEach(s=>{let n=db.players.filter(p=>p.schedule===s).length;$("count"+s.replace(":","")).textContent=n;$("home"+s.replace(":","")).textContent=n})}
 function getSession(date,schedule){return db.sessions.find(s=>s.date===date&&s.schedule===schedule)}
-function renderAtt(){let date=$("attDate").value,s=$("attSchedule").value,session=getSession(date,s),ps=db.players.filter(p=>p.schedule===s).sort((a,b)=>a.name.localeCompare(b.name,"es"));if(session?.cancelled){$("attPanel").innerHTML='<div class="hint">Este horario está marcado como “No hubo entrenamiento”. No se contará como falta para el MVP.</div>';return}let records=session?.records||[];$("attPanel").innerHTML=ps.length?ps.map(p=>{let r=records.find(x=>x.playerId===p.id),status=r?.status||"Presente";return `<div class="item"><div class="row"><b>${esc(p.name)}</b><span class="pill">${esc(status)}</span></div><div class="player-actions"><button data-player="${esc(p.id)}" data-status="Presente" class="${status==="Presente"?"selected":""}">PRESENTE</button><button data-player="${esc(p.id)}" data-status="Falta" class="${status==="Falta"?"selected":""}">FALTA</button><button data-player="${esc(p.id)}" data-status="Retardo" class="${status==="Retardo"?"selected":""}">RETARDO</button><button data-player="${esc(p.id)}" data-status="Justificada" class="${status==="Justificada"?"selected":""}">JUSTIFICADA</button></div></div>`}).join(""):'<div class="empty">No hay jugadores registrados en este horario.</div>'}
-$("attPanel").addEventListener("click",e=>{let b=e.target.closest("button[data-player]");if(!b)return;let card=b.closest(".item");card.querySelectorAll("button[data-player]").forEach(x=>x.classList.toggle("selected",x===b));card.querySelector(".pill").textContent=b.dataset.status});
-function saveAtt(){let date=$("attDate").value,s=$("attSchedule").value;if(!date)return msg("Selecciona fecha.");let day=new Date(date+"T12:00:00").getDay();if(![1,3,5].includes(day))return msg("La academia entrena lunes, miércoles y viernes. Revisa la fecha.");let old=getSession(date,s);if(old?.cancelled)return msg("Este día está marcado sin entrenamiento.");let records=[];document.querySelectorAll("#attPanel [data-player]").forEach(()=>{});db.players.filter(p=>p.schedule===s).forEach(p=>{let card=[...$("attPanel").querySelectorAll(".item")].find(x=>x.querySelector(`[data-player="${CSS.escape(p.id)}"]`));if(!card)return;let b=card.querySelector("button.selected[data-player]");records.push({playerId:p.id,status:b?.dataset.status||"Presente"})});let rec={date,schedule:s,cancelled:false,records};let i=db.sessions.findIndex(x=>x.date===date&&x.schedule===s);if(i>=0)db.sessions[i]=rec;else db.sessions.push(rec);if(!save())return;renderAll();msg("Asistencia guardada.")}
+function renderAtt(){
+ let date=$("attDate").value,s=$("attSchedule").value,session=getSession(date,s);
+ let ps=db.players.filter(p=>p.schedule===s).sort((a,b)=>a.name.localeCompare(b.name,"es"));
+ if(session?.cancelled){$("attPanel").innerHTML='<div class="hint">Este horario está marcado como “No hubo entrenamiento”. No contará como falta ni restará puntos.</div>';return}
+ let records=session?.records||[];
+ $("attPanel").innerHTML=ps.length?ps.map(p=>{
+  let r=records.find(x=>x.playerId===p.id);
+  let status=r?.status||"Pendiente";
+  if(status==="Presente"||status==="Retardo")status="Asistió";
+  if(status==="Falta")status="No asistió";
+  return `<div class="item"><div class="row"><b>${esc(p.name)}</b><span class="pill ${status==="Pendiente"?"gold":status==="No asistió"?"red":"green"}">${esc(status)}</span></div><div class="player-actions"><button data-player="${esc(p.id)}" data-status="Presente" class="${status==="Asistió"?"selected":""}">ASISTIÓ</button><button data-player="${esc(p.id)}" data-status="Falta" class="${status==="No asistió"?"selected":""}">NO ASISTIÓ</button><button data-player="${esc(p.id)}" data-status="Justificada" class="${status==="Justificada"?"selected":""}">FALTA JUSTIFICADA</button></div></div>`
+ }).join(""):'<div class="empty">No hay jugadores registrados en este horario.</div>'
+}
+$("attPanel").addEventListener("click",e=>{let b=e.target.closest("button[data-player]");if(!b)return;let card=b.closest(".item");card.querySelectorAll("button[data-player]").forEach(x=>x.classList.toggle("selected",x===b));card.querySelector(".pill").textContent=b.dataset.status==="Presente"?"Asistió":b.dataset.status==="Falta"?"No asistió":"Justificada";card.querySelector(".pill").className="pill "+(b.dataset.status==="Falta"?"red":"green")});
+function saveAtt(){
+ let date=$("attDate").value,s=$("attSchedule").value;
+ if(!date)return msg("Selecciona fecha.");
+ let day=new Date(date+"T12:00:00").getDay();
+ if(![1,3,5].includes(day))return msg("La academia entrena lunes, miércoles y viernes. Revisa la fecha.");
+ let old=getSession(date,s);if(old?.cancelled)return msg("Este día está marcado sin entrenamiento.");
+ let ps=db.players.filter(p=>p.schedule===s),records=[];
+ for(let p of ps){
+  let card=[...$("attPanel").querySelectorAll(".item")].find(x=>x.querySelector(`[data-player="${CSS.escape(p.id)}"]`));
+  let b=card?.querySelector("button.selected[data-player]");
+  if(!b)return msg("Falta marcar la asistencia de "+p.name+". Revisa toda la lista.");
+  records.push({playerId:p.id,status:b.dataset.status});
+ }
+ let rec={date,schedule:s,cancelled:false,records};
+ let i=db.sessions.findIndex(x=>x.date===date&&x.schedule===s);
+ if(i>=0)db.sessions[i]=rec;else db.sessions.push(rec);
+ if(!save())return;renderAll();msg("Asistencia completa y guardada.")
+}
 $("saveAtt").addEventListener("click",saveAtt);
-$("noTraining").addEventListener("click",()=>{let date=$("attDate").value,s=$("attSchedule").value;if(!date)return msg("Selecciona fecha.");if(!confirm("¿Confirmas que NO HUBO ENTRENAMIENTO en este horario? No contará para el MVP."))return;let rec={date,schedule:s,cancelled:true,records:[]};let i=db.sessions.findIndex(x=>x.date===date&&x.schedule===s);if(i>=0)db.sessions[i]=rec;else db.sessions.push(rec);db.evaluations=db.evaluations.filter(e=>!(e.date===date&&e.schedule===s));save();renderAll();msg("Día excluido del cálculo del MVP.")});
-function renderAttHistory(){let sessions=db.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);$("attHistory").innerHTML=sessions.length?sessions.map(s=>`<div class="item row"><div><b>${esc(s.date)} · ${esc(s.schedule)}</b><div class="muted">${s.cancelled?"No hubo entrenamiento":s.records.filter(r=>r.status==="Presente"||r.status==="Retardo").length+" presentes/retardos registrados"}</div></div><span class="pill ${s.cancelled?"gold":"green"}">${s.cancelled?"EXCLUIDO":"REALIZADO"}</span></div>`).join(""):'<div class="empty">Aún no hay sesiones registradas.</div>'}
+$("noTraining").addEventListener("click",()=>{let date=$("attDate").value,s=$("attSchedule").value;if(!date)return msg("Selecciona fecha.");if(!confirm("¿Confirmas que NO HUBO ENTRENAMIENTO en este horario? No contará como falta para el MVP."))return;let rec={date,schedule:s,cancelled:true,records:[]};let i=db.sessions.findIndex(x=>x.date===date&&x.schedule===s);if(i>=0)db.sessions[i]=rec;else db.sessions.push(rec);db.evaluations=db.evaluations.filter(e=>!(e.date===date&&e.schedule===s));save();renderAll();msg("Día excluido del cálculo del MVP.")});
+function renderAttHistory(){let sessions=db.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);$("attHistory").innerHTML=sessions.length?sessions.map(s=>`<div class="item row"><div><b>${esc(s.date)} · ${esc(s.schedule)}</b><div class="muted">${s.cancelled?"No hubo entrenamiento":s.records.filter(r=>["Presente","Retardo","Justificada"].includes(r.status)).length+" asistencias (incluye justificadas)"}</div></div><span class="pill ${s.cancelled?"gold":"green"}">${s.cancelled?"EXCLUIDO":"REALIZADO"}</span></div>`).join(""):'<div class="empty">Aún no hay sesiones registradas.</div>'}
 function renderEvPlayers(){let s=$("evSchedule").value,old=$("evPlayer").value,ps=db.players.filter(p=>p.schedule===s).sort((a,b)=>a.name.localeCompare(b.name,"es"));$("evPlayer").innerHTML='<option value="">Selecciona jugador</option>'+ps.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");if(ps.some(p=>p.id===old))$("evPlayer").value=old}
 function selectOne(group){$(group).addEventListener("click",e=>{let b=e.target.closest("button[data-value]");if(!b)return;$(group).querySelectorAll("button").forEach(x=>x.classList.toggle("selected",x===b))})}
 ["performance","attitude","effort"].forEach(selectOne);
@@ -87,12 +236,67 @@ function selected(group){return $(group).querySelector("button.selected")?.datas
 function saveEv(){let date=$("evDate").value,s=$("evSchedule").value,id=$("evPlayer").value,p=db.players.find(x=>x.id===id);if(!date||!p)return msg("Selecciona fecha y jugador.");let day=new Date(date+"T12:00:00").getDay();if(![1,3,5].includes(day))return msg("Solo registra evaluaciones en lunes, miércoles o viernes.");let session=getSession(date,s);if(session?.cancelled)return msg("No puedes evaluar: ese día está marcado sin entrenamiento.");if(!session)return msg("Primero registra la asistencia de este entrenamiento.");let rec={playerId:id,date,schedule:s,performance:selected("performance"),attitude:selected("attitude"),effort:selected("effort")};if(!rec.performance||!rec.attitude||!rec.effort)return msg("Selecciona una opción en las tres categorías.");let i=db.evaluations.findIndex(x=>x.playerId===id&&x.date===date);if(i>=0)db.evaluations[i]=rec;else db.evaluations.push(rec);if(!save())return;renderAll();msg("Evaluación guardada.")}
 $("saveEv").addEventListener("click",saveEv);
 function renderEvHistory(){let arr=db.evaluations.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);$("evHistory").innerHTML=arr.length?arr.map(e=>{let p=db.players.find(x=>x.id===e.playerId);return `<div class="item"><b>${esc(p?.name||"Jugador")}</b><div class="muted">${esc(e.date)} · ${esc(e.schedule)}</div><div class="row wrap"><span class="pill green">${esc(e.performance)}</span><span class="pill">${esc(e.attitude)}</span><span class="pill gold">${esc(e.effort)}</span></div></div>`}).join(""):'<div class="empty">Todavía no hay evaluaciones.</div>'}
-function calculateMvp(){let month=$("mvpMonth").value;if(!month)return msg("Selecciona un mes.");let html="";schedules.forEach(s=>{let sessions=db.sessions.filter(x=>x.schedule===s&&x.date.startsWith(month)&&!x.cancelled);let candidates=db.players.filter(p=>p.schedule===s).map(p=>{let attended=0,marked=0;sessions.forEach(session=>{let r=session.records.find(x=>x.playerId===p.id);if(r){marked++;if(r.status==="Presente"||r.status==="Retardo")attended++}});let ev=db.evaluations.filter(e=>e.playerId===p.id&&e.schedule===s&&e.date.startsWith(month));let perf={ "Buen trabajo":1,"Excelente trabajo":2};let att={"Buena actitud":2,"Prestó atención":2,"Estuvo platicador":0.5,"No prestó atención":0,"Estuvo jugando":0,"No siguió indicaciones":0};let effort={"Se esforzó mucho":2,"Va mejorando":2,"Necesita mejorar":0.5,"Le costó realizar ejercicios":0.5};let avg=ev.length?ev.reduce((n,e)=>n+(perf[e.performance]||0)+(att[e.attitude]||0)+(effort[e.effort]||0),0)/(ev.length*6):0;let attendance=sessions.length?attended/sessions.length:0;let evaluationCoverage=sessions.length?Math.min(ev.length/sessions.length,1):0;let total=(attendance*50)+(avg*40)+(evaluationCoverage*10);return {...p,attended,sessionCount:sessions.length,evCount:ev.length,total,attendance}}).filter(p=>p.sessionCount>0||p.evCount>0).sort((a,b)=>b.total-a.total);html+=`<div class="card"><h3>${s} · ${labels[s]}</h3><div class="muted">Sesiones realizadas: ${sessions.length}. Los días sin entrenamiento no se incluyen.</div>`;if(!sessions.length){html+='<div class="empty">No hay entrenamientos realizados registrados este mes.</div>'}else if(!candidates.length){html+='<div class="empty">Sin jugadores o registros para este grupo.</div>'}else{let winner=candidates[0];html+=`<div class="item"><span class="pill gold">🏆 MVP DEL GRUPO</span><h3 style="margin-top:10px">${esc(winner.name)}</h3><div class="muted">Asistencia: ${winner.attended} de ${winner.sessionCount} sesiones · Evaluaciones: ${winner.evCount}</div><div class="muted">Índice interno de seguimiento: ${winner.total.toFixed(1)} / 100</div></div>`;if(candidates[1])html+=`<div class="item"><b>Segundo destacado: ${esc(candidates[1].name)}</b><div class="muted">Asistencia: ${candidates[1].attended}/${candidates[1].sessionCount} · Evaluaciones: ${candidates[1].evCount}</div></div>`}html+="</div>"});$("mvpOutput").innerHTML=html}
+function expectedTrainingDates(month){
+ let [year,mon]=month.split("-").map(Number),last=new Date(year,mon,0).getDate(),limit=month===monthNow()?new Date().getDate():last,dates=[];
+ for(let d=1;d<=limit;d++){let dt=new Date(year,mon-1,d);if([1,3,5].includes(dt.getDay()))dates.push(`${year}-${String(mon).padStart(2,"0")}-${String(d).padStart(2,"0")}`)}
+ return dates;
+}
+function calculateMvp(){
+ let month=$("mvpMonth").value;
+ if(!month)return msg("Selecciona un mes.");
+ let html="";
+ let expected=expectedTrainingDates(month);
+ schedules.forEach(s=>{
+  let missing=expected.filter(date=>!getSession(date,s));
+  let sessions=db.sessions.filter(x=>x.schedule===s&&x.date.startsWith(month)&&!x.cancelled);
+  if(missing.length){
+   html+=`<div class="card"><h3>${s} · ${labels[s]}</h3><div class="hint">MVP pendiente: faltan registros de asistencia o días sin entrenamiento en estas fechas: ${missing.map(esc).join(", ")}. Completa el calendario para que nadie sea perjudicado por una sesión sin registrar.</div></div>`;
+   return;
+  }
+  let candidates=db.players.filter(p=>p.schedule===s).map(p=>{
+   let attended=0,absences=0,justified=0,late=0;
+   sessions.forEach(session=>{
+    let r=session.records.find(x=>x.playerId===p.id);
+    if(!r)return;
+    if(r.status==="Presente")attended++;
+    else if(r.status==="Retardo"){attended++;late++}
+    else if(r.status==="Falta")absences++;
+    else if(r.status==="Justificada"){attended++;justified++;}
+   });
+   let ev=db.evaluations.filter(e=>e.playerId===p.id&&e.schedule===s&&e.date.startsWith(month));
+   let deductions=absences*1+late*0.25;
+   let behaviorDeductions=0,effortDeductions=0,performanceDeductions=0;
+   ev.forEach(e=>{
+    if(e.performance==="Buen trabajo")performanceDeductions+=0.25;
+    if(e.attitude==="Estuvo platicador")behaviorDeductions+=1;
+    if(e.attitude==="No prestó atención")behaviorDeductions+=3;
+    if(e.attitude==="Estuvo jugando")behaviorDeductions+=3;
+    if(e.attitude==="No siguió indicaciones")behaviorDeductions+=4;
+    if(e.effort==="Necesita mejorar")effortDeductions+=1;
+    if(e.effort==="Le costó realizar ejercicios")effortDeductions+=0.5;
+   });
+   deductions+=behaviorDeductions+effortDeductions+performanceDeductions;
+   let score=Math.max(0,100-deductions);
+   return {...p,attended,absences,justified,late,sessionCount:sessions.length,evCount:ev.length,score,deductions,behaviorDeductions,effortDeductions,performanceDeductions};
+  }).filter(p=>p.sessionCount>0||p.evCount>0).sort((a,b)=>b.score-a.score||b.evCount-a.evCount||a.name.localeCompare(b.name,"es"));
+  html+=`<div class="card"><h3>${s} · ${labels[s]}</h3><div class="muted">Sesiones realizadas: ${sessions.length}. Cada jugador comienza con 100 puntos. Buen trabajo: −0.25 · Falta injustificada: −1 · Falta justificada: cuenta como asistencia y descuenta 0. Los días sin entrenamiento quedan excluidos.</div>`;
+  if(!sessions.length){html+='<div class="empty">No hay entrenamientos realizados registrados este mes.</div>'}
+  else if(!candidates.length){html+='<div class="empty">Sin jugadores o registros para este grupo.</div>'}
+  else{
+   let winner=candidates[0];
+   html+=`<div class="item"><span class="pill gold">🏆 MVP DEL GRUPO</span><h3 style="margin-top:10px">${esc(winner.name)}</h3><div class="stat"><span>Calificación final</span><strong>${winner.score.toFixed(2)} / 100</strong></div><div class="muted">Asistencia: ${winner.attended} · Faltas: ${winner.absences} · Justificadas: ${winner.justified} · Retardos: ${winner.late}</div><div class="muted">Evaluaciones: ${winner.evCount} · Descuentos por actitud: ${winner.behaviorDeductions.toFixed(2)} · Por esfuerzo: ${winner.effortDeductions.toFixed(2)}</div></div>`;
+   html+='<h3>Clasificación del grupo</h3>';
+   html+=candidates.map((p,i)=>`<div class="item row"><div><b>${i+1}. ${esc(p.name)}</b><div class="muted">Faltas ${p.absences} · Justificadas ${p.justified} · Evaluaciones ${p.evCount}</div></div><span class="pill ${i===0?"gold":"green"}">${p.score.toFixed(2)} pts</span></div>`).join("");
+  }
+  html+="</div>";
+ });
+ $("mvpOutput").innerHTML=html;
+}
 $("runMvp").addEventListener("click",calculateMvp);
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="respaldo-control-tiburones.json";a.click();URL.revokeObjectURL(url);msg("Respaldo descargado.")}
 $("backup").addEventListener("click",backup);
 $("restore").addEventListener("click",()=>{let f=$("restoreFile").files[0];if(!f)return msg("Selecciona tu archivo de respaldo.");if(!confirm("Restaurar reemplazará los datos actuales. ¿Continuar?"))return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.players)||!Array.isArray(x.sessions)||!Array.isArray(x.evaluations))throw Error();db=x;save();renderAll();msg("Respaldo restaurado.")}catch(e){msg("Archivo de respaldo no válido.")}};r.readAsText(f)});
-function renderSummary(){let present=db.sessions.filter(s=>s.date===today()&&!s.cancelled).flatMap(s=>s.records).filter(r=>r.status==="Presente"||r.status==="Retardo").length;$("totalPlayers").textContent=db.players.length;$("totalPresent").textContent=present;$("totalEvals").textContent=db.evaluations.filter(e=>e.date===today()).length;$("groupSummary").innerHTML=schedules.map(s=>`<div class="item row"><b>${s} · ${labels[s]}</b><span class="pill">${db.players.filter(p=>p.schedule===s).length} jugadores</span></div>`).join("")}
+function renderSummary(){let present=db.sessions.filter(s=>s.date===today()&&!s.cancelled).flatMap(s=>s.records).filter(r=>["Presente","Retardo","Justificada"].includes(r.status)).length;$("totalPlayers").textContent=db.players.length;$("totalPresent").textContent=present;$("totalEvals").textContent=db.evaluations.filter(e=>e.date===today()).length;$("groupSummary").innerHTML=schedules.map(s=>`<div class="item row"><b>${s} · ${labels[s]}</b><span class="pill">${db.players.filter(p=>p.schedule===s).length} jugadores</span></div>`).join("")}
 function renderAll(){renderCounts();renderRoster();renderAtt();renderAttHistory();renderEvPlayers();renderEvHistory();renderSummary()}
 function init(){load();$("attDate").value=today();$("evDate").value=today();$("mvpMonth").value=monthNow();renderAll()}
 ["attDate","attSchedule"].forEach(id=>$(id).addEventListener("change",renderAtt));
