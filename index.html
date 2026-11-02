@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#071629">
 <title>CONTROL TIBURONES</title>
-
 <style>
 :root{
   --bg:#071629;
@@ -201,7 +201,6 @@ footer{
 }
 </style>
 </head>
-
 <body>
 <header>
   <div class="brand">
@@ -212,7 +211,6 @@ footer{
     </div>
   </div>
 </header>
-
 <main>
 <nav id="menu">
   <button class="active" data-page="inicio">🏠 Inicio</button>
@@ -238,7 +236,6 @@ footer{
     </div>
     <div id="avisosInicio"></div>
   </div>
-
   <div class="grid">
     <div class="stat green">
       <div class="label">ALUMNOS ACTIVOS</div>
@@ -262,7 +259,6 @@ footer{
       <div class="small">Ingresos acumulados menos gastos acumulados</div>
     </div>
   </div>
-
   <div class="panel" style="margin-top:15px">
     <h3>Resumen del entrenamiento</h3>
     <div id="resumenEntrenamiento" class="muted">Cargando...</div>
@@ -381,7 +377,6 @@ footer{
     </select>
     <button class="btn green full" id="btnGuardarIngreso">＋ GUARDAR INGRESO</button>
   </div>
-
   <div class="panel">
     <h2>💸 Registrar gasto</h2>
     <label>Concepto del gasto</label>
@@ -409,7 +404,6 @@ footer{
     </select>
     <button class="btn red full" id="btnGuardarGasto">－ GUARDAR GASTO</button>
   </div>
-
   <div class="panel">
     <h2>Movimientos recientes</h2>
     <div id="listaMovimientos"></div>
@@ -467,1052 +461,848 @@ footer{
 </section>
 
 <footer>CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA 🦈</footer>
-</main>
-
-<script>// ==========================================
+  </main>
+<script>
+// ==========================================
 // CONTROL TIBURONES - PARTE 2
-// BASE DE DATOS Y FUNCIONES PRINCIPALES
+// FUNCIONES Y ALMACENAMIENTO
 // ==========================================
 
-const DB_KEY = "controlTiburonesNuevoV2";
+"use strict";
 
 const $ = id => document.getElementById(id);
 
-const hoy = () => {
-  const d = new Date();
-  return [
-    d.getFullYear(),
-    String(d.getMonth()+1).padStart(2,"0"),
-    String(d.getDate()).padStart(2,"0")
-  ].join("-");
-};
+const CLAVE_DATOS = "controlTiburonesNuevoV2";
 
-const mesActual = () => hoy().slice(0,7);
-
-const dinero = n => "$" + Number(n || 0).toLocaleString("es-MX",{
-  minimumFractionDigits:2,
-  maximumFractionDigits:2
-});
-
-const idNuevo = () => (
-  Date.now().toString(36) +
-  Math.random().toString(36).slice(2,8)
-);
-
-const escapar = s => String(s ?? "").replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-}[c]));
-
-function fechaLocal(valor){
-  const p = String(valor).split("-").map(Number);
-  return new Date(p[0],p[1]-1,p[2]);
+function fechaLocal(d = new Date()) {
+  const anio = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${anio}-${mes}-${dia}`;
 }
 
-function fechaBonita(valor){
-  if(!valor) return "";
-  return fechaLocal(valor).toLocaleDateString("es-MX",{
-    day:"numeric",month:"long",year:"numeric"
-  });
+function mesActual() {
+  return fechaLocal().slice(0, 7);
 }
 
-function cargarDB(){
-  try{
-    const anterior = JSON.parse(localStorage.getItem(DB_KEY));
-    if(anterior && typeof anterior === "object"){
-      return {
-        students:Array.isArray(anterior.students)?anterior.students:[],
-        attendance:Array.isArray(anterior.attendance)?anterior.attendance:[],
-        evaluations:Array.isArray(anterior.evaluations)?anterior.evaluations:[],
-        payments:Array.isArray(anterior.payments)?anterior.payments:[],
-        incomes:Array.isArray(anterior.incomes)?anterior.incomes:[],
-        expenses:Array.isArray(anterior.expenses)?anterior.expenses:[],
-        cancellations:Array.isArray(anterior.cancellations)?anterior.cancellations:[],
-        settings:anterior.settings || {}
-      };
-    }
-  }catch(e){
-    console.error("No se pudo leer la información guardada",e);
-  }
-
+function crearBase() {
   return {
-    students:[],
-    attendance:[],
-    evaluations:[],
-    payments:[],
-    incomes:[],
-    expenses:[],
-    cancellations:[],
-    settings:{}
+    students: [],
+    attendance: [],
+    evaluations: [],
+    payments: [],
+    incomes: [],
+    expenses: [],
+    cancellations: [],
+    families: [],
+    settings: {
+      cuotaNormal: 500,
+      cuotaMatutina: 600,
+      recargo: 100
+    }
   };
 }
 
-let db = cargarDB();
+function cargarBase() {
+  try {
+    const guardado = localStorage.getItem(CLAVE_DATOS);
+    if (!guardado) return crearBase();
 
-function guardarDB(){
-  try{
-    localStorage.setItem(DB_KEY,JSON.stringify(db));
+    const datos = JSON.parse(guardado);
+    const base = crearBase();
+
+    return {
+      ...base,
+      ...datos,
+      students: Array.isArray(datos.students) ? datos.students : [],
+      attendance: Array.isArray(datos.attendance) ? datos.attendance : [],
+      evaluations: Array.isArray(datos.evaluations) ? datos.evaluations : [],
+      payments: Array.isArray(datos.payments) ? datos.payments : [],
+      incomes: Array.isArray(datos.incomes) ? datos.incomes : [],
+      expenses: Array.isArray(datos.expenses) ? datos.expenses : [],
+      cancellations: Array.isArray(datos.cancellations) ? datos.cancellations : [],
+      families: Array.isArray(datos.families) ? datos.families : [],
+      settings: { ...base.settings, ...(datos.settings || {}) }
+    };
+  } catch (error) {
+    console.error("Error al cargar información:", error);
+    alert("No se pudo leer la información guardada. No borres los datos del navegador.");
+    return crearBase();
+  }
+}
+
+let db = cargarBase();
+
+function guardarBase() {
+  try {
+    localStorage.setItem(CLAVE_DATOS, JSON.stringify(db));
     return true;
-  }catch(e){
-    alert("No se pudo guardar. Revisa el espacio disponible del navegador y descarga un respaldo.");
-    console.error(e);
+  } catch (error) {
+    console.error("Error al guardar:", error);
+    alert("No se pudo guardar. Revisa el espacio disponible del navegador.");
     return false;
   }
 }
 
-function alumnoPorId(id){
-  return db.students.find(a=>a.id===id);
+function escapar(valor) {
+  return String(valor ?? "").replace(/[&<>"']/g, letra => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[letra]);
 }
 
-function activos(){
-  return db.students.filter(a=>(a.status || "active")==="active");
+function dinero(valor) {
+  return Number(valor || 0).toLocaleString("es-MX", {
+    style: "currency",
+    currency: "MXN"
+  });
 }
 
-function cuotaAlumno(a){
-  if(!a) return 0;
-  if(a.beca==="completa" || a.beca==="cortesia") return 0;
-  return Math.max(0,Number(a.cuota||500) -
-    (a.beca==="parcial"?Number(a.descuento||0):0));
+function activos() {
+  return db.students.filter(x => x.active !== false);
 }
 
-function diaEntrenamiento(fecha){
-  const d=fechaLocal(fecha).getDay();
-  return [1,3,5].includes(d);
+function alumnoPorId(id) {
+  return db.students.find(x => x.id === id);
 }
 
-function cancelacion(fecha){
-  return db.cancellations.find(c=>c.date===fecha);
+function nombreAlumno(id) {
+  return alumnoPorId(id)?.name || "Alumno eliminado";
 }
 
-function fechaValida(fecha){
-  return Boolean(fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha));
-}
+function fechasDelMes(mes) {
+  const [anio, numeroMes] = mes.split("-").map(Number);
+  const dias = new Date(anio, numeroMes, 0).getDate();
+  const resultado = [];
 
-function entrenamientoDisponible(fecha){
-  return fechaValida(fecha) &&
-    diaEntrenamiento(fecha) &&
-    !cancelacion(fecha);
-}
-
-function fechasDelMes(mes){
-  if(!/^\d{4}-\d{2}$/.test(mes)) return [];
-  const [y,m]=mes.split("-").map(Number);
-  const ultimo=new Date(y,m,0).getDate();
-  const resultado=[];
-
-  for(let dia=1;dia<=ultimo;dia++){
-    const f=[y,String(m).padStart(2,"0"),String(dia).padStart(2,"0")].join("-");
-    if(diaEntrenamiento(f)) resultado.push(f);
+  for (let dia = 1; dia <= dias; dia++) {
+    const fecha = new Date(anio, numeroMes - 1, dia);
+    if ([1, 3, 5].includes(fecha.getDay())) {
+      resultado.push(fechaLocal(fecha));
+    }
   }
   return resultado;
 }
 
-function diasDeGracia(){
-  return Number(db.settings.diasGracia ?? 5);
+function entrenamientoCancelado(fecha) {
+  return db.cancellations.some(x => x.date === fecha);
 }
 
-function recargo(){
-  return Number(db.settings.recargo ?? 100);
+function aviso(mensaje, tipo = "ok", destino = "avisosInicio") {
+  const elemento = $(destino);
+  if (!elemento) return;
+  elemento.innerHTML = `<div class="notice ${tipo}">${escapar(mensaje)}</div>`;
 }
 
-function pagoMensualAlumno(id,mes){
-  return db.payments
-    .filter(p=>p.studentId===id && p.month===mes)
-    .reduce((s,p)=>s+Number(p.amount||0),0);
-}
+// ==========================================
+// NAVEGACIÓN
+// ==========================================
 
-function estadoPago(a,mes=mesActual()){
-  const base=cuotaAlumno(a);
-  const pagado=pagoMensualAlumno(a.id,mes);
-  const saldo=Math.max(0,base-pagado);
-  const dia=Number(mes===mesActual()?hoy().slice(8,10):"1");
-
-  let recargoAplicable=0;
-  if(saldo>0 && mes===mesActual() && dia>diasDeGracia() && base>0){
-    recargoAplicable=recargo();
-  }
-
-  return {
-    base,
-    pagado,
-    saldo,
-    recargo:recargoAplicable,
-    total:saldo+recargoAplicable,
-    liquidado:saldo===0
-  };
-}
-
-function registrarAviso(mensaje,tipo="ok",contenedor="avisosInicio"){
-  const el=$(contenedor);
-  if(!el) return;
-  el.innerHTML=`<div class="notice ${tipo}">${escapar(mensaje)}</div>`;
-}
-
-function entrenamientosPendientes(){
-  const lista=[];
-  const hoyFecha=hoy();
-
-  fechasDelMes(mesActual()).forEach(f=>{
-    if(f>hoyFecha || cancelacion(f)) return;
-
-    const alumnosDelDia=activos();
-    const pendientes=[];
-
-    alumnosDelDia.forEach(a=>{
-      const existe=db.evaluations.some(e=>
-        e.studentId===a.id && e.date===f
-      );
-      if(!existe) pendientes.push(a);
-    });
-
-    if(pendientes.length){
-      lista.push({date:f,count:pendientes.length});
-    }
+function mostrarPagina(id) {
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.toggle("active", p.id === id);
   });
 
-  return lista;
+  document.querySelectorAll("#menu button").forEach(b => {
+    b.classList.toggle("active", b.dataset.page === id);
+  });
+
+  if (id === "inicio") actualizarInicio();
+  if (id === "alumnos") cargarAlumnos();
+  if (id === "asistencia") cargarAsistencia();
+  if (id === "evaluaciones") cargarEvaluaciones();
+  if (id === "finanzas") cargarFinanzas();
+  if (id === "calendario") cargarCalendario();
 }
 
-function actualizarInicio(){
-  const mes=mesActual();
-  const alumnos=activos();
+// ==========================================
+// ALUMNOS
+// ==========================================
 
-  const pendientes=alumnos.filter(a=>
-    estadoPago(a,mes).total>0
-  ).length;
+function guardarAlumno() {
+  const nombre = $("alumnoNombre").value.trim();
+  const horario = $("alumnoHorario").value;
+  const cuota = Number($("alumnoCuota").value);
+  const descuento = Number($("alumnoDescuento").value || 0);
+  const beca = $("alumnoBeca").value;
 
-  const ingresosMes=db.incomes
-    .filter(x=>x.date?.startsWith(mes))
-    .reduce((s,x)=>s+Number(x.amount||0),0);
-
-  const mensualidades=db.payments
-    .filter(x=>x.date?.startsWith(mes))
-    .reduce((s,x)=>s+Number(x.amount||0),0);
-
-  const gastosMes=db.expenses
-    .filter(x=>x.date?.startsWith(mes))
-    .reduce((s,x)=>s+Number(x.amount||0),0);
-
-  const ingresosTotales=db.incomes.reduce((s,x)=>s+Number(x.amount||0),0)
-    +db.payments.reduce((s,x)=>s+Number(x.amount||0),0);
-
-  const gastosTotales=db.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
-
-  $("fechaActual").textContent=fechaBonita(hoy());
-  $("statActivos").textContent=alumnos.length;
-  $("statPendientes").textContent=pendientes;
-  $("statIngresos").textContent=dinero(ingresosMes+mensualidades);
-  $("statGastos").textContent=dinero(gastosMes);
-  $("statAhorro").textContent=dinero(ingresosTotales-gastosTotales);
-
-  const pendientesEval=entrenamientosPendientes();
-
-  $("avisosInicio").innerHTML=pendientesEval.length
-    ? pendientesEval.map(p=>`
-      <div class="notice">
-        <b>⚠️ FALTA EVALUACIÓN</b><br>
-        ${escapar(fechaBonita(p.date))}: ${p.count} alumno(s) pendiente(s).
-      </div>`).join("")
-    : `<div class="notice ok">✓ No tienes evaluaciones pendientes de fechas anteriores.</div>`;
-
-  const entrenamientos=fechasDelMes(mes);
-  const cancelados=db.cancellations.filter(c=>c.date.startsWith(mes)).length;
-  const realizados=entrenamientos.filter(f=>f<=hoy() && !cancelacion(f)).length;
-
-  $("resumenEntrenamiento").innerHTML=`
-    <p>Fechas programadas este mes: <b>${entrenamientos.length}</b></p>
-    <p>Entrenamientos realizados o transcurridos: <b>${realizados}</b></p>
-    <p>Entrenamientos cancelados: <b>${cancelados}</b></p>
-    <p>Evaluaciones pendientes: <b>${pendientesEval.length}</b></p>
-  `;
-}
-
-function mostrarAlumnos(){
-  const buscar=($("buscarAlumno")?.value||"").toLowerCase();
-  const lista=db.students
-    .filter(a=>a.name.toLowerCase().includes(buscar))
-    .sort((a,b)=>a.name.localeCompare(b.name,"es"));
-
-  $("totalAlumnos").textContent=`${lista.length} alumnos`;
-
-  $("listaAlumnos").innerHTML=lista.length
-    ? lista.map(a=>`
-      <div class="list-item">
-        <div class="row">
-          <b>${escapar(a.name)}</b>
-          <span class="pill ${a.status==="active"?"green":"red"}">
-            ${a.status==="active"?"ACTIVO":"INACTIVO"}
-          </span>
-        </div>
-        <p class="small">Horario: ${escapar(a.schedule)}</p>
-        <p class="small">Cuota: ${dinero(cuotaAlumno(a))}</p>
-        <div class="actions">
-          <button class="btn blue" onclick="editarAlumno('${a.id}')">EDITAR</button>
-          <button class="btn red" onclick="cambiarEstadoAlumno('${a.id}')">
-            ${a.status==="active"?"DAR DE BAJA":"ACTIVAR"}
-          </button>
-        </div>
-      </div>
-    `).join("")
-    : `<div class="empty">Todavía no hay alumnos registrados.</div>`;
-}
-
-function guardarAlumno(){
-  const name=$("alumnoNombre").value.trim();
-  if(!name){
-    alert("Escribe el nombre del alumno.");
+  if (!nombre) {
+    alert("Escribe el nombre completo del alumno.");
+    $("alumnoNombre").focus();
     return;
   }
 
-  const cuota=Number($("alumnoCuota").value);
-  const descuento=Number($("alumnoDescuento").value);
-
-  if(cuota<0 || descuento<0){
+  if (!Number.isFinite(cuota) || cuota < 0 || descuento < 0 || descuento > cuota) {
     alert("Revisa la cuota y el descuento.");
     return;
   }
 
+  const duplicado = activos().some(x =>
+    x.name.trim().toLowerCase() === nombre.toLowerCase()
+  );
+
+  if (duplicado) {
+    alert("Ya existe un alumno activo con ese nombre.");
+    return;
+  }
+
   db.students.push({
-    id:idNuevo(),
-    name,
-    schedule:$("alumnoHorario").value,
-    cuota,
-    beca:$("alumnoBeca").value,
-    descuento,
-    status:"active",
-    createdAt:hoy()
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    name: nombre,
+    schedule: horario,
+    fee: cuota,
+    discount: descuento,
+    scholarship: beca,
+    active: true,
+    createdAt: fechaLocal()
   });
 
-  if(!guardarDB()) return;
+  if (!guardarBase()) return;
 
-  $("alumnoNombre").value="";
-  $("alumnoDescuento").value="0";
-  mostrarAlumnos();
-  actualizarTodo();
+  $("alumnoNombre").value = "";
+  $("alumnoDescuento").value = "0";
+  cargarAlumnos();
+  actualizarInicio();
   alert("Alumno guardado correctamente.");
 }
 
-function editarAlumno(id){
-  const a=alumnoPorId(id);
-  if(!a) return;
+function cargarAlumnos() {
+  const lista = $("listaAlumnos");
+  if (!lista) return;
 
-  const nombre=prompt("Nombre completo:",a.name);
-  if(nombre===null) return;
-  if(!nombre.trim()) return alert("El nombre no puede quedar vacío.");
+  const busqueda = ($("buscarAlumno")?.value || "").trim().toLowerCase();
 
-  const cuota=prompt("Mensualidad:",a.cuota);
-  if(cuota===null) return;
+  const alumnos = activos()
+    .filter(x => x.name.toLowerCase().includes(busqueda))
+    .sort((a, b) => a.schedule.localeCompare(b.schedule) || a.name.localeCompare(b.name));
 
-  const horario=prompt("Horario (4:30, 5:30, 6:30 u 8:30):",a.schedule);
-  if(horario===null) return;
+  $("totalAlumnos").textContent = `${activos().length} alumnos`;
 
-  if(!["4:30","5:30","6:30","8:30"].includes(horario)){
-    return alert("Horario no válido.");
-  }
-
-  a.name=nombre.trim();
-  a.cuota=Math.max(0,Number(cuota)||0);
-  a.schedule=horario;
-
-  if(guardarDB()){
-    mostrarAlumnos();
-    actualizarTodo();
-  }
-}
-
-function cambiarEstadoAlumno(id){
-  const a=alumnoPorId(id);
-  if(!a) return;
-
-  const nuevo=a.status==="active"?"inactive":"active";
-  if(!confirm(`¿Deseas ${nuevo==="active"?"activar":"dar de baja"} a ${a.name}?`)) return;
-
-  a.status=nuevo;
-  if(guardarDB()){
-    mostrarAlumnos();
-    actualizarTodo();
-  }
-}
-
-function cargarAsistencia(){
-  const fecha=$("fechaAsistencia").value;
-  const horario=$("horarioAsistencia").value;
-
-  if(!entrenamientoDisponible(fecha)){
-    $("listaAsistencia").innerHTML=
-      `<div class="notice error">Esta fecha no tiene entrenamiento disponible o fue cancelada.</div>`;
+  if (!alumnos.length) {
+    lista.innerHTML = `<div class="empty">Todavía no hay alumnos registrados.</div>`;
     return;
   }
 
-  const grupo=activos().filter(a=>a.schedule===horario);
-
-  $("listaAsistencia").innerHTML=grupo.length
-    ? grupo.map(a=>{
-      const anterior=db.attendance.find(x=>x.studentId===a.id && x.date===fecha);
-      return `
-      <div class="list-item">
-        <b>${escapar(a.name)}</b>
-        <select class="estadoAsistencia" data-id="${a.id}">
-          <option value="present" ${anterior?.status==="present"?"selected":""}>Presente</option>
-          <option value="absent" ${anterior?.status==="absent"?"selected":""}>Ausente</option>
-          <option value="justified" ${anterior?.status==="justified"?"selected":""}>Justificada</option>
-        </select>
-      </div>`;
-    }).join("")
-    : `<div class="empty">No hay alumnos activos en este horario.</div>`;
-}
-
-function guardarAsistencia(){
-  const fecha=$("fechaAsistencia").value;
-  if(!entrenamientoDisponible(fecha)){
-    return alert("No se puede registrar asistencia en una fecha sin entrenamiento.");
-  }
-
-  const controles=[...document.querySelectorAll(".estadoAsistencia")];
-  if(!controles.length) return alert("No hay alumnos para registrar.");
-
-  controles.forEach(c=>{
-    const registro={
-      studentId:c.dataset.id,
-      date:fecha,
-      status:c.value
-    };
-
-    const i=db.attendance.findIndex(x=>
-      x.studentId===registro.studentId && x.date===fecha
-    );
-
-    if(i>=0) db.attendance[i]=registro;
-    else db.attendance.push(registro);
-  });
-
-  if(guardarDB()){
-    alert("Asistencia guardada correctamente.");
-    actualizarTodo();
-    cargarAsistencia();
-  }
-}
-
-function cargarEvaluaciones(){
-  const fecha=$("fechaEvaluacion").value;
-  const horario=$("horarioEvaluacion").value;
-
-  if(!entrenamientoDisponible(fecha)){
-    $("listaEvaluaciones").innerHTML=
-      `<div class="notice error">No corresponde evaluar: fecha no válida o entrenamiento cancelado.</div>`;
-    return;
-  }
-
-  const grupo=activos().filter(a=>a.schedule===horario);
-
-  $("listaEvaluaciones").innerHTML=grupo.length
-    ? grupo.map(a=>{
-      const anterior=db.evaluations.find(x=>x.studentId===a.id && x.date===fecha);
-      return `
-      <div class="list-item">
-        <b>${escapar(a.name)}</b>
-        <label>Observación</label>
-        <select class="tipoEvaluacion" data-id="${a.id}">
-          <option value="excellent" ${anterior?.type==="excellent"?"selected":""}>Excelente / sin observaciones</option>
-          <option value="effort" ${anterior?.type==="effort"?"selected":""}>Esfuerzo y participación</option>
-          <option value="teamwork" ${anterior?.type==="teamwork"?"selected":""}>Compañerismo</option>
-          <option value="improvement" ${anterior?.type==="improvement"?"selected":""}>Mejoría destacada</option>
-          <option value="yellow" ${anterior?.type==="yellow"?"selected":""}>Amarilla: distracción o plática</option>
-          <option value="red" ${anterior?.type==="red"?"selected":""}>Roja: conducta que debe corregir</option>
-        </select>
-        <label>Observaciones adicionales</label>
-        <input class="notaEvaluacion" data-id="${a.id}"
-          value="${escapar(anterior?.note||"")}"
-          placeholder="Escribe una observación (opcional)">
-        <p class="small">Puntos de esta evaluación: ${anterior?anterior.points:"10"}</p>
-      </div>`;
-    }).join("")
-    : `<div class="empty">No hay alumnos activos en este horario.</div>`;
-}
-
-function puntosEvaluacion(tipo){
-  const puntos={
-    excellent:10,
-    effort:10,
-    teamwork:10,
-    improvement:10,
-    yellow:9,
-    red:7
-  };
-  return puntos[tipo] ?? 10;
-}
-
-function guardarEvaluaciones(){
-  const fecha=$("fechaEvaluacion").value;
-
-  if(!entrenamientoDisponible(fecha)){
-    return alert("No se puede evaluar una fecha cancelada o sin entrenamiento.");
-  }
-
-  const controles=[...document.querySelectorAll(".tipoEvaluacion")];
-  if(!controles.length) return alert("No hay alumnos para evaluar.");
-
-  controles.forEach(c=>{
-    const id=c.dataset.id;
-    const tipo=c.value;
-    const nota=document.querySelector(`.notaEvaluacion[data-id="${id}"]`)?.value||"";
-
-    const registro={
-      id:idNuevo(),
-      studentId:id,
-      date:fecha,
-      type:tipo,
-      points:puntosEvaluacion(tipo),
-      note:nota
-    };
-
-    const i=db.evaluations.findIndex(x=>
-      x.studentId===id && x.date===fecha
-    );
-
-    if(i>=0){
-      registro.id=db.evaluations[i].id;
-      db.evaluations[i]=registro;
-    }else{
-      db.evaluations.push(registro);
-    }
-  });
-
-  if(guardarDB()){
-    alert("Evaluaciones guardadas correctamente.");
-    actualizarTodo();
-    cargarEvaluaciones();
-  }
-}
-
-function puntajeMVP(id,mes){
-  const evaluaciones=db.evaluations.filter(e=>
-    e.studentId===id && e.date.startsWith(mes)
-  );
-
-  const asistencias=db.attendance.filter(a=>
-    a.studentId===id && a.date.startsWith(mes)
-  );
-
-  let puntos=0;
-
-  evaluaciones.forEach(e=>{
-    puntos+=Number(e.points||10);
-  });
-
-  const presentes=asistencias.filter(a=>a.status==="present").length;
-  const justificadas=asistencias.filter(a=>a.status==="justified").length;
-
-  return {
-    evaluaciones:evaluaciones.length,
-    presentes,
-    justificadas,
-    puntos:puntos+(presentes*2)+(justificadas*1)
-  };
-}
-
-function calcularMVP(){
-  const mes=$("mesMVP").value;
-  if(!mes) return alert("Selecciona el mes.");
-
-  const resultados=[];
-
-  ["4:30","5:30","6:30","8:30"].forEach(horario=>{
-    const grupo=activos().filter(a=>a.schedule===horario);
-
-    const ranking=grupo.map(a=>({
-      alumno:a,
-      ...puntajeMVP(a.id,mes)
-    })).filter(x=>x.evaluaciones>0 || x.presentes>0)
-      .sort((a,b)=>
-        b.puntos-a.puntos ||
-        b.presentes-a.presentes ||
-        a.alumno.name.localeCompare(b.alumno.name,"es")
-      );
-
-    resultados.push({horario,ranking});
-  });
-
-  $("resultadoMVP").innerHTML=resultados.map(r=>`
+  lista.innerHTML = alumnos.map(x => `
     <div class="list-item">
-      <h3>🏆 Horario ${escapar(r.horario)}</h3>
-      ${r.ranking.length
-        ? r.ranking.slice(0,2).map((x,i)=>`
-          <div class="notice ${i===0?"ok":""}">
-            <b>${i+1}. ${escapar(x.alumno.name)}</b><br>
-            Puntos: <b>${x.puntos}</b><br>
-            Asistencias: ${x.presentes}<br>
-            Evaluaciones: ${x.evaluaciones}
-          </div>`).join("")
-        : `<p class="muted">Todavía no hay resultados registrados.</p>`
-      }
+      <div class="row">
+        <strong>${escapar(x.name)}</strong>
+        <span class="pill blue">${escapar(x.schedule)}</span>
+      </div>
+      <p class="small">Cuota: ${dinero(x.fee)} · Descuento: ${dinero(x.discount)}</p>
+      <div class="actions">
+        <button class="btn yellow" data-edit-alumno="${escapar(x.id)}">Editar</button>
+        <button class="btn red" data-baja-alumno="${escapar(x.id)}">Dar de baja</button>
+      </div>
     </div>
   `).join("");
 }
 
-function guardarIngreso(){
-  const cantidad=Number($("cantidadIngreso").value);
-  const fecha=$("fechaIngreso").value;
-  if(!Number.isFinite(cantidad)||cantidad<=0) return alert("Ingresa una cantidad válida.");
-  if(!fechaValida(fecha)) return alert("Selecciona una fecha válida.");
+function editarAlumno(id) {
+  const alumno = alumnoPorId(id);
+  if (!alumno) return;
 
-  db.incomes.push({
-    id:idNuevo(),
-    type:$("tipoIngreso").value,
-    detail:$("detalleIngreso").value.trim(),
-    amount:cantidad,
-    date:fecha,
-    method:$("metodoIngreso").value
-  });
-
-  if(guardarDB()){
-    $("cantidadIngreso").value="";
-    $("detalleIngreso").value="";
-    alert("Ingreso guardado correctamente.");
-    actualizarTodo();
-  }
-}
-
-function guardarGasto(){
-  const cantidad=Number($("cantidadGasto").value);
-  const fecha=$("fechaGasto").value;
-  if(!Number.isFinite(cantidad)||cantidad<=0) return alert("Ingresa una cantidad válida.");
-  if(!fechaValida(fecha)) return alert("Selecciona una fecha válida.");
-
-  db.expenses.push({
-    id:idNuevo(),
-    type:$("tipoGasto").value,
-    detail:$("detalleGasto").value.trim(),
-    amount:cantidad,
-    date:fecha,
-    method:$("metodoGasto").value
-  });
-
-  if(guardarDB()){
-    $("cantidadGasto").value="";
-    $("detalleGasto").value="";
-    alert("Gasto guardado correctamente.");
-    actualizarTodo();
-  }
-}
-
-function mostrarMovimientos(){
-  const movimientos=[
-    ...db.incomes.map(x=>({...x,kind:"Ingreso"})),
-    ...db.payments.map(x=>({...x,kind:"Mensualidad"})),
-    ...db.expenses.map(x=>({...x,kind:"Gasto"}))
-  ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
-
-  $("listaMovimientos").innerHTML=movimientos.length
-    ? movimientos.map(x=>`
-      <div class="list-item">
-        <div class="row">
-          <b>${escapar(x.kind)}: ${escapar(x.type||"Mensualidad")}</b>
-          <b>${dinero(x.amount)}</b>
-        </div>
-        <div class="small">${fechaBonita(x.date)} · ${escapar(x.detail||"")}</div>
-      </div>
-    `).join("")
-    : `<div class="empty">Todavía no hay movimientos registrados.</div>`;
-}
-
-function cancelarEntrenamiento(){
-  const fecha=$("fechaCancelar").value;
-  if(!fechaValida(fecha) || !diaEntrenamiento(fecha)){
-    return alert("Selecciona un lunes, miércoles o viernes válido.");
-  }
-  if(fecha<hoy()){
-    return alert("Para evitar modificar el historial, no se permite cancelar fechas pasadas desde aquí.");
-  }
-  if(cancelacion(fecha)) return alert("Este entrenamiento ya está cancelado.");
-
-  if(!confirm("¿Confirmas cancelar el entrenamiento? No se solicitarán evaluaciones para esta fecha.")) return;
-
-  db.cancellations.push({
-    id:idNuevo(),
-    date:fecha,
-    reason:$("motivoCancelar").value,
-    detail:$("detalleCancelar").value.trim()
-  });
-
-  if(guardarDB()){
-    alert("Entrenamiento cancelado.");
-    actualizarTodo();
-    mostrarCalendario();
-  }
-}
-
-function mostrarCalendario(){
-  const mes=$("mesCalendario").value || mesActual();
-  const fechas=fechasDelMes(mes);
-
-  $("listaCalendario").innerHTML=fechas.map(f=>{
-    const c=cancelacion(f);
-    const pasado=f<hoy();
-    return `
-      <div class="list-item">
-        <div class="row">
-          <b>${fechaBonita(f)}</b>
-          <span class="pill ${c?"red":pasado?"green":"blue"}">
-            ${c?"CANCELADO":pasado?"FECHA TRANSCURRIDA":"PROGRAMADO"}
-          </span>
-        </div>
-        ${c?`<p class="small">${escapar(c.reason)} ${escapar(c.detail)}</p>`:""}
-      </div>`;
-  }).join("") || `<div class="empty">No hay entrenamientos este mes.</div>`;
-}
-
-function consultarReporte(){
-  const mes=$("mesReporte").value;
-  if(!mes) return alert("Selecciona un mes.");
-
-  const mensualidades=db.payments.filter(x=>x.date.startsWith(mes));// ==========================================
-// CONTROL TIBURONES - PARTE 3
-// BOTONES, NAVEGACION, PAGOS Y RESPALDOS
-// ==========================================
-
-// ---------- NAVEGACION ----------
-document.querySelectorAll("#menu button").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    document.querySelectorAll("#menu button").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-
-    btn.classList.add("active");
-    const pagina=$(btn.dataset.page);
-    if(pagina) pagina.classList.add("active");
-
-    if(btn.dataset.page==="asistencia") cargarAsistencia();
-    if(btn.dataset.page==="evaluaciones") cargarEvaluaciones();
-    if(btn.dataset.page==="calendario") mostrarCalendario();
-    if(btn.dataset.page==="mvp") $("mesMVP").value ||= mesActual();
-    if(btn.dataset.page==="reportes") $("mesReporte").value ||= mesActual();
-  });
-});
-
-// ---------- FECHAS AUTOMATICAS ----------
-[
-  "fechaAsistencia","fechaEvaluacion","fechaIngreso",
-  "fechaGasto","fechaCancelar"
-].forEach(id=>{
-  if($(id)) $(id).value=hoy();
-});
-
-["mesCalendario","mesReporte","mesMVP"].forEach(id=>{
-  if($(id)) $(id).value=mesActual();
-});
-
-$("fechaAsistencia").addEventListener("change",cargarAsistencia);
-$("horarioAsistencia").addEventListener("change",cargarAsistencia);
-$("fechaEvaluacion").addEventListener("change",cargarEvaluaciones);
-$("horarioEvaluacion").addEventListener("change",cargarEvaluaciones);
-$("mesCalendario").addEventListener("change",mostrarCalendario);
-$("buscarAlumno").addEventListener("input",mostrarAlumnos);
-
-// ---------- BOTONES PRINCIPALES ----------
-$("btnGuardarAlumno").addEventListener("click",guardarAlumno);
-$("btnGuardarAsistencia").addEventListener("click",guardarAsistencia);
-$("btnGuardarEvaluaciones").addEventListener("click",guardarEvaluaciones);
-$("btnCalcularMVP").addEventListener("click",calcularMVP);
-$("btnGuardarIngreso").addEventListener("click",guardarIngreso);
-$("btnGuardarGasto").addEventListener("click",guardarGasto);
-$("btnCancelarEntrenamiento").addEventListener("click",cancelarEntrenamiento);
-$("btnConsultarReporte").addEventListener("click",consultarReporte);
-
-// ---------- MENSUALIDADES ----------
-const bloquePagos=document.createElement("div");
-bloquePagos.className="panel";
-bloquePagos.innerHTML=`
-  <h2>💳 Registrar mensualidad</h2>
-  <label>Seleccionar alumno</label>
-  <select id="pagoAlumno"></select>
-  <label>Mes que se paga</label>
-  <input id="pagoMes" type="month">
-  <label>Fecha del pago</label>
-  <input id="pagoFecha" type="date">
-  <label>Cantidad recibida (MXN)</label>
-  <input id="pagoCantidad" type="number" min="0.01" step="0.01">
-  <label>Forma de pago</label>
-  <select id="pagoMetodo">
-    <option>Efectivo</option>
-    <option>Transferencia</option>
-    <option>Depósito</option>
-    <option>Otro</option>
-  </select>
-  <button class="btn green full" id="btnRegistrarMensualidad">
-    REGISTRAR MENSUALIDAD
-  </button>
-  <div id="estadoPagoRegistro"></div>
-`;
-const finanzasPage=$("finanzas");
-finanzasPage.insertBefore(bloquePagos,finanzasPage.firstElementChild);
-
-function llenarAlumnosPago(){
-  const select=$("pagoAlumno");
-  const anterior=select.value;
-
-  select.innerHTML=`<option value="">Selecciona un alumno</option>`+
-    activos().sort((a,b)=>a.name.localeCompare(b.name,"es"))
-    .map(a=>`<option value="${a.id}">${escapar(a.name)} · ${escapar(a.schedule)}</option>`)
-    .join("");
-
-  if(anterior && alumnoPorId(anterior)) select.value=anterior;
-}
-
-function registrarMensualidad(){
-  const studentId=$("pagoAlumno").value;
-  const mes=$("pagoMes").value;
-  const fecha=$("pagoFecha").value;
-  const amount=Number($("pagoCantidad").value);
-
-  if(!studentId) return alert("Selecciona un alumno.");
-  if(!/^\d{4}-\d{2}$/.test(mes)) return alert("Selecciona el mes.");
-  if(!fechaValida(fecha)) return alert("Selecciona la fecha del pago.");
-  if(!Number.isFinite(amount) || amount<=0) return alert("Ingresa una cantidad válida.");
-
-  const alumno=alumnoPorId(studentId);
-  if(!alumno) return alert("No se encontró al alumno.");
-
-  db.payments.push({
-    id:idNuevo(),
-    studentId,
-    month:mes,
-    date:fecha,
-    amount,
-    method:$("pagoMetodo").value,
-    detail:"Mensualidad de "+mes
-  });
-
-  if(guardarDB()){
-    $("pagoCantidad").value="";
-    $("estadoPagoRegistro").innerHTML=
-      `<div class="notice ok">Mensualidad de ${escapar(alumno.name)} registrada correctamente.</div>`;
-    actualizarTodo();
-    llenarAlumnosPago();
-  }
-}
-
-$("pagoMes").value=mesActual();
-$("pagoFecha").value=hoy();
-$("btnRegistrarMensualidad").addEventListener("click",registrarMensualidad);
-
-// ---------- RECORDATORIOS POR HORARIO ----------
-function recordatoriosDetallados(){
-  const fecha=hoy();
-
-  if(!diaEntrenamiento(fecha)){
-    return `<div class="notice ok">
-      Hoy no hay entrenamiento programado. Tus próximas fechas se calculan automáticamente.
-    </div>`;
-  }
-
-  if(cancelacion(fecha)){
-    return `<div class="notice error">
-      Entrenamiento de hoy cancelado. No se solicitarán evaluaciones.
-    </div>`;
-  }
-
-  const horarios=["4:30","5:30","6:30","8:30"];
-
-  return horarios.map(h=>{
-    const grupo=activos().filter(a=>a.schedule===h);
-    const pendientes=grupo.filter(a=>
-      !db.evaluations.some(e=>e.studentId===a.id && e.date===fecha)
-    );
-
-    if(!grupo.length) return "";
-
-    return pendientes.length
-      ? `<div class="notice">
-          <b>⚠️ FALTA EVALUACIÓN · ${escapar(h)}</b><br>
-          ${pendientes.length} alumno(s) pendiente(s).
-          <br><button class="btn yellow" onclick="abrirEvaluacionHorario('${h}')">
-            EVALUAR ESTE TURNO
-          </button>
-        </div>`
-      : `<div class="notice ok">
-          ✓ Evaluación completa · ${escapar(h)}
-        </div>`;
-  }).join("");
-}
-
-function abrirEvaluacionHorario(h){
-  document.querySelector('[data-page="evaluaciones"]').click();
-  $("fechaEvaluacion").value=hoy();
-  $("horarioEvaluacion").value=h;
-  cargarEvaluaciones();
-}
-
-// Reemplaza el aviso general del inicio por el detalle de cada turno.
-const actualizarInicioOriginal=actualizarInicio;
-actualizarInicio=function(){
-  actualizarInicioOriginal();
-  const aviso=$("avisosInicio");
-  if(aviso) aviso.innerHTML=recordatoriosDetallados();
-};
-
-// ---------- EVITAR EVALUAR DIAS CANCELADOS ----------
-const cargarEvaluacionesOriginal=cargarEvaluaciones;
-cargarEvaluaciones=function(){
-  const fecha=$("fechaEvaluacion").value;
-  const aviso=$("avisoEvaluacion");
-
-  if(!entrenamientoDisponible(fecha)){
-    aviso.innerHTML=`
-      <div class="notice error">
-        Esta fecha no tiene entrenamiento disponible.
-        No se pueden registrar evaluaciones.
-      </div>`;
-    $("listaEvaluaciones").innerHTML="";
+  const nombre = prompt("Nombre completo:", alumno.name);
+  if (nombre === null) return;
+  if (!nombre.trim()) {
+    alert("El nombre no puede quedar vacío.");
     return;
   }
 
-  aviso.innerHTML="";
-  cargarEvaluacionesOriginal();
-};
+  const cuota = prompt("Mensualidad en pesos:", alumno.fee);
+  if (cuota === null) return;
 
-// ---------- CANCELACIONES Y PROTECCION DE HISTORIAL ----------
-function cancelarEntrenamiento(){
-  const fecha=$("fechaCancelar").value;
+  const descuento = prompt("Descuento en pesos:", alumno.discount || 0);
+  if (descuento === null) return;
 
-  if(!fechaValida(fecha) || !diaEntrenamiento(fecha)){
-    return alert("Selecciona un lunes, miércoles o viernes.");
+  const horario = prompt(
+    "Horario: 4:30, 5:30, 6:30 u 8:30",
+    alumno.schedule
+  );
+  if (horario === null) return;
+
+  const cuotaNum = Number(cuota);
+  const descuentoNum = Number(descuento);
+
+  if (!Number.isFinite(cuotaNum) || cuotaNum < 0 ||
+      !Number.isFinite(descuentoNum) || descuentoNum < 0 ||
+      descuentoNum > cuotaNum ||
+      !["4:30", "5:30", "6:30", "8:30"].includes(horario.trim())) {
+    alert("Algún dato no es válido. No se guardaron los cambios.");
+    return;
   }
 
-  if(fecha<hoy()){
-    return alert("No se pueden cancelar fechas pasadas desde este apartado.");
+  alumno.name = nombre.trim();
+  alumno.fee = cuotaNum;
+  alumno.discount = descuentoNum;
+  alumno.schedule = horario.trim();
+
+  if (guardarBase()) {
+    cargarAlumnos();
+    actualizarInicio();
+    alert("Datos del alumno actualizados.");
+  }
+}
+
+function darDeBajaAlumno(id) {
+  const alumno = alumnoPorId(id);
+  if (!alumno) return;
+
+  if (!confirm(`¿Dar de baja a ${alumno.name}? Su historial se conservará.`)) return;
+
+  alumno.active = false;
+
+  if (guardarBase()) {
+    cargarAlumnos();
+    actualizarInicio();
+  }
+}
+
+// ==========================================
+// ASISTENCIA
+// ==========================================
+
+function cargarAsistencia() {
+  const fecha = $("fechaAsistencia").value || fechaLocal();
+  const horario = $("horarioAsistencia").value;
+
+  const lista = $("listaAsistencia");
+  if (!lista) return;
+
+  if (entrenamientoCancelado(fecha)) {
+    lista.innerHTML = `<div class="notice">Este entrenamiento está cancelado. No se debe registrar asistencia.</div>`;
+    return;
   }
 
-  if(cancelacion(fecha)){
-    return alert("Esta fecha ya está cancelada.");
+  const alumnos = activos()
+    .filter(x => x.schedule === horario)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (!alumnos.length) {
+    lista.innerHTML = `<div class="empty">No hay alumnos activos en este horario.</div>`;
+    return;
   }
 
-  if(db.attendance.some(a=>a.date===fecha) ||
-     db.evaluations.some(e=>e.date===fecha)){
-    return alert("Ya existen registros para ese día. No se canceló para proteger el historial.");
+  lista.innerHTML = alumnos.map(x => {
+    const registro = db.attendance.find(a =>
+      a.studentId === x.id && a.date === fecha
+    );
+
+    const estado = registro?.status || "present";
+
+    return `
+      <div class="list-item">
+        <strong>${escapar(x.name)}</strong>
+        <label>Asistencia</label>
+        <select data-asistencia-id="${escapar(x.id)}">
+          <option value="present" ${estado === "present" ? "selected" : ""}>Presente</option>
+          <option value="absent" ${estado === "absent" ? "selected" : ""}>Falta</option>
+          <option value="justified" ${estado === "justified" ? "selected" : ""}>Falta justificada</option>
+        </select>
+      </div>
+    `;
+  }).join("");
+}
+
+function guardarAsistencia() {
+  const fecha = $("fechaAsistencia").value;
+  const horario = $("horarioAsistencia").value;
+
+  if (!fecha) {
+    alert("Selecciona una fecha.");
+    return;
   }
 
-  if(!confirm("¿Confirmas cancelar este entrenamiento?")) return;
+  if (entrenamientoCancelado(fecha)) {
+    alert("Este entrenamiento está cancelado.");
+    return;
+  }
 
-  db.cancellations.push({
-    id:idNuevo(),
-    date:fecha,
-    reason:$("motivoCancelar").value,
-    detail:$("detalleCancelar").value.trim()
+  const controles = document.querySelectorAll("[data-asistencia-id]");
+  if (!controles.length) {
+    alert("No hay alumnos para registrar en este horario.");
+    return;
+  }
+
+  controles.forEach(control => {
+    const studentId = control.dataset.asistenciaId;
+    const alumno = alumnoPorId(studentId);
+    if (!alumno || alumno.schedule !== horario) return;
+
+    const existente = db.attendance.find(a =>
+      a.studentId === studentId && a.date === fecha
+    );
+
+    if (existente) {
+      existente.status = control.value;
+      existente.schedule = horario;
+    } else {
+      db.attendance.push({
+        id: String(Date.now() + Math.random()),
+        studentId,
+        date: fecha,
+        schedule: horario,
+        status: control.value
+      });
+    }
   });
 
-  if(guardarDB()){
-    alert("Entrenamiento cancelado. No se solicitarán evaluaciones.");
-    $("detalleCancelar").value="";
-    actualizarTodo();
-    mostrarCalendario();
+  if (guardarBase()) {
+    actualizarInicio();
+    alert("Asistencia guardada correctamente.");
   }
 }
 
-// ---------- RESPALDOS ----------
-function descargarRespaldo(){
-  const contenido={
-    app:"CONTROL TIBURONES",
-    version:3,
-    createdAt:new Date().toISOString(),
-    data:db
-  };
+// ==========================================
+// EVALUACIONES
+// ==========================================
 
-  const archivo=new Blob(
-    [JSON.stringify(contenido,null,2)],
-    {type:"application/json"}
-  );
+function cargarEvaluaciones() {
+  const fecha = $("fechaEvaluacion").value || fechaLocal();
+  const horario = $("horarioEvaluacion").value;
+  const lista = $("listaEvaluaciones");
 
-  const url=URL.createObjectURL(archivo);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download="respaldo-control-tiburones-"+hoy()+".json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  if (!lista) return;
+
+  if (entrenamientoCancelado(fecha)) {
+    lista.innerHTML = `<div class="notice">Este entrenamiento está cancelado. No se requieren evaluaciones.</div>`;
+    return;
+  }
+
+  const alumnos = activos()
+    .filter(x => x.schedule === horario)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (!alumnos.length) {
+    lista.innerHTML = `<div class="empty">No hay alumnos activos en este horario.</div>`;
+    return;
+  }
+
+  lista.innerHTML = alumnos.map(x => {
+    const evaluacion = db.evaluations.find(e =>
+      e.studentId === x.id && e.date === fecha
+    );
+
+    const puntaje = evaluacion?.score ?? 10;
+    const observacion = evaluacion?.note || "";
+
+    return `
+      <div class="list-item">
+        <div class="row">
+          <strong>${escapar(x.name)}</strong>
+          <span class="pill ${evaluacion ? "green" : "yellow"}">
+            ${evaluacion ? "Evaluado" : "Pendiente"}
+          </span>
+        </div>
+        <label>Calificación (5 a 10)</label>
+        <select data-evaluacion-score="${escapar(x.id)}">
+          ${[10, 9, 8, 7, 6, 5].map(n =>
+            `<option value="${n}" ${Number(puntaje) === n ? "selected" : ""}>${n}</option>`
+          ).join("")}
+        </select>
+        <label>Observaciones</label>
+        <textarea data-evaluacion-nota="${escapar(x.id)}" placeholder="Anota avances, actitud o algo que deba mejorar...">${escapar(observacion)}</textarea>
+      </div>
+    `;
+  }).join("");
 }
 
-function restaurarRespaldo(){
-  const archivo=$("archivoRespaldo").files[0];
-  if(!archivo) return alert("Selecciona primero un archivo JSON.");
+function guardarEvaluaciones() {
+  const fecha = $("fechaEvaluacion").value;
+  const horario = $("horarioEvaluacion").value;
 
-  const lector=new FileReader();
+  if (!fecha) {
+    alert("Selecciona una fecha.");
+    return;
+  }
 
-  lector.onload=()=>{
-    try{
-      const contenido=JSON.parse(lector.result);
-      const datos=contenido.data || contenido;
+  if (entrenamientoCancelado(fecha)) {
+    alert("Este entrenamiento está cancelado.");
+    return;
+  }
 
-      const campos=[
-        "students","attendance","evaluations",
-        "payments","incomes","expenses","cancellations"
-      ];
+  const controles = document.querySelectorAll("[data-evaluacion-score]");
+  if (!controles.length) {
+    alert("No hay alumnos para evaluar en este horario.");
+    return;
+  }
 
-      for(const campo of campos){
-        if(!Array.isArray(datos[campo])){
-          throw new Error("El respaldo no tiene la estructura esperada.");
-        }
-      }
+  controles.forEach(control => {
+    const studentId = control.dataset.evaluacionScore;
+    const alumno = alumnoPorId(studentId);
+    if (!alumno || alumno.schedule !== horario) return;
 
-      if(!confirm("Esto reemplazará los datos actuales. ¿Ya descargaste un respaldo de seguridad?")) return;
+    const notaControl = document.querySelector(
+      `[data-evaluacion-nota="${CSS.escape(studentId)}"]`
+    );
 
-      db={
-        students:datos.students,
-        attendance:datos.attendance,
-        evaluations:datos.evaluations,
-        payments:datos.payments,
-        incomes:datos.incomes,
-        expenses:datos.expenses,
-        cancellations:datos.cancellations,
-        settings:datos.settings || {}
-      };
+    const score = Number(control.value);
+    const note = notaControl?.value.trim() || "";
 
-      if(guardarDB()){
-        $("estadoRespaldo").innerHTML=
-          `<div class="notice ok">Respaldo restaurado correctamente.</div>`;
-        actualizarTodo();
-        llenarAlumnosPago();
-        alert("Información restaurada.");
-      }
-    }catch(e){
-      $("estadoRespaldo").innerHTML=
-        `<div class="notice error">No se pudo restaurar: ${escapar(e.message)}</div>`;
+    const existente = db.evaluations.find(e =>
+      e.studentId === studentId && e.date === fecha
+    );
+
+    if (existente) {
+      existente.score = score;
+      existente.note = note;
+      existente.schedule = horario;
+    } else {
+      db.evaluations.push({
+        id: String(Date.now() + Math.random()),
+        studentId,
+        date: fecha,
+        schedule: horario,
+        score,
+        note
+      });
     }
-  };
+  });
 
-  lector.readAsText(archivo);
+  if (guardarBase()) {
+    cargarEvaluaciones();
+    actualizarInicio();
+    alert("Evaluaciones guardadas correctamente.");
+  }
 }
 
-$("btnDescargarRespaldo").addEventListener("click",descargarRespaldo);
-$("btnRestaurarRespaldo").addEventListener("click",restaurarRespaldo);
+// ==========================================
+// MVP MENSUAL
+// ==========================================
 
-// ---------- REPORTE DE FECHAS ----------
-function inicializarFechas(){
-  $("fechaAsistencia").value=hoy();
-  $("fechaEvaluacion").value=hoy();
-  $("fechaIngreso").value=hoy();
-  $("fechaGasto").value=hoy();
-  $("fechaCancelar").value=hoy();
+function calcularMVP() {
+  const mes = $("mesMVP").value || mesActual();
+  const horarios = ["4:30", "5:30", "6:30", "8:30"];
+  const resultado = $("resultadoMVP");
 
-  $("mesCalendario").value=mesActual();
-  $("mesReporte").value=mesActual();
-  $("mesMVP").value=mesActual();
-  $("pagoMes").value=mesActual();
-  $("pagoFecha").value=hoy();
+  const fechaFin = `${mes}-31`;
+
+  let html = "";
+
+  horarios.forEach(horario => {
+    const alumnos = activos().filter(x => x.schedule === horario);
+
+    const puntuaciones = alumnos.map(alumno => {
+      const asistencias = db.attendance.filter(a =>
+        a.studentId === alumno.id &&
+        a.date.startsWith(mes)
+      );
+
+      const presentes = asistencias.filter(a => a.status === "present").length;
+      const justificadas = asistencias.filter(a => a.status === "justified").length;
+
+      const evaluaciones = db.evaluations.filter(e =>
+        e.studentId === alumno.id &&
+        e.date.startsWith(mes)
+      );
+
+      const promedio = evaluaciones.length
+        ? evaluaciones.reduce((s, e) => s + Number(e.score || 0), 0) / evaluaciones.length
+        : 10;
+
+      const puntos = (promedio * 10) + (presentes * 2) + justificadas;
+
+      return {
+        name: alumno.name,
+        puntos,
+        promedio,
+        presentes,
+        evaluaciones: evaluaciones.length
+      };
+    }).sort((a, b) => b.puntos - a.puntos || a.name.localeCompare(b.name));
+
+    html += `<div class="list-item"><h3>Horario ${escapar(horario)}</h3>`;
+
+    if (!puntuaciones.length) {
+      html += `<p class="muted">Sin alumnos activos en este horario.</p>`;
+    } else {
+      puntuaciones.slice(0, 2).forEach((x, i) => {
+        html += `
+          <p><strong>${i + 1}. ${escapar(x.name)}</strong></p>
+          <p class="small">Puntos: ${x.puntos.toFixed(1)} · Promedio: ${x.promedio.toFixed(1)} · Presentes: ${x.presentes} · Evaluaciones: ${x.evaluaciones}</p>
+        `;
+      });
+      html += `<p class="small">Resultado orientativo. Revisa las observaciones del coach antes de anunciar el MVP.</p>`;
+    }
+
+    html += `</div>`;
+  });
+
+  resultado.innerHTML = html;
 }
 
-// ---------- INICIO DE APLICACION ----------
-function iniciarAplicacion(){
-  inicializarFechas();
-  llenarAlumnosPago();
-  actualizarTodo();
+// ==========================================
+// FINANZAS
+// ==========================================
+
+function guardarIngreso() {
+  const concepto = $("tipoIngreso").value;
+  const detalle = $("detalleIngreso").value.trim();
+  const amount = Number($("cantidadIngreso").value);
+  const date = $("fechaIngreso").value;
+  const metodo = $("metodoIngreso").value;
+
+  if (!Number.isFinite(amount) || amount <= 0 || !date) {
+    alert("Escribe una cantidad válida y selecciona la fecha.");
+    return;
+  }
+
+  db.incomes.push({
+    id: String(Date.now() + Math.random()),
+    concept: concepto,
+    detail: detalle,
+    amount,
+    date,
+    method: metodo
+  });
+
+  if (guardarBase()) {
+    $("detalleIngreso").value = "";
+    $("cantidadIngreso").value = "";
+    cargarFinanzas();
+    actualizarInicio();
+    alert("Ingreso registrado.");
+  }
+}
+
+function guardarGasto() {
+  const concepto = $("tipoGasto").value;
+  const detalle = $("detalleGasto").value.trim();
+  const amount = Number($("cantidadGasto").value);
+  const date = $("fechaGasto").value;
+  const metodo = $("metodoGasto").value;
+
+  if (!Number.isFinite(amount) || amount <= 0 || !date) {
+    alert("Escribe una cantidad válida y selecciona la fecha.");
+    return;
+  }
+
+  db.expenses.push({
+    id: String(Date.now() + Math.random()),
+    concept: concepto,
+    detail: detalle,
+    amount,
+    date,
+    method: metodo
+  });
+
+  if (guardarBase()) {
+    $("detalleGasto").value = "";
+    $("cantidadGasto").value = "";
+    cargarFinanzas();
+    actualizarInicio();
+    alert("Gasto registrado.");
+  }
+}
+
+function cargarFinanzas() {
+  const lista = $("listaMovimientos");
+  if (!lista) return;
+
+  const movimientos = [
+    ...db.incomes.map(x => ({ ...x, kind: "Ingreso" })),
+    ...db.expenses.map(x => ({ ...x, kind: "Gasto" }))
+  ].sort((a, b) => b.date.localeCompare(a.date));
+
+  if (!movimientos.length) {
+    lista.innerHTML = `<div class="empty">Todavía no hay movimientos.</div>`;
+    return;
+  }
+
+  lista.innerHTML = movimientos.slice(0, 40).map(x => `
+    <div class="list-item">
+      <div class="row">
+        <strong>${escapar(x.kind)}: ${escapar(x.concept)}</strong>
+        <span class="pill ${x.kind === "Ingreso" ? "green" : "red"}">${dinero(x.amount)}</span>
+      </div>
+      <p class="small">${escapar(x.date)} · ${escapar(x.detail || "")} · ${escapar(x.method || "")}</p>
+    </div>
+  `).join("");
+}
+
+// ==========================================
+// CALENDARIO Y CANCELACIONES
+// ==========================================
+
+function cargarCalendario() {
+  const mes = $("mesCalendario").value || mesActual();
+  const lista = $("listaCalendario");
+  if (!lista) return;
+
+  const fechas = fechasDelMes(mes);
+
+  if (!fechas.length) {
+    lista.innerHTML = `<div class="empty">No hay entrenamientos programados.</div>`;
+    return;
+  }
+
+  lista.innerHTML = fechas.map(fecha => {
+    const cancelacion = db.cancellations.find(x => x.date === fecha);
+    const dia = new Date(`${fecha}T12:00:00`).toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    });
+
+    return `
+      <div class="list-item">
+        <div class="row">
+          <strong>${escapar(dia)}</strong>
+          <span class="pill ${cancelacion ? "red" : "green"}">
+            ${cancelacion ? "Cancelado" : "Programado"}
+          </span>
+        </div>
+        ${cancelacion ? `<p class="small">Motivo: ${escapar(cancelacion.reason)} ${escapar(cancelacion.detail || "")}</p>` : ""}
+      </div>
+    `;
+  }).join("");
+}
+
+function cancelarEntrenamiento() {
+  const fecha = $("fechaCancelar").value;
+  const motivo = $("motivoCancelar").value;
+  const detalle = $("detalleCancelar").value.trim();
+
+  if (!fecha) {
+    alert("Selecciona la fecha que deseas cancelar.");
+    return;
+  }
+
+  const dia = new Date(`${fecha}T12:00:00`).getDay();
+  if (![1, 3, 5].includes(dia)) {
+    alert("Solo puedes cancelar fechas programadas de lunes, miércoles o viernes.");
+    return;
+  }
+
+  if (db.cancellations.some(x => x.date === fecha)) {
+    alert("Ese entrenamiento ya está cancelado.");
+    return;
+  }
+
+  if (db.attendance.some(x => x.date === fecha) ||
+      db.evaluations.some(x => x.date === fecha)) {
+    
+// ==========================================
+// CONTROL TIBURONES - PARTE 3
+// CONEXIÓN DE BOTONES E INICIO
+// ==========================================
+
+// MENÚ PRINCIPAL
+document.querySelectorAll("#menu button").forEach(boton => {
+  boton.addEventListener("click", () => {
+    mostrarPagina(boton.dataset.page);
+  });
+});
+
+// BOTONES DE ALUMNOS
+$("btnGuardarAlumno").addEventListener("click", guardarAlumno);
+$("buscarAlumno").addEventListener("input", cargarAlumnos);
+
+$("listaAlumnos").addEventListener("click", evento => {
+  const editar = evento.target.closest("[data-edit-alumno]");
+  const baja = evento.target.closest("[data-baja-alumno]");
+
+  if (editar) editarAlumno(editar.dataset.editAlumno);
+  if (baja) darDeBajaAlumno(baja.dataset.bajaAlumno);
+});
+
+// BOTONES DE ASISTENCIA
+$("btnGuardarAsistencia").addEventListener("click", guardarAsistencia);
+
+$("fechaAsistencia").addEventListener("change", cargarAsistencia);
+$("horarioAsistencia").addEventListener("change", cargarAsistencia);
+
+// BOTONES DE EVALUACIONES
+$("btnGuardarEvaluaciones").addEventListener("click", guardarEvaluaciones);
+
+$("fechaEvaluacion").addEventListener("change", cargarEvaluaciones);
+$("horarioEvaluacion").addEventListener("change", cargarEvaluaciones);
+
+// BOTÓN MVP
+$("btnCalcularMVP").addEventListener("click", calcularMVP);
+
+// BOTONES DE FINANZAS
+$("btnGuardarIngreso").addEventListener("click", guardarIngreso);
+$("btnGuardarGasto").addEventListener("click", guardarGasto);
+
+// BOTONES DE CALENDARIO
+$("mesCalendario").addEventListener("change", cargarCalendario);
+
+$("btnCancelarEntrenamiento").addEventListener(
+  "click",
+  cancelarEntrenamiento
+);
+
+// BOTÓN DE REPORTES
+$("btnConsultarReporte").addEventListener(
+  "click",
+  consultarReporte
+);
+
+// BOTONES DE RESPALDO
+$("btnDescargarRespaldo").addEventListener(
+  "click",
+  descargarRespaldo
+);
+
+$("btnRestaurarRespaldo").addEventListener(
+  "click",
+  restaurarRespaldo
+);
+
+// ==========================================
+// CONFIGURAR FECHAS INICIALES
+// ==========================================
+
+function configurarFechasIniciales() {
+  const hoy = fechaLocal();
+  const mes = mesActual();
+
+  $("fechaAsistencia").value = hoy;
+  $("fechaEvaluacion").value = hoy;
+
+  $("fechaIngreso").value = hoy;
+  $("fechaGasto").value = hoy;
+
+  $("fechaCancelar").value = hoy;
+
+  $("mesCalendario").value = mes;
+  $("mesReporte").value = mes;
+  $("mesMVP").value = mes;
+}
+
+// ==========================================
+// INICIAR APLICACIÓN
+// ==========================================
+
+function iniciarAplicacion() {
+  configurarFechasIniciales();
+
+  actualizarInicio();
+  cargarAlumnos();
   cargarAsistencia();
   cargarEvaluaciones();
-  mostrarCalendario();
+  cargarFinanzas();
+  cargarCalendario();
+
+  console.log("CONTROL TIBURONES iniciado correctamente.");
 }
 
-iniciarAplicacion();
+// ==========================================
+// ARRANQUE SEGURO
+// ==========================================
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", iniciarAplicacion);
+} else {
+  iniciarAplicacion();
+}
 
 </script>
 </body>
 </html>
- 
+
+    
