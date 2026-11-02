@@ -303,5 +303,309 @@ function init(){load();$("attDate").value=today();$("evDate").value=today();$("m
 $("evSchedule").addEventListener("change",renderEvPlayers);
 init();
 </script>
+<script>
+(function(){
+"use strict";
+
+const DB_KEY="control_tiburones_mvp_2026_v2";
+const saveButton=document.getElementById("saveEv");
+
+if(!saveButton || document.getElementById("historyButton")) return;
+
+const style=document.createElement("style");
+style.textContent=`
+#historyButton{
+ width:100%;min-height:60px;margin-top:12px;
+ border:1px solid #edc36b;border-radius:15px;
+ background:linear-gradient(135deg,#a9751e,#775014);
+ color:white;font-size:15px;font-weight:900;
+}
+#historyPanel{
+ display:none;margin-top:15px;padding:15px;
+ background:#0c2440;border:1px solid #55c8ed;
+ border-radius:17px;color:white;
+}
+.ph-head{
+ background:linear-gradient(135deg,#07518b,#123452);
+ padding:18px;border-radius:14px;text-align:center;
+}
+.ph-head h2{font-size:21px;margin:12px 0}
+.ph-head p{font-size:13px;line-height:1.6;margin:5px}
+.ph-stats{
+ display:grid;grid-template-columns:repeat(3,1fr);
+ gap:7px;margin:13px 0;
+}
+.ph-stat{
+ background:#153957;border:1px solid #315777;
+ border-radius:12px;padding:12px 5px;text-align:center;
+}
+.ph-stat strong{display:block;font-size:23px}
+.ph-stat span{font-size:11px;color:#c0d4e5}
+.ph-entry{
+ background:#091f37;border:1px solid #345b79;
+ border-radius:12px;padding:13px;margin:10px 0;
+}
+.ph-date{font-weight:900;color:#64d9f2;font-size:14px}
+.ph-detail{font-size:13px;line-height:1.7;margin-top:7px}
+.ph-actions{
+ display:grid;grid-template-columns:1fr 1fr;
+ gap:9px;margin-top:15px;
+}
+.ph-actions button{
+ min-height:52px;border-radius:12px;
+ color:white;font-weight:900;border:1px solid #5d91b5;
+ background:#155b89;
+}
+#historyMonth{
+ width:100%;padding:13px;border-radius:11px;
+ background:#071d33;color:white;border:1px solid #466783;
+ font-size:16px;
+}
+@media print{
+ @page{size:A4;margin:14mm}
+ body *{visibility:hidden!important}
+ #historyPanel,#historyPanel *{visibility:visible!important}
+ #historyPanel{
+  display:block!important;position:absolute!important;
+  top:0!important;left:0!important;width:100%!important;
+  background:white!important;color:#172b3e!important;
+  border:0!important;padding:0!important;
+ }
+ #historyPanel .ph-head{
+  background:#eaf4fb!important;color:#123452!important;
+  border:2px solid #123452!important;
+ }
+ #historyPanel .ph-head p,
+ #historyPanel .ph-detail,
+ #historyPanel .ph-stat span{color:#263b4d!important}
+ #historyPanel .ph-entry,
+ #historyPanel .ph-stat{
+  background:white!important;color:#172b3e!important;
+  border:1px solid #b8c7d3!important;
+  break-inside:avoid;
+ }
+ #historyPanel .ph-date{color:#075b8b!important}
+ #historyPanel .no-print{display:none!important}
+}
+`;
+document.head.appendChild(style);
+
+const wrapper=document.createElement("div");
+wrapper.innerHTML=`
+<button type="button" id="historyButton">
+ 📖 VER HISTORIAL DEL JUGADOR
+</button>
+<div id="historyPanel">
+ <h3>🦈 Historial deportivo individual</h3>
+ <label>Selecciona el mes que deseas consultar</label>
+ <input type="month" id="historyMonth">
+ <button type="button" class="btn primary full no-print" id="historySearch">
+  CONSULTAR HISTORIAL
+ </button>
+ <div id="historyReport"></div>
+ <div class="ph-actions no-print">
+  <button type="button" id="historyPDF">📄 GUARDAR / IMPRIMIR PDF</button>
+  <button type="button" id="historyClose">CERRAR HISTORIAL</button>
+ </div>
+</div>
+`;
+
+saveButton.insertAdjacentElement("afterend",wrapper);
+
+const panel=document.getElementById("historyPanel");
+const monthInput=document.getElementById("historyMonth");
+const report=document.getElementById("historyReport");
+
+function esc(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function getDatabase(){
+ try{
+  return JSON.parse(localStorage.getItem(DB_KEY)||"{}");
+ }catch(e){
+  return null;
+ }
+}
+
+function showHistory(){
+ const playerId=document.getElementById("evPlayer").value;
+ const month=monthInput.value;
+
+ if(!playerId){
+  alert("Primero selecciona al jugador.");
+  return;
+ }
+ if(!month){
+  alert("Selecciona el mes del historial.");
+  return;
+ }
+
+ const db=getDatabase();
+ if(!db){
+  alert("No fue posible consultar los datos guardados.");
+  return;
+ }
+
+ const player=(db.players||[]).find(p=>p.id===playerId);
+ if(!player){
+  alert("No se encontró al jugador.");
+  return;
+ }
+
+ const sessions=(db.sessions||[]).filter(s=>
+  s.schedule===player.schedule &&
+  s.date.startsWith(month)
+ );
+
+ const evaluations=(db.evaluations||[]).filter(e=>
+  e.playerId===playerId &&
+  e.date.startsWith(month)
+ );
+
+ const dates=[...new Set([
+  ...sessions.map(s=>s.date),
+  ...evaluations.map(e=>e.date)
+ ])].sort();
+
+ let present=0;
+ let absent=0;
+ let justified=0;
+ let late=0;
+ let noTraining=0;
+
+ const details=dates.map(date=>{
+  const session=sessions.find(s=>s.date===date);
+  const record=session?.records?.find(r=>r.playerId===playerId);
+  const evaluation=evaluations.find(e=>e.date===date);
+
+  let status="Sin registro de asistencia";
+
+  if(session?.cancelled){
+   status="NO HUBO ENTRENAMIENTO";
+   noTraining++;
+  }else if(record){
+   switch(record.status){
+    case "Presente":
+     status="ASISTIÓ";
+     present++;
+     break;
+    case "Retardo":
+     status="ASISTIÓ CON RETARDO";
+     present++;
+     late++;
+     break;
+    case "Falta":
+     status="NO ASISTIÓ";
+     absent++;
+     break;
+    case "Justificada":
+     status="FALTA JUSTIFICADA · CUENTA COMO ASISTENCIA";
+     present++;
+     justified++;
+     break;
+   }
+  }
+
+  let evaluationHTML=evaluation?`
+   <div class="ph-detail">
+    <b>Desempeño:</b> ${esc(evaluation.performance)}<br>
+    <b>Actitud:</b> ${esc(evaluation.attitude)}<br>
+    <b>Esfuerzo:</b> ${esc(evaluation.effort)}
+   </div>
+  `:`<div class="ph-detail">No hay evaluación registrada.</div>`;
+
+  return `
+   <div class="ph-entry">
+    <div class="ph-date">${esc(date)}</div>
+    <div class="ph-detail"><b>Asistencia:</b> ${esc(status)}</div>
+    ${evaluationHTML}
+   </div>
+  `;
+ }).join("");
+
+ const monthName=new Date(month+"-15T12:00:00")
+  .toLocaleDateString("es-MX",{month:"long",year:"numeric"});
+
+ report.innerHTML=`
+  <div id="historyPrintable">
+   <div class="ph-head">
+    <div style="font-size:30px">🦈</div>
+    <h2>ACADEMIA TIBURONES ENSENADA</h2>
+    <p>REPORTE DE SEGUIMIENTO DEPORTIVO</p>
+    <h2>${esc(player.name)}</h2>
+    <p>
+     Horario: ${esc(player.schedule)} PM<br>
+     Categoría: ${esc(
+      player.schedule==="4:30"?"Inicial":
+      player.schedule==="5:30"?"Infantil":"Juvenil"
+     )}<br>
+     Periodo: ${esc(monthName)}
+    </p>
+   </div>
+
+   <h3>RESUMEN DEL MES</h3>
+   <div class="ph-stats">
+    <div class="ph-stat">
+     <strong>${present}</strong><span>Asistencias</span>
+    </div>
+    <div class="ph-stat">
+     <strong>${absent}</strong><span>Faltas</span>
+    </div>
+    <div class="ph-stat">
+     <strong>${justified}</strong><span>Justificadas</span>
+    </div>
+   </div>
+
+   <div class="ph-entry">
+    <b>RESUMEN GENERAL</b>
+    <div class="ph-detail">
+     Total de asistencias: ${present}<br>
+     Faltas injustificadas: ${absent}<br>
+     Faltas justificadas: ${justified}<br>
+     Retardos: ${late}<br>
+     Días sin entrenamiento: ${noTraining}<br>
+     Evaluaciones realizadas: ${evaluations.length}
+    </div>
+   </div>
+
+   <h3>HISTORIAL POR FECHA</h3>
+   ${details||'<div class="ph-entry">No existen registros para este mes.</div>'}
+
+   <div class="ph-entry">
+    <b>ACADEMIA TIBURONES ENSENADA</b>
+    <div class="ph-detail">
+     Seguimiento de asistencia, actitud, esfuerzo y desarrollo deportivo.
+    </div>
+   </div>
+  </div>
+ `;
+
+ panel.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+document.getElementById("historyButton").addEventListener("click",()=>{
+ panel.style.display="block";
+ showHistory();
+});
+
+document.getElementById("historySearch").addEventListener("click",showHistory);
+
+document.getElementById("historyClose").addEventListener("click",()=>{
+ panel.style.display="none";
+});
+
+document.getElementById("historyPDF").addEventListener("click",()=>{
+ window.print();
+});
+
+const now=new Date();
+monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+
+})();
+  
+   </script>  
 </body>
 </html>
