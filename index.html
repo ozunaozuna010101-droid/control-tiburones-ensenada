@@ -742,7 +742,7 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
         });
 
         // Las faltas tienen poco impacto.
-        deductions += absent * 0.25 + late * 0.10;
+        deductions += absent * 0.5;
 
         const evs = evaluations.filter(
           e => String(e.playerId) === String(p.id) &&
@@ -750,22 +750,13 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
         );
 
         evs.forEach(e => {
-          const attitude = e.attitude || "";
-          const effort = e.effort || "";
+  const attitude = e.attitude || "";
 
-          if (attitude === "Estuvo platicador")
-            deductions += 1;
-          if (attitude === "No prestó atención")
-            deductions += 3;
-          if (attitude === "Estuvo jugando")
-            deductions += 3;
-          if (attitude === "No siguió indicaciones")
-            deductions += 4;
-
-          if (effort === "Necesita mejorar")
-            deductions += 1;
-          if (effort === "Le costó realizar ejercicios")
-            deductions += 0.5;
+  if (attitude === "Estuvo platicador") deductions += 2;
+  if (attitude === "No prestó atención") deductions += 3;
+  if (attitude === "Estuvo jugando") deductions += 3;
+  if (attitude === "No siguió indicaciones") deductions += 4;
+});
         });
 
         return {
