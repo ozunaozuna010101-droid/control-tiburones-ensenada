@@ -1752,5 +1752,116 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
 })();
   </script>
   
+<script>
+(function(){
+  const card = document.getElementById("totalPlayers")?.closest(".card");
+  if(!card || card.dataset.compactSummary) return;
+
+  const grid = card.querySelector(".grid3");
+  const groups = document.getElementById("groupSummary");
+  const total = document.getElementById("totalPlayers");
+  const present = document.getElementById("totalPresent");
+
+  if(!grid || !groups || !total || !present) return;
+
+  card.dataset.compactSummary = "1";
+  card.classList.add("tc-summary-compact");
+
+  const labels = grid.querySelectorAll(".stat span");
+  if(labels.length >= 3){
+    labels[0].textContent = "Jugadores";
+    labels[1].textContent = "Presentes";
+    labels[2].textContent = "Evaluados";
+  }
+
+  const percentCard = document.createElement("div");
+  percentCard.className = "stat tc-attendance-stat";
+  percentCard.innerHTML =
+    '<span>Asistencia</span><strong id="totalAttendancePct">0%</strong>';
+  grid.appendChild(percentCard);
+
+  groups.classList.add("tc-group-compact");
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #page-inicio .tc-summary-compact {
+      padding:10px !important;
+      margin:8px 0 !important;
+      border-radius:15px !important;
+    }
+    #page-inicio .tc-summary-compact h3 {
+      font-size:15px !important;
+      margin:0 0 8px !important;
+    }
+    #page-inicio .tc-summary-compact .grid3 {
+      display:grid !important;
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+      gap:5px !important;
+    }
+    #page-inicio .tc-summary-compact .stat {
+      padding:8px 4px !important;
+      border-radius:11px !important;
+      min-width:0 !important;
+      text-align:center !important;
+    }
+    #page-inicio .tc-summary-compact .stat span {
+      font-size:9px !important;
+      line-height:1.2 !important;
+    }
+    #page-inicio .tc-summary-compact .stat strong {
+      font-size:20px !important;
+      margin-top:4px !important;
+    }
+    #page-inicio .tc-attendance-stat {
+      background:linear-gradient(145deg,#174c68,#10334f) !important;
+      border-color:#42bfe9 !important;
+    }
+    #page-inicio .tc-group-compact {
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      gap:5px !important;
+      margin-top:8px !important;
+    }
+    #page-inicio .tc-group-compact .item {
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      text-align:center !important;
+      gap:5px !important;
+      padding:8px 3px !important;
+      margin:0 !important;
+      border-radius:11px !important;
+      font-size:10px !important;
+      min-width:0 !important;
+    }
+    #page-inicio .tc-group-compact .pill {
+      font-size:9px !important;
+      padding:4px 5px !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  function updatePercent(){
+    const players = Number(total.textContent) || 0;
+    const attendees = Number(present.textContent) || 0;
+    const pct = players ? Math.round(attendees / players * 100) : 0;
+    document.getElementById("totalAttendancePct").textContent = pct + "%";
+  }
+
+  updatePercent();
+
+  const observer = new MutationObserver(updatePercent);
+  [total,present].forEach(el => {
+    observer.observe(el,{
+      childList:true,
+      characterData:true,
+      subtree:true
+    });
+  });
+})();
+    </script>
+  
+  
 </body>
 </html>
