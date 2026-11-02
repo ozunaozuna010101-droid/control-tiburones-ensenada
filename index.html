@@ -242,56 +242,55 @@ function expectedTrainingDates(month){
  return dates;
 }
 function calculateMvp(){
- let month=$("mvpMonth").value;
+ const month=$("mvpMonth").value;
  if(!month)return msg("Selecciona un mes.");
  let html="";
- let expected=expectedTrainingDates(month);
  schedules.forEach(s=>{
-  let missing=expected.filter(date=>!getSession(date,s));
-  let sessions=db.sessions.filter(x=>x.schedule===s&&x.date.startsWith(month)&&!x.cancelled);
-  if(missing.length){
-   html+=`<div class="card"><h3>${s} · ${labels[s]}</h3><div class="hint">MVP pendiente: faltan registros de asistencia o días sin entrenamiento en estas fechas: ${missing.map(esc).join(", ")}. Completa el calendario para que nadie sea perjudicado por una sesión sin registrar.</div></div>`;
-   return;
-  }
-  let candidates=db.players.filter(p=>p.schedule===s).map(p=>{
+  const sessions=db.sessions.filter(x=>x.schedule===s&&x.date.startsWith(month)&&!x.cancelled);
+  const candidates=db.players.filter(p=>p.schedule===s).map(p=>{
    let attended=0,absences=0,justified=0,late=0;
    sessions.forEach(session=>{
-    let r=session.records.find(x=>x.playerId===p.id);
+    const r=(session.records||[]).find(x=>x.playerId===p.id);
     if(!r)return;
     if(r.status==="Presente")attended++;
     else if(r.status==="Retardo"){attended++;late++}
     else if(r.status==="Falta")absences++;
-    else if(r.status==="Justificada"){attended++;justified++;}
+    else if(r.status==="Justificada"){attended++;justified++}
    });
-   let ev=db.evaluations.filter(e=>e.playerId===p.id&&e.schedule===s&&e.date.startsWith(month));
-   let deductions=absences*1+late*0.25;
-   let behaviorDeductions=0,effortDeductions=0,performanceDeductions=0;
+   const ev=db.evaluations.filter(e=>e.playerId===p.id&&e.schedule===s&&e.date.startsWith(month));
+   let behaviorDeductions=0;
    ev.forEach(e=>{
-    if(e.performance==="Buen trabajo")performanceDeductions+=0.25;
-    if(e.attitude==="Estuvo platicador")behaviorDeductions+=1;
-    if(e.attitude==="No prestó atención")behaviorDeductions+=3;
-    if(e.attitude==="Estuvo jugando")behaviorDeductions+=3;
-    if(e.attitude==="No siguió indicaciones")behaviorDeductions+=4;
-    if(e.effort==="Necesita mejorar")effortDeductions+=1;
-    if(e.effort==="Le costó realizar ejercicios")effortDeductions+=0.5;
+    if(e.attitude==="Estuvo platicador")behaviorDeductions+=2;
+    else if(e.attitude==="No prestó atención")behaviorDeductions+=3;
+    else if(e.attitude==="Estuvo jugando")behaviorDeductions+=3;
+    else if(e.attitude==="No siguió indicaciones")behaviorDeductions+=4;
    });
-   deductions+=behaviorDeductions+effortDeductions+performanceDeductions;
-   let score=Math.max(0,100-deductions);
-   return {...p,attended,absences,justified,late,sessionCount:sessions.length,evCount:ev.length,score,deductions,behaviorDeductions,effortDeductions,performanceDeductions};
-  }).filter(p=>p.sessionCount>0||p.evCount>0).sort((a,b)=>b.score-a.score||b.evCount-a.evCount||a.name.localeCompare(b.name,"es"));
-  html+=`<div class="card"><h3>${s} · ${labels[s]}</h3><div class="muted">Sesiones realizadas: ${sessions.length}. Cada jugador comienza con 100 puntos. Buen trabajo: −0.25 · Falta injustificada: −1 · Falta justificada: cuenta como asistencia y descuenta 0. Los días sin entrenamiento quedan excluidos.</div>`;
-  if(!sessions.length){html+='<div class="empty">No hay entrenamientos realizados registrados este mes.</div>'}
-  else if(!candidates.length){html+='<div class="empty">Sin jugadores o registros para este grupo.</div>'}
-  else{
-   let winner=candidates[0];
-   html+=`<div class="item"><span class="pill gold">🏆 MVP DEL GRUPO</span><h3 style="margin-top:10px">${esc(winner.name)}</h3><div class="stat"><span>Calificación final</span><strong>${winner.score.toFixed(2)} / 100</strong></div><div class="muted">Asistencia: ${winner.attended} · Faltas: ${winner.absences} · Justificadas: ${winner.justified} · Retardos: ${winner.late}</div><div class="muted">Evaluaciones: ${winner.evCount} · Descuentos por actitud: ${winner.behaviorDeductions.toFixed(2)} · Por esfuerzo: ${winner.effortDeductions.toFixed(2)}</div></div>`;
-   html+='<h3>Clasificación del grupo</h3>';
-   html+=candidates.map((p,i)=>`<div class="item row"><div><b>${i+1}. ${esc(p.name)}</b><div class="muted">Faltas ${p.absences} · Justificadas ${p.justified} · Evaluaciones ${p.evCount}</div></div><span class="pill ${i===0?"gold":"green"}">${p.score.toFixed(2)} pts</span></div>`).join("");
+   const deductions=absences*0.5+behaviorDeductions;
+   const score=Math.max(0,100-deductions);
+   return {...p,attended,absences,justified,late,sessionCount:sessions.length,evCount:ev.length,score,deductions,behaviorDeductions};
+  }).filter(p=>p.sessionCount>0||p.evCount>0)
+    .sort((a,b)=>b.score-a.score||b.attended-a.attended||b.evCount-a.evCount||a.name.localeCompare(b.name,"es"));
+
+  html+=`<div class="card"><h3>${s} · ${labels[s]}</h3><div class="muted">Entrenamientos registrados: ${sessions.length}. Puntaje inicial: 100 puntos. Falta injustificada: −0.50. Retardos, faltas justificadas, desempeño y esfuerzo no descuentan puntos. Las deducciones de actitud siguen los criterios establecidos.</div>`;
+
+  if(!candidates.length){
+   html+='<div class="empty">Todavía no hay registros para este grupo en el mes seleccionado.</div>';
+  }else{
+   const first=candidates[0];
+   html+=`<div class="item"><span class="pill gold">🏆 PRIMER CANDIDATO</span><h3 style="margin-top:10px">${esc(first.name)}</h3><div class="stat"><span>Puntaje provisional</span><strong>${first.score.toFixed(2)} / 100</strong></div><div class="muted">Asistencias: ${first.attended} · Faltas: ${first.absences} · Justificadas: ${first.justified} · Retardos: ${first.late}</div></div>`;
+
+   if(candidates[1]){
+    const second=candidates[1];
+    html+=`<div class="item"><span class="pill gold">🥈 SEGUNDO CANDIDATO</span><h3 style="margin-top:10px">${esc(second.name)}</h3><div class="stat"><span>Puntaje provisional</span><strong>${second.score.toFixed(2)} / 100</strong></div><div class="muted">Asistencias: ${second.attended} · Faltas: ${second.absences} · Justificadas: ${second.justified} · Retardos: ${second.late}</div></div>`;
+   }
+
+   html+='<h3>Clasificación provisional del grupo</h3>';
+   html+=candidates.map((p,i)=>`<div class="item row"><div><b>${i+1}. ${esc(p.name)}</b><div class="muted">Faltas: ${p.absences} · Justificadas: ${p.justified} · Evaluaciones: ${p.evCount}</div></div><span class="pill ${i<2?"gold":"green"}">${p.score.toFixed(2)} pts</span></div>`).join("");
   }
   html+="</div>";
  });
  $("mvpOutput").innerHTML=html;
-}
+                                    }
 $("runMvp").addEventListener("click",calculateMvp);
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="respaldo-control-tiburones.json";a.click();URL.revokeObjectURL(url);msg("Respaldo descargado.")}
 $("backup").addEventListener("click",backup);
