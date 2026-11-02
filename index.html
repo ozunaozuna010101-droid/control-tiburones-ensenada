@@ -597,65 +597,293 @@ document.getElementById("historyClose").addEventListener("click",()=>{
 });
 
 document.getElementById("historyPDF").addEventListener("click", async () => {
-  const printable = document.getElementById("historyPrintable");
-  if (!printable) {
-    alert("Primero consulta el historial del jugador.");
-    return;
-  }
-
   try {
+    const playerId = document.getElementById("evPlayer").value;
+    const month = monthInput.value;
+    const db = getDatabase();
+
+    if (!playerId || !month || !db) {
+      alert("Selecciona un jugador y un mes para consultar.");
+      return;
+    }
+
+    const player = db.players.find(p => p.id === playerId);
+    if (!player) return alert("No se encontró al jugador.");
+
+    const loadScript = src => new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
     if (!window.jspdf) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+    }
+
+    if (!window.jspdf.jsPDF.API.autoTable) {
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js");
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-
-    doc.setFillColor(7, 29, 53);
-    doc.rect(0, 0, 210, 38, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(17);
-    doc.text("ACADEMIA TIBURONES ENSENADA", 105, 16, { align: "center" });
-    doc.setFontSize(11);
-    doc.text("REPORTE DE SEGUIMIENTO DEPORTIVO", 105, 26, { align: "center" });
-
-    const contenido = printable.innerText
-      .replace(/ACADEMIA TIBURONES ENSENADA/g, "")
-      .replace(/REPORTE DE SEGUIMIENTO DEPORTIVO/g, "")
-      .trim();
-
-    const lineas = doc.splitTextToSize(contenido, 170);
-    doc.setTextColor(25, 45, 65);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-
-    let y = 48;
-    lineas.forEach(linea => {
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(linea, 20, y);
-      y += 6;
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4"
     });
 
-    const jugador = document.getElementById("evPlayer")
-      .selectedOptions[0]?.textContent || "Jugador";
+    const sesiones = (db.sessions || []).filter(s =>
+      s.schedule === player.schedule &&
+      s.date.startsWith(month)
+    );
 
-    const nombre = jugador.normalize("NFD")
+    const evaluaciones = (db.evaluations || []).filter(e =>
+      e.playerId === playerId &&
+      e.date.startsWith(month)
+    );
+
+    const fechas = [...new Set([
+      ...sesiones.map(s => s.date),
+      ...evaluaciones.map(e => e.date)
+    ])].sort();
+
+    let asistencias = 0;
+    let faltas = 0;
+    let justificadas = 0;
+    let retardos = 0;
+    let sinEntrenamiento = 0;
+
+    const filas = fechas.map(fecha => {
+      const sesion = sesiones.find(s => s.date === fecha);
+      const registro = sesion?.records?.find(r => r.playerId === playerId);
+      const ev = evaluaciones.find(e => e.date === fecha);
+
+      let estado = "Sin registro";
+      if (sesion?.cancelled) {
+        estado = "No hubo entrenamiento";
+        sinEntrenamiento++;
+      } else if (registro) {
+        if (registro.status === "Presente") {
+          estado = "Presente";
+          asistencias++;
+        } else if (registro.status === "Retardo") {
+          estado = "Retardo";
+          asistencias++;
+          retardos++;
+        } else if (registro.status === "Falta") {
+          estado = "Falta";
+          faltas++;
+        } else if (registro.status === "Justificada") {
+          estado = "Justificada";
+          asistencias++;
+          justificadas++;
+        }
+      }
+
+      return [
+        fecha,
+        estado,
+        ev?.performance || "Sin evaluación",
+        ev?.attitude || "Sin evaluación",
+        ev?.effort || "Sin evaluación"
+      ];
+    });
+
+    const ancho = doc.internal.pageSize.getWidth();
+    const alto = doc.internal.pageSize.getHeight();
+
+    doc.setFillColor(7, 29, 53);
+    doc.rect(0, 0, ancho, 37, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(21);
+    doc.text("ACADEMIA TIBURONES ENSENADA", ancho / 2, 15, {
+      align: "center"
+    });
+
+    doc.setFontSize(11);
+    doc.text("INFORME DE SEGUIMIENTO DEPORTIVO", ancho / 2, 24, {
+      align: "center"
+    });
+
+    doc.setFontSize(9);
+    doc.text("REPORTE MENSUAL DEL JUGADOR", ancho / 2, 31, {
+      align: "center"
+    });
+
+    const mesNombre = new Date(month + "-15T12:00:00")
+      .toLocaleDateString("es-MX", {
+        month: "long",
+        year: "numeric"
+      });
+
+    doc.setTextColor(20, 43, 65);
+    doc.setFontSize(17);
+    doc.text(player.name, ancho / 2, 48, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "Horario: " + player.schedule + " PM   |   Categoría: " +
+      (player.schedule === "4:30" ? "Inicial" :
+       player.schedule === "5:30" ? "Infantil" : "Juvenil") +
+      "   |   Periodo: " + mesNombre,
+      ancho / 2, 56, { align: "center" }
+    );
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("RESUMEN DEL MES", ancho / 2, 68, {
+      align: "center"
+    });
+
+    const tarjetas = [
+      ["ASISTENCIAS", asistencias, [225, 244, 233], [25, 115, 65]],
+      ["FALTAS", faltas, [252, 232, 232], [175, 45, 50]],
+      ["JUSTIFICADAS", justificadas, [255, 245, 220], [150, 100, 15]],
+      ["RETARDOS", retardos, [255, 239, 220], [165, 90, 20]],
+      ["EVALUACIONES", evaluaciones.length, [230, 241, 252], [35, 85, 145]]
+    ];
+
+    const margen = 12;
+    const espacio = 5;
+    const tarjetaAncho = (ancho - margen * 2 - espacio * 4) / 5;
+
+    tarjetas.forEach((t, i) => {
+      const x = margen + i * (tarjetaAncho + espacio);
+      doc.setFillColor(...t[2]);
+      doc.roundedRect(x, 73, tarjetaAncho, 22, 3, 3, "F");
+      doc.setTextColor(...t[3]);
+      doc.setFontSize(15);
+      doc.text(String(t[1]), x + tarjetaAncho / 2, 83, {
+        align: "center"
+      });
+      doc.setFontSize(7);
+      doc.text(t[0], x + tarjetaAncho / 2, 90, {
+        align: "center"
+      });
+    });
+
+    doc.setTextColor(25, 45, 65);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("HISTORIAL DE ENTRENAMIENTOS Y EVALUACIONES", ancho / 2, 106, {
+      align: "center"
+    });
+
+    doc.autoTable({
+      startY: 111,
+      head: [[
+        "FECHA",
+        "ASISTENCIA",
+        "DESEMPEÑO",
+        "ACTITUD Y ATENCIÓN",
+        "ESFUERZO Y MEJORA"
+      ]],
+      body: filas.length ? filas : [[
+        "-", "Sin registros", "-", "-", "-"
+      ]],
+      theme: "grid",
+      margin: { left: 12, right: 12, bottom: 17 },
+      styles: {
+        font: "helvetica",
+        fontSize: 8,
+        cellPadding: 4,
+        overflow: "linebreak",
+        valign: "middle",
+        halign: "center",
+        textColor: [35, 50, 65],
+        lineColor: [210, 220, 230],
+        lineWidth: 0.2
+      },
+      headStyles: {
+        fillColor: [9, 39, 67],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        halign: "center"
+      },
+      columnStyles: {
+        0: { cellWidth: 28 },
+        1: { cellWidth: 38 },
+        2: { cellWidth: 48 },
+        3: { cellWidth: 65 },
+        4: { cellWidth: 65 }
+      },
+      didParseCell: data => {
+        if (data.section !== "body") return;
+
+        const valor = String(data.cell.raw || "").toLowerCase();
+
+        if (data.column.index === 1) {
+          if (valor === "presente") {
+            data.cell.styles.fillColor = [225, 244, 233];
+            data.cell.styles.textColor = [25, 115, 65];
+          } else if (valor === "falta") {
+            data.cell.styles.fillColor = [252, 232, 232];
+            data.cell.styles.textColor = [175, 45, 50];
+          } else if (valor === "justificada") {
+            data.cell.styles.fillColor = [255, 245, 220];
+            data.cell.styles.textColor = [150, 100, 15];
+          } else if (valor === "retardo") {
+            data.cell.styles.fillColor = [255, 239, 220];
+            data.cell.styles.textColor = [165, 90, 20];
+          }
+        }
+
+        if (data.column.index === 2) {
+          data.cell.styles.fillColor = [230, 241, 252];
+        }
+
+        if (data.column.index === 3) {
+          const negativo = [
+            "platicador", "no prestó atención",
+            "estuvo jugando", "no siguió indicaciones"
+          ].some(x => valor.includes(x));
+
+          data.cell.styles.fillColor = negativo
+            ? [252, 232, 232] : [225, 244, 233];
+          data.cell.styles.textColor = negativo
+            ? [175, 45, 50] : [25, 115, 65];
+        }
+
+        if (data.column.index === 4) {
+          const negativo = [
+            "necesita mejorar", "le costó"
+          ].some(x => valor.includes(x));
+
+          data.cell.styles.fillColor = negativo
+            ? [255, 239, 220] : [225, 244, 233];
+          data.cell.styles.textColor = negativo
+            ? [165, 90, 20] : [25, 115, 65];
+        }
+      }
+    });
+
+    const paginas = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= paginas; p++) {
+      doc.setPage(p);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 115, 130);
+      doc.text(
+        "ACADEMIA TIBURONES ENSENADA  |  Seguimiento deportivo",
+        ancho / 2, alto - 8, { align: "center" }
+      );
+      doc.text("Página " + p + " de " + paginas, ancho - 12, alto - 8, {
+        align: "right"
+      });
+    }
+
+    const nombre = player.name.normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-zA-Z0-9_-]+/g, "_");
 
     const archivo = "Historial_Tiburones_" + nombre + ".pdf";
     const blob = doc.output("blob");
-    const file = new File([blob], archivo, { type: "application/pdf" });
+    const file = new File([blob], archivo, {
+      type: "application/pdf"
+    });
 
     const url = URL.createObjectURL(blob);
     const enlace = document.createElement("a");
@@ -672,20 +900,20 @@ document.getElementById("historyPDF").addEventListener("click", async () => {
         await navigator.share({
           files: [file],
           title: "Historial deportivo Tiburones",
-          text: "Historial deportivo del jugador"
+          text: "Reporte mensual del jugador"
         });
       } catch (error) {
         if (error.name !== "AbortError") {
-          alert("El PDF quedó descargado. Puedes compartirlo desde Descargas.");
+          alert("El PDF quedó descargado en tu teléfono.");
         }
       }
     } else {
-      alert("PDF descargado. Puedes compartirlo desde la carpeta Descargas de tu teléfono.");
+      alert("PDF descargado. Puedes compartirlo desde Descargas.");
     }
 
   } catch (error) {
     console.error(error);
-    alert("No se pudo generar el PDF. Revisa tu conexión e inténtalo nuevamente.");
+    alert("No se pudo generar el PDF. Revisa tu conexión e inténtalo de nuevo.");
   }
 });
 
