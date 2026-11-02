@@ -1591,5 +1591,139 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
   document.head.appendChild(style);
 })();
   </script>
+  
+<script>
+(function(){
+  const style = document.createElement("style");
+  style.textContent = `
+    .tc-compact-toggle {
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:5px 0;
+      border:0;
+      background:transparent;
+      color:white;
+      text-align:left;
+      font-size:16px;
+      font-weight:900;
+    }
+    .tc-compact-toggle span:last-child {
+      font-size:13px;
+      color:#d8efff;
+      white-space:nowrap;
+    }
+    .tc-compact-details {
+      display:none;
+      padding-top:12px;
+    }
+    .tc-compact-details.open {
+      display:block;
+    }
+    .tc-status.tc-compact {
+      padding:12px 15px !important;
+      margin:9px 0 !important;
+      border-radius:15px !important;
+    }
+    .tc-vacation.tc-compact {
+      padding:12px 15px !important;
+      margin:9px 0 !important;
+      border-radius:15px !important;
+    }
+    .tc-compact-details p {
+      font-size:14px;
+      line-height:1.4;
+    }
+  `;
+  document.head.appendChild(style);
+
+  function compactStatus(card){
+    if(card.dataset.compactReady) return;
+    const heading = card.querySelector("h3");
+    const number = card.querySelector("strong");
+    if(!heading || !number) return;
+
+    card.dataset.compactReady = "1";
+    const title = heading.textContent.trim();
+    const value = number.textContent.trim();
+    const details = document.createElement("div");
+    details.className = "tc-compact-details";
+
+    [...card.children].forEach(el => {
+      if(el !== heading && el !== number) details.appendChild(el);
+    });
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "tc-compact-toggle";
+    toggle.innerHTML =
+      `<span>${title} · ${value}</span><span>VER MÁS⌄</span>`;
+
+    toggle.addEventListener("click", () => {
+      details.classList.toggle("open");
+      toggle.lastElementChild.textContent =
+        details.classList.contains("open") ? "VER MENOS⌃" : "VER MÁS⌄";
+    });
+
+    card.innerHTML = "";
+    card.classList.add("tc-compact");
+    card.append(toggle, details);
+  }
+
+  function compactVacation(card){
+    if(card.dataset.compactReady) return;
+    card.dataset.compactReady = "1";
+
+    const details = document.createElement("div");
+    details.className = "tc-compact-details";
+
+    [...card.children].forEach(el => details.appendChild(el));
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "tc-compact-toggle";
+
+    function updateLabel(){
+      const list = card.querySelector("#tcVacationList");
+      const count = list ? list.querySelectorAll("[data-tc-delete]").length : 0;
+      toggle.innerHTML =
+        `<span>📅 CALENDARIO DE VACACIONES</span>` +
+        `<span>${count ? count + " programado(s)" : "SIN PROGRAMAR"} ⌄</span>`;
+    }
+
+    toggle.addEventListener("click", () => {
+      details.classList.toggle("open");
+      toggle.lastElementChild.textContent =
+        (details.classList.contains("open") ? "CERRAR" : "VER MÁS") + "⌄";
+    });
+
+    card.classList.add("tc-compact");
+    card.append(toggle, details);
+    updateLabel();
+
+    const list = card.querySelector("#tcVacationList");
+    if(list){
+      new MutationObserver(updateLabel).observe(list,{childList:true,subtree:true});
+    }
+  }
+
+  function apply(){
+    document.querySelectorAll("#tcCards .tc-status")
+      .forEach(compactStatus);
+    const vacation = document.querySelector("#page-inicio .tc-vacation");
+    if(vacation) compactVacation(vacation);
+  }
+
+  apply();
+
+  const cards = document.getElementById("tcCards");
+  if(cards){
+    new MutationObserver(apply).observe(cards,{childList:true,subtree:true});
+  }
+})();
+</script>
+  
 </body>
 </html>
