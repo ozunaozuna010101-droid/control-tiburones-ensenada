@@ -606,6 +606,259 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
 
 })();
   
-   </script>  
+   </script> 
+
+<script>
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "control_tiburones_mvp_2026_v2";
+  const GROUPS = [
+    ["4:30", "Inicial"],
+    ["5:30", "Infantil"],
+    ["6:30", "Juvenil"]
+  ];
+
+  function safe(text) {
+    return String(text ?? "").replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;",
+      '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  function database() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function monthNow() {
+    const d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #tbMvpOpen {
+      position:fixed;bottom:18px;right:14px;
+      z-index:9998;background:#008ed0;color:white;
+      border:2px solid #8de8ff;border-radius:18px;
+      padding:14px;font-weight:900;
+      box-shadow:0 5px 20px #0008;
+    }
+    #tbMvpPanel {
+      display:none;position:fixed;inset:0;
+      z-index:9999;background:#071a32;color:white;
+      overflow:auto;padding:18px 14px 55px;
+      font-family:Arial,sans-serif;
+    }
+    #tbMvpPanel button {
+      padding:12px;border:0;border-radius:12px;
+      background:#087fc0;color:white;font-weight:bold;
+    }
+    .tbGroup {
+      background:#123453;border:1px solid #3b789e;
+      border-radius:16px;padding:14px;margin:16px 0;
+    }
+    .tbPlayer {
+      display:flex;justify-content:space-between;
+      gap:10px;align-items:center;padding:12px 5px;
+      border-bottom:1px solid #45627b;
+    }
+    .tbPlayer small {
+      display:block;color:#b8cfdd;margin-top:5px;
+    }
+    .tbScore {color:#68e2ff;font-weight:900}
+  `;
+  document.head.appendChild(style);
+
+  const open = document.createElement("button");
+  open.id = "tbMvpOpen";
+  open.type = "button";
+  open.textContent = "🏆 TABULADOR MVP";
+  document.body.appendChild(open);
+
+  const panel = document.createElement("div");
+  panel.id = "tbMvpPanel";
+  panel.innerHTML = `
+    <h2>🏆 TABULADOR MVP EN VIVO</h2>
+    <p>Clasificación provisional de la academia</p>
+    <label>Mes que deseas consultar</label>
+    <input id="tbMvpMonth" type="month"
+      style="display:block;padding:12px;margin:12px 0;
+      font-size:17px;width:90%;border-radius:10px">
+    <button id="tbMvpRefresh">🔄 ACTUALIZAR</button>
+    <button id="tbMvpClose">✕ CERRAR</button>
+    <div id="tbMvpResults"></div>
+  `;
+  document.body.appendChild(panel);
+
+  const monthInput = document.getElementById("tbMvpMonth");
+  const results = document.getElementById("tbMvpResults");
+  monthInput.value = monthNow();
+
+  function calculate() {
+    const db = database();
+    const players = db.players || [];
+    const sessions = db.sessions || [];
+    const evaluations = db.evaluations || [];
+    const month = monthInput.value;
+
+    let html = "";
+
+    GROUPS.forEach(([schedule, label]) => {
+      const groupPlayers = players.filter(
+        p => p.schedule === schedule
+      );
+
+      const groupSessions = sessions.filter(
+        s => s.schedule === schedule &&
+          String(s.date).startsWith(month) &&
+          !s.cancelled
+      );
+
+      const ranking = groupPlayers.map(p => {
+        let attended = 0;
+        let absent = 0;
+        let justified = 0;
+        let late = 0;
+        let deductions = 0;
+
+        groupSessions.forEach(s => {
+          const r = (s.records || []).find(
+            x => String(x.playerId) === String(p.id)
+          );
+          if (!r) return;
+
+          if (r.status === "Presente") attended++;
+          if (r.status === "Falta") absent++;
+          if (r.status === "Justificada") justified++;
+          if (r.status === "Retardo") {
+            attended++;
+            late++;
+          }
+        });
+
+        // Las faltas tienen poco impacto.
+        deductions += absent * 0.25 + late * 0.10;
+
+        const evs = evaluations.filter(
+          e => String(e.playerId) === String(p.id) &&
+            String(e.date).startsWith(month)
+        );
+
+        evs.forEach(e => {
+          const attitude = e.attitude || "";
+          const effort = e.effort || "";
+
+          if (attitude === "Estuvo platicador")
+            deductions += 1;
+          if (attitude === "No prestó atención")
+            deductions += 3;
+          if (attitude === "Estuvo jugando")
+            deductions += 3;
+          if (attitude === "No siguió indicaciones")
+            deductions += 4;
+
+          if (effort === "Necesita mejorar")
+            deductions += 1;
+          if (effort === "Le costó realizar ejercicios")
+            deductions += 0.5;
+        });
+
+        return {
+          name: p.name,
+          score: Math.max(0, 100 - deductions),
+          attended, absent, justified,
+          evaluated: evs.length
+        };
+      });
+
+      ranking.sort((a,b) =>
+        b.score - a.score ||
+        b.evaluated - a.evaluated ||
+        b.attended - a.attended ||
+        a.name.localeCompare(b.name, "es")
+      );
+
+      html += `
+        <section class="tbGroup">
+          <h3>🏀 ${schedule} · ${label}</h3>
+          <p>Entrenamientos registrados:
+          ${groupSessions.length}</p>
+          ${ranking.length ? ranking.map((p,i) => `
+            <div class="tbPlayer">
+              <div>
+                <strong>
+                  ${i === 0 ? "🥇" :
+                    i === 1 ? "🥈" : (i+1)+"."}
+                  ${safe(p.name)}
+                </strong>
+                <small>
+                  Asistencias: ${p.attended} ·
+                  Faltas: ${p.absent} ·
+                  Justificadas: ${p.justified} ·
+                  Evaluaciones: ${p.evaluated}
+                </small>
+                ${i === 0 ?
+                  "<small>Primer candidato MVP</small>" :
+                  i === 1 ?
+                  "<small>Segundo candidato MVP</small>" : ""}
+              </div>
+              <span class="tbScore">
+                ${p.score.toFixed(2)}
+              </span>
+            </div>
+          `).join("") :
+          "<p>No hay jugadores en este horario.</p>"}
+        </section>
+      `;
+    });
+
+    results.innerHTML = html +
+      `<p style="color:#b8cfdd">
+        Clasificación provisional. Los entrenamientos
+        todavía no registrados no descuentan puntos.
+        Puedes reconocer a uno o máximo dos MVP
+        por horario.
+      </p>`;
+  }
+
+  open.addEventListener("click", () => {
+    panel.style.display = "block";
+    calculate();
+  });
+
+  document.getElementById("tbMvpClose")
+    .addEventListener("click", () => {
+      panel.style.display = "none";
+    });
+
+  document.getElementById("tbMvpRefresh")
+    .addEventListener("click", calculate);
+
+  monthInput.addEventListener("change", calculate);
+
+  // Recalcular después de guardar registros.
+  document.addEventListener("click", e => {
+    if (e.target.closest("#saveAtt, #saveEv")) {
+      setTimeout(() => {
+        if (panel.style.display === "block") calculate();
+      }, 200);
+    }
+  });
+
+  // Detectar cambios de datos en la misma página.
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden &&
+        panel.style.display === "block") calculate();
+  });
+
+})();
+        </script>
+  
 </body>
 </html>
