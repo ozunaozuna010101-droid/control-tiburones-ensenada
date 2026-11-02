@@ -15,14 +15,16 @@
 <nav class="menu" id="menu">
 <button type="button" class="active" data-page="inicio">🏠 Inicio</button><button type="button" data-page="alumnos">👥 Alumnos</button><button type="button" data-page="familias">👨‍👩‍👧 Familias</button><button type="button" data-page="asistencia">📋 Asistencia</button><button type="button" data-page="evaluaciones">⭐ Evaluaciones</button><button type="button" data-page="mvp">🏆 MVP</button><button type="button" data-page="pagos">💳 Pagos</button><button type="button" data-page="finanzas">💰 Finanzas</button><button type="button" data-page="calendario">📅 Calendario</button><button type="button" data-page="reportes">📊 Reportes</button><button type="button" data-page="respaldo">💾 Respaldo</button>
 </nav>
-<section class="page active" id="page-inicio"><div class="panel"><h2>Panel de control</h2><p class="muted" id="today"></p><span class="pill">TIBURONES ENSENADA</span></div><div class="grid"><div class="card green"><strong>ALUMNOS ACTIVOS</strong><div class="num" id="dashStudents">0</div></div><div class="card orange"><strong>SALDOS PENDIENTES</strong><div class="num" id="dashDue">0</div></div><div class="card blue"><strong>INGRESOS DEL MES</strong><div class="num" id="dashIncome">$0</div></div><div class="card red"><strong>GASTOS DEL MES</strong><div class="num" id="dashExpenses">$0</div></div></div><div class="panel" style="margin-top:15px"><h3>Resumen de la academia</h3><p class="muted" id="dashSummary">Registra alumnos para comenzar.</p></div></section><section class="page" id="page-alumnos"><div class="panel"><h2>👥 Alumnos</h2><p class="muted">Registra jugadores. Al guardar, el formulario queda listo para capturar al siguiente.</p><form id="studentForm"><input type="hidden" id="studentId"><div class="formgrid"><div class="field wide"><label>Nombre completo</label><input id="studentName" required placeholder="Nombre y apellidos"></div><div class="field"><label>Fecha de nacimiento</label><input type="date" id="studentBirth"></div><div class="field"><label>Sexo</label><select id="studentSex"><option value="">Seleccionar</option><option>Femenino</option><option>Masculino</option><option>Prefiero no especificar</option></select></div><div class="field"><label>Horario</label><select id="studentSchedule" required><option value="">Seleccionar</option><option value="4:30">4:30 a 5:30 PM</option><option value="5:30">5:30 a 6:30 PM</option><option value="6:30">6:30 a 7:30 PM</option><option value="mañana">8:30 a 9:45 AM</option></select></div><div class="field"><label>Fecha de ingreso</label><input type="date" id="studentJoin"></div><div class="field"><label>Familia</label><select id="studentFamily"><option value="">Sin familia asignada</option></select></div><div class="field"><label>Cuota mensual</label><input type="number" min="0" id="studentFee" value="500"></div><div class="field"><label>Estado</label><select id="studentStatus"><option value="activo">Activo</option><option value="inactivo">Inactivo</option><option value="baja">Baja temporal</option></select></div><div class="field wide"><label>Observaciones opcionales</label><textarea id="studentNotes" placeholder="Notas adicionales"></textarea></div></div><div class="actions"><button class="btn" type="submit">Guardar alumno</button><button class="btn secondary" type="button" id="studentClear">Limpiar</button></div></form></div><div class="panel"><h3>Lista de alumnos</h3><input id="studentSearch" placeholder="Buscar alumno..."><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Horario</th><th>Familia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="studentRows"></tbody></table></div></div></section>
+<section class="page active" id="page-inicio"><div class="panel"><h2>Panel de control</h2><p class="muted" id="today"></p><span class="pill">TIBURONES ENSENADA</span></div><div class="grid"><div class="card green"><strong>ALUMNOS ACTIVOS</strong><div class="num" id="dashStudents">0</div></div><div class="card orange"><strong>SALDOS PENDIENTES</strong><div class="num" id="dashDue">0</div></div><div class="card blue"><strong>INGRESOS DEL MES</strong><div class="num" id="dashIncome">$0</div></div><div class="card red"><strong>GASTOS DEL MES</strong><div class="num" id="dashExpenses">$0</div></div></div><div class="panel" style="margin-top:15px"><h3>Resumen de la academia</h3><p class="muted" id="dashSummary">Registra alumnos para comenzar.</p></div></section>
+<section class="page" id="page-alumnos"><div class="panel"><h2>👥 Alumnos</h2><p class="muted">Registra jugadores. Al guardar, el formulario queda listo para capturar al siguiente.</p><form id="studentForm"><input type="hidden" id="studentId"><div class="formgrid"><div class="field wide"><label>Nombre completo</label><input id="studentName" required placeholder="Nombre y apellidos"></div><div class="field"><label>Fecha de nacimiento</label><input type="date" id="studentBirth"></div><div class="field"><label>Sexo</label><select id="studentSex"><option value="">Seleccionar</option><option>Femenino</option><option>Masculino</option><option>Prefiero no especificar</option></select></div><div class="field"><label>Horario</label><select id="studentSchedule" required><option value="">Seleccionar</option><option value="4:30">4:30 a 5:30 PM</option><option value="5:30">5:30 a 6:30 PM</option><option value="6:30">6:30 a 7:30 PM</option><option value="mañana">8:30 a 9:45 AM</option></select></div><div class="field"><label>Fecha de ingreso</label><input type="date" id="studentJoin"></div><div class="field"><label>Familia</label><select id="studentFamily"><option value="">Sin familia asignada</option></select></div><div class="field"><label>Cuota mensual</label><input type="number" min="0" id="studentFee" value="500"></div><div class="field"><label>Estado</label><select id="studentStatus"><option value="activo">Activo</option><option value="inactivo">Inactivo</option><option value="baja">Baja temporal</option></select></div><div class="field wide"><label>Observaciones opcionales</label><textarea id="studentNotes" placeholder="Notas adicionales"></textarea></div></div><div class="actions"><button class="btn" type="submit">Guardar alumno</button><button class="btn secondary" type="button" id="studentClear">Limpiar</button></div></form></div><div class="panel"><h3>Lista de alumnos</h3><input id="studentSearch" placeholder="Buscar alumno..."><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Horario</th><th>Familia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="studentRows"></tbody></table></div></div></section>
 <section class="page" id="page-familias"><div class="panel"><h2>👨‍👩‍👧 Familias</h2><p class="muted">Agrupa hermanos y registra responsables.</p><form id="familyForm"><input type="hidden" id="familyId"><div class="formgrid"><div class="field wide"><label>Nombre de familia</label><input id="familyName" required placeholder="Ej. Familia Pérez"></div><div class="field"><label>Responsable</label><input id="familyResponsible"></div><div class="field"><label>Teléfono</label><input id="familyPhone" type="tel"></div><div class="field wide"><label>Observaciones</label><textarea id="familyNotes"></textarea></div></div><div class="actions"><button class="btn" type="submit">Guardar familia</button><button class="btn secondary" type="button" id="familyClear">Limpiar</button></div></form></div><div class="panel"><h3>Familias registradas</h3><div class="tablewrap"><table><thead><tr><th>Familia</th><th>Responsable</th><th>Teléfono</th><th>Alumnos</th><th>Acciones</th></tr></thead><tbody id="familyRows"></tbody></table></div></div></section>
 <section class="page" id="page-asistencia"><div class="panel"><h2>📋 Asistencia</h2><div class="formgrid"><div class="field"><label>Fecha</label><input type="date" id="attDate"></div><div class="field"><label>Horario</label><select id="attSchedule"><option value="4:30">4:30 PM</option><option value="5:30">5:30 PM</option><option value="6:30">6:30 PM</option><option value="mañana">8:30 AM</option></select></div></div><div class="actions"><button class="btn" type="button" id="loadAttendance">Cargar alumnos</button><button class="btn success" type="button" id="saveAttendance">Guardar asistencia</button></div></div><div class="panel"><h3>Lista del entrenamiento</h3><div id="attendanceList" class="empty">Selecciona fecha y horario.</div></div></section>
 <section class="page" id="page-evaluaciones"><div class="panel"><h2>⭐ Evaluaciones</h2><p class="muted">Evalúa rápidamente con botones. El desempeño comienza en 10 puntos y puedes marcar varias observaciones.</p><div class="formgrid"><div class="field"><label>Fecha</label><input type="date" id="evalDate"></div><div class="field"><label>Horario</label><select id="evalSchedule"><option value="4:30">4:30 PM</option><option value="5:30">5:30 PM</option><option value="6:30">6:30 PM</option><option value="mañana">8:30 AM</option></select></div><div class="field wide"><label>Alumno</label><select id="evalStudent"><option value="">Seleccionar alumno</option></select></div></div><div class="sectionlabel">Desempeño</div><div class="choicegrid" id="performanceChoices"><button type="button" class="choice selected" data-group="performance" data-value="excelente" data-score="10">🌟 Trabajo excelente<small>10 puntos</small></button><button type="button" class="choice" data-group="performance" data-value="muy bien" data-score="9">👏 Muy buen trabajo<small>9 puntos</small></button><button type="button" class="choice" data-group="performance" data-value="cumplio" data-score="8">🏀 Cumplió el ejercicio<small>8 puntos</small></button><button type="button" class="choice" data-group="performance" data-value="regular" data-score="7">⚠️ Necesita mejorar<small>7 puntos</small></button><button type="button" class="choice" data-group="performance" data-value="no cumplio" data-score="6">❌ No cumplió el ejercicio<small>6 puntos</small></button></div><div class="sectionlabel">Actitud y conducta (puedes marcar varias)</div><div class="choicegrid" id="attitudeChoices"><button type="button" class="choice" data-group="attitude" data-value="buena actitud">😊 Buena actitud</button><button type="button" class="choice" data-group="attitude" data-value="respetó indicaciones">🤝 Respetó indicaciones</button><button type="button" class="choice" data-group="attitude" data-value="trabajó en equipo">👥 Trabajó en equipo</button><button type="button" class="choice" data-group="attitude" data-value="estuvo platicador">💬 Estuvo platicador</button><button type="button" class="choice" data-group="attitude" data-value="se distrajo">👀 Se distrajo</button><button type="button" class="choice" data-group="attitude" data-value="no siguió instrucciones">⚠️ No siguió instrucciones</button></div><div class="sectionlabel">Esfuerzo y progreso (puedes marcar varias)</div><div class="choicegrid" id="effortChoices"><button type="button" class="choice" data-group="effort" data-value="mostró mucho esfuerzo">💪 Mostró mucho esfuerzo</button><button type="button" class="choice" data-group="effort" data-value="mejoró respecto a la sesión anterior">📈 Mostró mejora</button><button type="button" class="choice" data-group="effort" data-value="necesita trabajar más">🔁 Necesita trabajar más</button><button type="button" class="choice" data-group="effort" data-value="no realizó el ejercicio">🚫 No realizó el ejercicio</button></div><div class="actions"><button class="btn success" type="button" id="saveEvaluation">Guardar evaluación</button><button class="btn secondary" type="button" id="resetEvaluation">Restablecer botones</button></div></div><div class="panel"><h3>Evaluaciones pendientes</h3><div id="evalPending" class="empty">Selecciona fecha y horario.</div></div><div class="panel"><h3>Historial de evaluaciones</h3><div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Alumno</th><th>Puntos</th><th>Observaciones</th></tr></thead><tbody id="evalRows"></tbody></table></div></div></section>
 <section class="page" id="page-mvp"><div class="panel"><h2>🏆 MVP mensual</h2><p class="muted">Candidatos según asistencia, evaluación, actitud, esfuerzo y mejora. Hasta dos reconocimientos por cada horario de la tarde.</p><div class="formgrid"><div class="field"><label>Mes</label><input type="month" id="mvpMonth"></div><div class="field"><label>Horario</label><select id="mvpSchedule"><option value="4:30">4:30 PM</option><option value="5:30">5:30 PM</option><option value="6:30">6:30 PM</option></select></div></div><div class="actions"><button class="btn" type="button" id="calculateMvp">Calcular candidatos</button></div></div><div class="panel"><h3>Resultados</h3><div id="mvpResults" class="empty">Selecciona mes y horario.</div></div><div class="panel"><h3>Reconocimientos guardados</h3><div id="mvpHistory" class="empty">Aún no hay MVP registrados.</div></div></section>
 <section class="page" id="page-pagos"><div class="panel"><h2>💳 Pagos</h2><p class="muted">Mensualidad, recargos y otros conceptos.</p><form id="paymentForm"><div class="formgrid"><div class="field wide"><label>Alumno</label><select id="paymentStudent" required></select></div><div class="field"><label>Concepto</label><select id="paymentConcept"><option value="mensualidad">Mensualidad</option><option value="recargo">Recargo</option><option value="reingreso">Reingreso</option><option value="uniforme">Uniforme</option><option value="otro">Otro</option></select></div><div class="field"><label>Mes</label><input type="month" id="paymentMonth"></div><div class="field"><label>Importe</label><input type="number" min="0.01" step="0.01" id="paymentAmount" required></div><div class="field"><label>Fecha</label><input type="date" id="paymentDate" required></div><div class="field"><label>Método</label><select id="paymentMethod"><option>Efectivo</option><option>Transferencia</option><option>Otro</option></select></div></div><div class="actions"><button class="btn success" type="submit">Registrar pago</button></div></form></div><div class="panel"><h3>Historial de pagos</h3><div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Alumno</th><th>Concepto</th><th>Importe</th><th>Método</th></tr></thead><tbody id="paymentRows"></tbody></table></div></div></section>
 <section class="page" id="page-finanzas"><div class="panel"><h2>💰 Finanzas</h2><form id="expenseForm"><div class="formgrid"><div class="field wide"><label>Descripción</label><input id="expenseDescription" required></div><div class="field"><label>Importe</label><input type="number" min="0.01" step="0.01" id="expenseAmount" required></div><div class="field"><label>Fecha</label><input type="date" id="expenseDate" required></div><div class="field wide"><label>Categoría</label><select id="expenseCategory"><option>Material deportivo</option><option>Uniformes</option><option>Instalaciones</option><option>Torneos</option><option>Transporte</option><option>Otros</option></select></div></div><div class="actions"><button class="btn" type="submit">Registrar gasto</button></div></form></div><div class="panel"><h3>Gastos registrados</h3><div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Importe</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div></section>
-<section class="page" id="page-calendario"><div class="panel"><h2>📅 Calendario</h2><form id="eventForm"><div class="formgrid"><div class="field wide"><label>Evento</label><input id="eventName" required placeholder="Torneo, descanso, reunión..."></div><div class="field"><label>Fecha</label><input type="date" id="eventDate" required></div><div class="field"><label>Tipo</label><select id="eventType"><option>Entrenamiento</option><option>Descanso</option><option>Torneo</option><option>Evento especial</option><option>Reunión</option></select></div></div><div class="actions"><button class="btn" type="submit">Guardar evento</button></div></form></div><div class="panel"><h3>Eventos</h3><div id="eventRows" class="empty">No hay eventos.</div></div></section><section class="page" id="page-reportes"><div class="panel"><h2>📊 Reportes</h2><div class="field"><label>Mes del reporte</label><input type="month" id="reportMonth"></div><div class="actions"><button class="btn" type="button" id="makeReport">Generar reporte</button><button class="btn secondary" type="button" id="printReport">Imprimir</button></div></div><div class="panel"><div id="reportResults" class="muted">Selecciona un mes y genera el reporte.</div></div></section>
+<section class="page" id="page-calendario"><div class="panel"><h2>📅 Calendario</h2><form id="eventForm"><div class="formgrid"><div class="field wide"><label>Evento</label><input id="eventName" required placeholder="Torneo, descanso, reunión..."></div><div class="field"><label>Fecha</label><input type="date" id="eventDate" required></div><div class="field"><label>Tipo</label><select id="eventType"><option>Entrenamiento</option><option>Descanso</option><option>Torneo</option><option>Evento especial</option><option>Reunión</option></select></div></div><div class="actions"><button class="btn" type="submit">Guardar evento</button></div></form></div><div class="panel"><h3>Eventos</h3><div id="eventRows" class="empty">No hay eventos.</div></div></section>
+<section class="page" id="page-reportes"><div class="panel"><h2>📊 Reportes</h2><div class="field"><label>Mes del reporte</label><input type="month" id="reportMonth"></div><div class="actions"><button class="btn" type="button" id="makeReport">Generar reporte</button><button class="btn secondary" type="button" id="printReport">Imprimir</button></div></div><div class="panel"><div id="reportResults" class="muted">Selecciona un mes y genera el reporte.</div></div></section>
 <section class="page" id="page-respaldo"><div class="panel"><h2>💾 Respaldo de información</h2><p class="muted">Descarga una copia de tus registros para conservarlos o restaurarlos en otro dispositivo.</p><div class="actions"><button class="btn success" type="button" id="exportBackup">Descargar respaldo</button></div></div><div class="panel"><h3>Restaurar respaldo</h3><p class="muted">Selecciona un archivo JSON descargado previamente. La restauración reemplazará los datos actuales.</p><input type="file" id="backupFile" accept=".json,application/json"><div class="actions"><button class="btn warn" type="button" id="importBackup">Restaurar información</button></div></div></section>
 </main>
 <div class="footer">CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA</div>
@@ -189,119 +191,112 @@ function saveEvaluation(){
   if(old)Object.assign(old,record);else db.evaluations.push(record);
   if(!saveDB())return;
   resetEvaluation();renderEvaluations();updateDashboard();notify("Evaluación guardada. Selecciona al siguiente jugador.");
-}<script>
-"use strict";
-
-// NAVEGACIÓN
-function openPage(name){
-  document.querySelectorAll(".page").forEach(p=>{
-    p.classList.toggle("active",p.id==="page-"+name);
-  });
-  document.querySelectorAll("#menu button").forEach(b=>{
-    b.classList.toggle("active",b.dataset.page===name);
-  });
-  if(name==="inicio")updateDashboard();
-  if(name==="alumnos")renderStudents();
-  if(name==="familias")renderFamilies();
-  if(name==="evaluaciones")renderEvaluations();
-  if(name==="pagos")renderPayments();
-  if(name==="finanzas")renderExpenses();
-  if(name==="calendario")renderEvents();
-  if(name==="mvp")renderMvpHistory();
 }
-
-$("menu").addEventListener("click",e=>{
-  const b=e.target.closest("[data-page]");
-  if(b)openPage(b.dataset.page);
-});
-
-// ALUMNOS Y FAMILIAS
-$("studentForm").addEventListener("submit",saveStudent);
-$("studentClear").addEventListener("click",()=>{
-  clearStudentForm();
-  notify("Formulario listo para otro alumno.");
-});
-$("studentSearch").addEventListener("input",renderStudents);
-
-$("studentRows").addEventListener("click",e=>{
-  const edit=e.target.closest("[data-edit-student]");
-  const toggle=e.target.closest("[data-toggle-student]");
-  if(edit)editStudent(edit.dataset.editStudent);
-  if(toggle)toggleStudent(toggle.dataset.toggleStudent);
-});
-
-$("familyForm").addEventListener("submit",saveFamily);
-$("familyClear").addEventListener("click",()=>{
-  $("familyForm").reset();
-  $("familyId").value="";
-});
-$("familyRows").addEventListener("click",e=>{
-  const b=e.target.closest("[data-edit-family]");
-  if(b)editFamily(b.dataset.editFamily);
-});
-
-// ASISTENCIA
-$("loadAttendance").addEventListener("click",loadAttendance);
-$("saveAttendance").addEventListener("click",saveAttendance);
-
-// EVALUACIONES
-document.querySelectorAll(".choice").forEach(button=>{
-  button.addEventListener("click",()=>handleChoice(button));
-});
-
-$("saveEvaluation").addEventListener("click",saveEvaluation);
-$("resetEvaluation").addEventListener("click",()=>{
-  resetEvaluation();
-  notify("Evaluación restablecida a excelente, 10 puntos.");
-});
-
-$("evalSchedule").addEventListener("change",()=>{
-  $("evalStudent").value="";
-  renderPending();
-});
-
-$("evalDate").addEventListener("change",renderPending);
-
-$("evalPending").addEventListener("click",e=>{
-  const b=e.target.closest("[data-select-eval]");
-  if(!b)return;
-  $("evalStudent").value=b.dataset.selectEval;
-  $("evalStudent").scrollIntoView({behavior:"smooth",block:"center"});
-});
-
-// MVP
-$("calculateMvp").addEventListener("click",calculateMvp);
-
-// PAGOS
-$("paymentForm").addEventListener("submit",savePayment);
-
-// FINANZAS
-$("expenseForm").addEventListener("submit",saveExpense);
-
-// CALENDARIO
-$("eventForm").addEventListener("submit",saveEvent);
-
-// REPORTES
-$("makeReport").addEventListener("click",makeReport);
-$("printReport").addEventListener("click",()=>{
-  makeReport();
-  window.print();
-});
-
-// RESPALDO
-$("exportBackup").addEventListener("click",exportBackup);
-$("importBackup").addEventListener("click",importBackup);
-
-// INICIO
-function startApp(){
-  setDefaults();
-  resetEvaluation();
-  refreshAll();
-  openPage("inicio");
-  console.log("CONTROL TIBURONES iniciado.");
+function calculateMvp(){
+  const month=$("mvpMonth").value,schedule=$("mvpSchedule").value;
+  if(!/^\d{4}-\d{2}$/.test(month)){notify("Selecciona un mes.");return;}
+  const candidates=studentsForSchedule(schedule).map(s=>{
+    const ev=db.evaluations.filter(e=>e.studentId===s.id&&e.date.startsWith(month));
+    const at=db.attendance.filter(a=>a.studentId===s.id&&a.date.startsWith(month));
+    const attended=at.filter(a=>["presente","retardo"].includes(a.status)).length;
+    const attendanceRate=at.length?attended/at.length*100:0;
+    const avg=ev.length?ev.reduce((sum,e)=>sum+e.score,0)/ev.length:0;
+    const conduct=ev.length?ev.reduce((sum,e)=>sum+(e.attitude.includes("buena actitud")||e.attitude.includes("respetó indicaciones")?1:0),0)/ev.length:0;
+    const effort=ev.length?ev.reduce((sum,e)=>sum+(e.effort.includes("mostró mucho esfuerzo")||e.effort.includes("mejoró respecto a la sesión anterior")?1:0),0)/ev.length:0;
+    const score=ev.length?avg*7+attendanceRate*.2+conduct*5+effort*5:0;
+    return {student:s,score,avg,attendanceRate,evCount:ev.length,attendanceCount:at.length};
+  }).filter(x=>x.evCount||x.attendanceCount).sort((a,b)=>b.score-a.score);
+  $("mvpResults").innerHTML=candidates.length?candidates.map((x,i)=>`<div class="card ${i<2?"green":""}" style="margin:9px 0"><strong>${i+1}. ${safe(x.student.name)}</strong><div class="num">${x.score.toFixed(1)} pts</div><p class="small">Promedio ${x.avg.toFixed(1)}/10 · Asistencia registrada ${x.attendanceRate.toFixed(0)}% · ${x.evCount} evaluaciones</p></div>`).join("")+`<div class="actions"><button type="button" class="btn success" id="saveMvpWinners">Guardar los primeros ${Math.min(2,candidates.length)} reconocimientos</button></div>`:'<div class="empty">Todavía no hay datos suficientes para calcular candidatos.</div>';
+  $("saveMvpWinners")?.addEventListener("click",()=>{
+    candidates.slice(0,2).forEach(x=>{
+      const exists=db.mvp.find(m=>m.month===month&&m.schedule===schedule&&m.studentId===x.student.id);
+      if(!exists)db.mvp.push({id:uid(),month,schedule,studentId:x.student.id,score:Number(x.score.toFixed(1)),savedAt:today()});
+    });
+    saveDB();renderMvpHistory();notify("Reconocimientos guardados.");
+  });
 }
-
-startApp();
-</script>
-</body>
-</html>
+function renderMvpHistory(){
+  $("mvpHistory").innerHTML=db.mvp.length?[...db.mvp].sort((a,b)=>b.month.localeCompare(a.month)).map(m=>`<div class="card green" style="margin:8px 0"><strong>🏆 ${safe(studentName(m.studentId))}</strong><p>${safe(m.month)} · ${safe(m.schedule)} · ${m.score} puntos</p></div>`).join(""):'Aún no hay MVP registrados.';
+}
+function savePayment(e){
+  e.preventDefault();
+  const studentId=$("paymentStudent").value,amount=Number($("paymentAmount").value),date=$("paymentDate").value;
+  if(!studentId||amount<=0||!validDate(date)){notify("Revisa alumno, importe y fecha.");return;}
+  const p={id:uid(),studentId,concept:$("paymentConcept").value,month:$("paymentMonth").value||date.slice(0,7),amount,date,method:$("paymentMethod").value};
+  db.payments.push(p);if(!saveDB())return;
+  $("paymentForm").reset();$("paymentDate").value=today();$("paymentMonth").value=currentMonth();renderPayments();updateDashboard();notify("Pago registrado.");
+}
+function renderPayments(){
+  const list=[...db.payments].sort((a,b)=>b.date.localeCompare(a.date));
+  $("paymentRows").innerHTML=list.length?list.map(p=>`<tr><td>${dateText(p.date)}</td><td>${safe(studentName(p.studentId))}</td><td>${safe(p.concept)}</td><td>${money(p.amount)}</td><td>${safe(p.method)}</td></tr>`).join(""):'<tr><td colspan="5" class="empty">No hay pagos registrados.</td></tr>';
+}
+function saveExpense(e){
+  e.preventDefault();const description=$("expenseDescription").value.trim(),amount=Number($("expenseAmount").value),date=$("expenseDate").value;
+  if(!description||amount<=0||!validDate(date)){notify("Completa descripción, importe y fecha.");return;}
+  db.expenses.push({id:uid(),description,amount,date,category:$("expenseCategory").value});
+  if(!saveDB())return;$("expenseForm").reset();$("expenseDate").value=today();renderExpenses();updateDashboard();notify("Gasto registrado.");
+}
+function renderExpenses(){
+  const list=[...db.expenses].sort((a,b)=>b.date.localeCompare(a.date));
+  $("expenseRows").innerHTML=list.length?list.map(x=>`<tr><td>${dateText(x.date)}</td><td>${safe(x.description)}</td><td>${safe(x.category)}</td><td>${money(x.amount)}</td></tr>`).join(""):'<tr><td colspan="4" class="empty">No hay gastos registrados.</td></tr>';
+}
+function saveEvent(e){
+  e.preventDefault();const name=$("eventName").value.trim(),date=$("eventDate").value;
+  if(!name||!validDate(date)){notify("Escribe el evento y selecciona fecha.");return;}
+  db.events.push({id:uid(),name,date,type:$("eventType").value});
+  if(!saveDB())return;$("eventForm").reset();$("eventDate").value=today();renderEvents();notify("Evento guardado.");
+}
+function renderEvents(){
+  const list=[...db.events].sort((a,b)=>a.date.localeCompare(b.date));
+  $("eventRows").innerHTML=list.length?list.map(x=>`<div class="card" style="margin:8px 0"><strong>${safe(x.name)}</strong><p>${dateText(x.date)} · ${safe(x.type)}</p></div>`).join(""):'No hay eventos registrados.';
+}
+function monthlyPaid(studentId,month){
+  return db.payments.filter(p=>p.studentId===studentId&&p.month===month&&p.concept==="mensualidad").reduce((s,p)=>s+p.amount,0);
+}
+function studentBalance(s,month){
+  const fee=Number(s.fee||(s.schedule==="mañana"?600:500));
+  let due=fee;
+  if(month===currentMonth()&&Number(today().slice(8,10))>db.settings.dueDay)due+=db.settings.lateFee;
+  return Math.max(0,due-monthlyPaid(s.id,month));
+}
+function updateDashboard(){
+  const month=currentMonth(),active=activeStudents();
+  const income=db.payments.filter(p=>p.date.startsWith(month)).reduce((s,p)=>s+p.amount,0);
+  const expenses=db.expenses.filter(x=>x.date.startsWith(month)).reduce((s,x)=>s+x.amount,0);
+  $("dashStudents").textContent=active.length;
+  $("dashDue").textContent=active.filter(s=>studentBalance(s,month)>0).length;
+  $("dashIncome").textContent=money(income);
+  $("dashExpenses").textContent=money(expenses);
+  $("today").textContent="Fecha: "+dateText(today());
+  $("dashSummary").textContent=active.length?`Hay ${active.length} alumnos activos. ${active.filter(s=>studentBalance(s,month)>0).length} presentan saldo pendiente del mes. Ingresos: ${money(income)}. Gastos: ${money(expenses)}.`:"Registra alumnos para comenzar.";
+}
+function makeReport(){
+  const month=$("reportMonth").value;if(!/^\d{4}-\d{2}$/.test(month)){notify("Selecciona el mes.");return;}
+  const payments=db.payments.filter(p=>p.date.startsWith(month)),expenses=db.expenses.filter(x=>x.date.startsWith(month)),att=db.attendance.filter(a=>a.date.startsWith(month)),ev=db.evaluations.filter(e=>e.date.startsWith(month));
+  const income=payments.reduce((s,p)=>s+p.amount,0),cost=expenses.reduce((s,x)=>s+x.amount,0),present=att.filter(a=>["presente","retardo"].includes(a.status)).length,avg=ev.length?ev.reduce((s,e)=>s+e.score,0)/ev.length:0;
+  $("reportResults").innerHTML=`<div class="grid"><div class="card green"><strong>INGRESOS</strong><div class="num">${money(income)}</div></div><div class="card red"><strong>GASTOS</strong><div class="num">${money(cost)}</div></div><div class="card blue"><strong>BALANCE</strong><div class="num">${money(income-cost)}</div></div><div class="card purple"><strong>EVALUACIONES</strong><div class="num">${ev.length}</div></div></div><p>Alumnos activos: ${activeStudents().length}</p><p>Pagos registrados: ${payments.length}</p><p>Asistencias registradas: ${att.length}</p><p>Presentes y retardos: ${present}</p><p>Promedio de evaluación: ${avg.toFixed(1)}/10</p>`;
+}
+function exportBackup(){
+  const payload={application:"CONTROL TIBURONES",version:3,exportedAt:new Date().toISOString(),data:db};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="respaldo-control-tiburones-"+today()+".json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);notify("Respaldo descargado.");
+}
+function importBackup(){
+  const file=$("backupFile").files[0];if(!file){notify("Selecciona un respaldo JSON.");return;}
+  if(!confirm("La restauración reemplazará los datos actuales. ¿Continuar?"))return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const obj=JSON.parse(reader.result),data=obj.data||obj;
+      const required=["students","families","attendance","evaluations","payments","expenses","events","mvp","settings"];
+      if(!required.every(k=>data[k]!==undefined))throw new Error("Respaldo incompleto");
+      db=data;if(!saveDB())return;refreshAll();notify("Respaldo restaurado.");
+    }catch(err){console.error(err);notify("El archivo no es un respaldo válido.");}
+  };
+  reader.readAsText(file);
+}
+function refreshAll(){
+  renderFamilyOptions();renderStudentOptions();renderStudents();renderFamilies();renderEvaluations();renderPayments();renderExpenses();renderEvents();renderMvpHistory();updateDashboard();
+}
+</script>  
