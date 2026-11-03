@@ -2288,7 +2288,566 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
 
 })();
 </script>  
-  
+<script>
+(function () {
+  "use strict";
+
+  if (window.tiburonesUniformeMVP) return;
+  window.tiburonesUniformeMVP = true;
+
+  const KEY = "control_tiburones_mvp_2026_v2";
+
+  const POINTS = {
+    performance: {
+      "Excelente trabajo": 3,
+      "Buen trabajo": 2,
+      "Mejorando": 1
+    },
+    attitude: {
+      "Buena actitud": 2,
+      "Prestó atención": 2,
+      "Estuvo platicador": -1,
+      "No siguió indicaciones": -2,
+      "No prestó atención": -3,
+      "Estuvo jugando": -3
+    },
+    effort: {
+      "Se esforzó mucho": 3,
+      "Va mejorando": 2,
+      "Necesita mejorar": 0,
+      "Le costó realizar ejercicios": 0,
+      "Reforzar la práctica": 0
+    },
+    uniform: {
+      "Cumple": 1,
+      "Justificado": 0,
+      "No cumple": -1
+    }
+  };
+
+  const GROUPS = [
+    ["4:30", "Inicial"],
+    ["5:30", "Infantil"],
+    ["6:30", "Juvenil"]
+  ];
+
+  const $ = id => document.getElementById(id);
+
+  const safe = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+
+  const signed = value =>
+    value > 0 ? `+${value}` :
+    value < 0 ? `−${Math.abs(value)}` : "0";
+
+  const saveButton = $("saveEv");
+
+  if (!saveButton || !$("page-evaluacion")) return;
+
+  // DISEÑO DEL UNIFORME
+  const style = document.createElement("style");
+
+  style.textContent = `
+    #uniformEvaluation { margin-top:16px; }
+
+    #uniformEvaluation .uniform-options {
+      display:grid;
+      gap:10px;
+    }
+
+    #uniformEvaluation .uniform-choice {
+      width:100%;
+      min-height:105px;
+      padding:15px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      text-align:left;
+      color:#fff;
+      border:2px solid transparent;
+      border-radius:15px;
+    }
+
+    #uniformEvaluation .uniform-choice span {
+      display:grid;
+      gap:9px;
+    }
+
+    #uniformEvaluation .uniform-choice b {
+      font-size:17px;
+    }
+
+    #uniformEvaluation .uniform-choice small {
+      color:#fff;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    #uniformEvaluation .uniform-choice strong {
+      font-size:16px;
+      white-space:nowrap;
+    }
+
+    #uniformEvaluation .uniform-ok {
+      background:#176b4d;
+      border-color:#36c98b;
+    }
+
+    #uniformEvaluation .uniform-just {
+      background:#805014;
+      border-color:#e8b34c;
+    }
+
+    #uniformEvaluation .uniform-no {
+      background:#8b1e25;
+      border-color:#ed6870;
+    }
+
+    #uniformEvaluation .uniform-choice.selected {
+      outline:3px solid #fff;
+      box-shadow:0 0 0 5px #35c8ed66;
+    }
+
+    #page-evaluacion .choice-grid button .score-label {
+      display:block;
+      margin-top:7px;
+      font-size:13px;
+      color:#fff;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  // APARTADO 4: UNIFORME DE ENTRENAMIENTO
+  const uniformCard = document.createElement("div");
+
+  uniformCard.className = "card";
+  uniformCard.id = "uniformEvaluation";
+
+  uniformCard.innerHTML = `
+    <div class="choice-title">
+      4. Uniforme de entrenamiento
+    </div>
+
+    <p class="muted">
+      Selecciona una sola opción para evaluar el uniforme completo.
+    </p>
+
+    <div class="uniform-options">
+
+      <button type="button"
+        class="uniform-choice uniform-ok"
+        data-uniform="Cumple">
+
+        <span>
+          <b>CUMPLE</b>
+          <small>
+            Lleva correctamente el uniforme completo.
+          </small>
+        </span>
+
+        <strong>+1 punto</strong>
+      </button>
+
+      <button type="button"
+        class="uniform-choice uniform-just"
+        data-uniform="Justificado">
+
+        <span>
+          <b>JUSTIFICADO</b>
+          <small>
+            Avisó que no podía llevar alguna prenda
+            o recibió autorización. Solo queda registrado.
+          </small>
+        </span>
+
+        <strong>0 puntos</strong>
+      </button>
+
+      <button type="button"
+        class="uniform-choice uniform-no"
+        data-uniform="No cumple">
+
+        <span>
+          <b>NO CUMPLE</b>
+          <small>
+            No lleva el uniforme completo, lleva otra
+            playera o un short diferente, sin justificación.
+          </small>
+        </span>
+
+        <strong>−1 punto</strong>
+      </button>
+
+    </div>
+  `;
+
+  saveButton.parentNode.insertBefore(uniformCard, saveButton);
+
+  // MOSTRAR PUNTOS EN LAS OTRAS TRES CATEGORÍAS
+  ["performance", "attitude", "effort"].forEach(groupName => {
+    const group = $(groupName);
+
+    if (!group) return;
+
+    group.querySelectorAll("button[data-value]").forEach(button => {
+      const score = POINTS[groupName][button.dataset.value];
+
+      if (score === undefined) return;
+
+      let label = button.querySelector(".score-label");
+
+      if (!label) {
+        label = document.createElement("span");
+        label.className = "score-label";
+        button.appendChild(label);
+      }
+
+      label.textContent =
+        `${signed(score)} ${Math.abs(score) === 1 ? "punto" : "puntos"}`;
+    });
+  });
+
+  // SELECCIÓN ÚNICA DEL UNIFORME
+  uniformCard.addEventListener("click", event => {
+    const button = event.target.closest("button[data-uniform]");
+
+    if (!button) return;
+
+    uniformCard.querySelectorAll(".uniform-choice").forEach(item => {
+      item.classList.toggle("selected", item === button);
+    });
+  });
+
+  function selectedUniform() {
+    return uniformCard.querySelector(
+      ".uniform-choice.selected"
+    )?.dataset.uniform || "";
+  }
+
+  // GUARDAR EL UNIFORME EN LA MISMA EVALUACIÓN
+  saveButton.addEventListener("click", event => {
+    const uniformValue = selectedUniform();
+
+    if (!uniformValue) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (typeof msg === "function") {
+        msg("Selecciona una opción del uniforme antes de guardar.");
+      }
+
+      return;
+    }
+
+    const date = $("evDate").value;
+    const playerId = $("evPlayer").value;
+    const schedule = $("evSchedule").value;
+
+    const alreadyExists = db.evaluations.some(e =>
+      String(e.playerId) === String(playerId) &&
+      e.date === date &&
+      e.schedule === schedule
+    );
+
+    if (alreadyExists) return;
+
+    setTimeout(() => {
+      const record = db.evaluations.find(e =>
+        String(e.playerId) === String(playerId) &&
+        e.date === date &&
+        e.schedule === schedule
+      );
+
+      if (!record || record.uniform === uniformValue) return;
+
+      record.uniform = uniformValue;
+
+      if (typeof save === "function") save();
+
+      if (typeof renderEvHistory === "function") {
+        renderEvHistory();
+      }
+
+      uniformCard.querySelectorAll(".uniform-choice").forEach(item => {
+        item.classList.remove("selected");
+      });
+
+      refreshMvp();
+
+    }, 100);
+
+  }, true);
+
+  // CÁLCULO MENSUAL DEL MVP
+  function calculate(month) {
+    let database;
+
+    try {
+      database = JSON.parse(localStorage.getItem(KEY) || "{}");
+    } catch (error) {
+      database = {};
+    }
+
+    const players = database.players || [];
+
+    const sessions = (database.sessions || []).filter(session =>
+      String(session.date || "").startsWith(month) &&
+      !session.cancelled
+    );
+
+    const evaluations = (database.evaluations || []).filter(e =>
+      String(e.date || "").startsWith(month)
+    );
+
+    return GROUPS.map(([schedule, label]) => {
+
+      const groupSessions = sessions.filter(session =>
+        session.schedule === schedule
+      );
+
+      const ranking = players
+        .filter(player => player.schedule === schedule)
+        .map(player => {
+
+          let attended = 0;
+          let absences = 0;
+          let justified = 0;
+          let late = 0;
+
+          let attendancePoints = 0;
+          let performancePoints = 0;
+          let attitudePoints = 0;
+          let effortPoints = 0;
+          let uniformPoints = 0;
+
+          groupSessions.forEach(session => {
+
+            const record = (session.records || []).find(r =>
+              String(r.playerId) === String(player.id)
+            );
+
+            if (!record) return;
+
+            if (record.status === "Presente") {
+              attended++;
+            }
+
+            else if (record.status === "Retardo") {
+              attended++;
+              late++;
+            }
+
+            else if (record.status === "Justificada") {
+              attended++;
+              justified++;
+            }
+
+            else if (record.status === "Falta") {
+              absences++;
+              attendancePoints -= 0.5;
+            }
+
+          });
+
+          const playerEvals = evaluations.filter(e =>
+            String(e.playerId) === String(player.id) &&
+            e.schedule === schedule
+          );
+
+          playerEvals.forEach(e => {
+
+            performancePoints +=
+              POINTS.performance[e.performance] || 0;
+
+            attitudePoints +=
+              POINTS.attitude[e.attitude] || 0;
+
+            effortPoints +=
+              POINTS.effort[e.effort] || 0;
+
+            uniformPoints +=
+              POINTS.uniform[e.uniform] || 0;
+
+          });
+
+          const score =
+            attendancePoints +
+            performancePoints +
+            attitudePoints +
+            effortPoints +
+            uniformPoints;
+
+          return {
+            name: player.name,
+            score,
+            attended,
+            absences,
+            justified,
+            late,
+            evaluations: playerEvals.length,
+            attendancePoints,
+            performancePoints,
+            attitudePoints,
+            effortPoints,
+            uniformPoints
+          };
+
+        })
+        .filter(player =>
+          groupSessions.length > 0 ||
+          player.evaluations > 0
+        )
+        .sort((a, b) =>
+          b.score - a.score ||
+          b.attended - a.attended ||
+          b.evaluations - a.evaluations ||
+          a.name.localeCompare(b.name, "es")
+        );
+
+      return {
+        schedule,
+        label,
+        ranking
+      };
+
+    });
+  }
+
+  // MOSTRAR RESULTADOS EN EL MVP PRINCIPAL Y TABULADOR
+  function render(month, target) {
+    if (!month || !target) return;
+
+    target.innerHTML = calculate(month).map(group => {
+
+      const ranking = group.ranking;
+
+      if (!ranking.length) {
+        return `
+          <div class="card">
+            <h3>${group.schedule} · ${group.label}</h3>
+            <div class="empty">
+              No hay registros para este horario.
+            </div>
+          </div>
+        `;
+      }
+
+      const candidates = ranking.slice(0, 2).map((player, index) => `
+        <div class="item">
+
+          <span class="pill gold">
+            ${index === 0 ? "🥇 PRIMER LUGAR" : "🥈 SEGUNDO LUGAR"}
+          </span>
+
+          <h3 style="margin-top:10px">
+            ${safe(player.name)}
+          </h3>
+
+          <div class="stat">
+            <span>Puntos acumulados del mes</span>
+            <strong>${player.score.toFixed(2)} pts</strong>
+          </div>
+
+          <div class="muted">
+            Asistencias: ${player.attended} ·
+            Faltas: ${player.absences} ·
+            Justificadas: ${player.justified} ·
+            Retardos: ${player.late}
+          </div>
+
+        </div>
+      `).join("");
+
+      const rows = ranking.map((player, index) => `
+        <div class="item row">
+
+          <div>
+            <b>
+              ${index + 1}. ${safe(player.name)}
+            </b>
+
+            <div class="muted">
+              Asistencia: ${player.attendancePoints.toFixed(2)} ·
+              Desempeño: ${signed(player.performancePoints)} ·
+              Actitud: ${signed(player.attitudePoints)} ·
+              Esfuerzo: ${signed(player.effortPoints)} ·
+              Uniforme: ${signed(player.uniformPoints)}
+            </div>
+          </div>
+
+          <span class="pill ${index < 2 ? "gold" : "green"}">
+            ${player.score.toFixed(2)} pts
+          </span>
+
+        </div>
+      `).join("");
+
+      return `
+        <div class="card">
+          <h3>🏀 ${group.schedule} · ${group.label}</h3>
+
+          ${candidates}
+
+          <h3>Clasificación del horario</h3>
+
+          ${rows}
+        </div>
+      `;
+
+    }).join("") + `
+      <div class="hint">
+        Todos comienzan con 0 puntos cada mes.
+        Falta injustificada: −0.50.
+        Uniforme: cumple +1, justificado 0, no cumple −1.
+        Se muestran los dos primeros lugares de cada horario.
+      </div>
+    `;
+  }
+
+  function refreshMvp() {
+    const mainMonth = $("mvpMonth")?.value;
+
+    if (mainMonth) {
+      render(mainMonth, $("mvpOutput"));
+    }
+
+    const liveMonth = $("tbMvpMonth")?.value || mainMonth;
+
+    if (liveMonth) {
+      render(liveMonth, $("tbMvpResults"));
+    }
+  }
+
+  // ACTUALIZAR DESPUÉS DE LOS REGISTROS Y CAMBIOS DE MES
+  document.addEventListener("click", event => {
+
+    if (event.target.closest(
+      "#runMvp, #tbMvpRefresh, #tbMvpOpen, nav button[data-page='mvp'], #saveEv, #saveAtt, #noTraining"
+    )) {
+      setTimeout(refreshMvp, 350);
+    }
+
+  });
+
+  document.addEventListener("change", event => {
+
+    if (event.target.matches("#mvpMonth, #tbMvpMonth")) {
+      setTimeout(refreshMvp, 80);
+    }
+
+  });
+
+  refreshMvp();
+
+})();
+</script>  
   
 </body>
 </html>
