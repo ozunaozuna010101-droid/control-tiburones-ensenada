@@ -2010,7 +2010,284 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
   });
 })();
       </script>
-  
+<script>
+(function () {
+  "use strict";
+
+  const KEY = "control_tiburones_mvp_2026_v2";
+
+  const POINTS = {
+    performance: {
+      "Excelente trabajo": 3,
+      "Buen trabajo": 2,
+      "Mejorando": 1
+    },
+    attitude: {
+      "Buena actitud": 2,
+      "Prestó atención": 2,
+      "Estuvo platicador": -1,
+      "No siguió indicaciones": -2,
+      "No prestó atención": -3,
+      "Estuvo jugando": -3
+    },
+    effort: {
+      "Se esforzó mucho": 3,
+      "Va mejorando": 2,
+      "Necesita mejorar": 0,
+      "Le costó realizar ejercicios": 0,
+      "Reforzar la práctica": 0
+    }
+  };
+
+  const GROUPS = [
+    ["4:30", "Inicial"],
+    ["5:30", "Infantil"],
+    ["6:30", "Juvenil"]
+  ];
+
+  function readDB() {
+    try {
+      return JSON.parse(localStorage.getItem(KEY)) || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function safe(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[c]));
+  }
+
+  function currentMonth() {
+    const d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  function calculate(month) {
+    const db = readDB();
+    const players = db.players || [];
+    const sessions = (db.sessions || []).filter(s =>
+      String(s.date || "").startsWith(month) && !s.cancelled
+    );
+    const evaluations = (db.evaluations || []).filter(e =>
+      String(e.date || "").startsWith(month)
+    );
+
+    return GROUPS.map(([schedule, label]) => {
+      const ranking = players
+        .filter(p => p.schedule === schedule)
+        .map(player => {
+          let attended = 0;
+          let absences = 0;
+          let justified = 0;
+          let late = 0;
+          let attendancePoints = 0;
+          let performancePoints = 0;
+          let attitudePoints = 0;
+          let effortPoints = 0;
+
+          sessions
+            .filter(s => s.schedule === schedule)
+            .forEach(session => {
+              const record = (session.records || []).find(r =>
+                String(r.playerId) === String(player.id)
+              );
+
+              if (!record) return;
+
+              if (record.status === "Presente") {
+                attended++;
+              } else if (record.status === "Retardo") {
+                attended++;
+                late++;
+              } else if (record.status === "Justificada") {
+                attended++;
+                justified++;
+              } else if (record.status === "Falta") {
+                absences++;
+                attendancePoints -= 0.50;
+              }
+            });
+
+          const playerEvals = evaluations.filter(e =>
+            String(e.playerId) === String(player.id) &&
+            e.schedule === schedule
+          );
+
+          playerEvals.forEach(e => {
+            performancePoints +=
+              POINTS.performance[e.performance] || 0;
+
+            attitudePoints +=
+              POINTS.attitude[e.attitude] || 0;
+
+            effortPoints +=
+              POINTS.effort[e.effort] || 0;
+          });
+
+          const score =
+            attendancePoints +
+            performancePoints +
+            attitudePoints +
+            effortPoints;
+
+          return {
+            name: player.name,
+            score,
+            attended,
+            absences,
+            justified,
+            late,
+            evaluations: playerEvals.length,
+            attendancePoints,
+            performancePoints,
+            attitudePoints,
+            effortPoints
+          };
+        });
+
+      ranking.sort((a, b) =>
+        b.score - a.score ||
+        b.attended - a.attended ||
+        b.evaluations - a.evaluations ||
+        a.name.localeCompare(b.name, "es")
+      );
+
+      return { schedule, label, ranking };
+    });
+  }
+
+  function render(month, target) {
+    if (!target) return;
+
+    const groups = calculate(month);
+
+    target.innerHTML = groups.map(group => {
+      const ranking = group.ranking;
+
+      if (!ranking.length) {
+        return `
+          <div class="card">
+            <h3>${group.schedule} · ${group.label}</h3>
+            <div class="empty">No hay jugadores registrados.</div>
+          </div>
+        `;
+      }
+
+      const first = ranking[0];
+      const second = ranking[1];
+
+      function candidate(player, position) {
+        if (!player) return "";
+
+        return `
+          <div class="item">
+            <span class="pill gold">
+              ${position === 1 ? "🥇 PRIMER LUGAR" : "🥈 SEGUNDO LUGAR"}
+            </span>
+            <h3 style="margin-top:10px">${safe(player.name)}</h3>
+            <div class="stat">
+              <span>Puntos acumulados del mes</span>
+              <strong>${player.score.toFixed(2)} pts</strong>
+            </div>
+            <div class="muted">
+              Asistencias: ${player.attended} ·
+              Faltas: ${player.absences} ·
+              Justificadas: ${player.justified} ·
+              Retardos: ${player.late}
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card">
+          <h3>🏀 ${group.schedule} · ${group.label}</h3>
+          ${candidate(first, 1)}
+          ${candidate(second, 2)}
+          <h3>Clasificación del horario</h3>
+          ${ranking.map((p, i) => `
+            <div class="item row">
+              <div>
+                <b>${i + 1}. ${safe(p.name)}</b>
+                <div class="muted">
+                  Asistencia: ${p.attendancePoints.toFixed(2)} ·
+                  Desempeño: +${p.performancePoints} ·
+                  Actitud: ${p.attitudePoints} ·
+                  Esfuerzo: +${p.effortPoints}
+                </div>
+              </div>
+              <span class="pill ${i < 2 ? "gold" : "green"}">
+                ${p.score.toFixed(2)} pts
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }).join("") + `
+      <div class="hint">
+        Todos comienzan con 0 puntos al iniciar cada mes.
+        El historial anterior se conserva. Se muestran los dos
+        primeros lugares de cada horario.
+      </div>
+    `;
+  }
+
+  function refresh() {
+    const month =
+      document.getElementById("mvpMonth")?.value ||
+      currentMonth();
+
+    render(month, document.getElementById("mvpOutput"));
+
+    const liveMonth =
+      document.getElementById("tbMvpMonth")?.value || month;
+
+    render(liveMonth, document.getElementById("tbMvpResults"));
+  }
+
+  // Añadir la opción MEJORANDO al desempeño.
+  const performance = document.getElementById("performance");
+
+  if (performance &&
+      !performance.querySelector('[data-value="Mejorando"]')) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "c-blue";
+    button.dataset.value = "Mejorando";
+    button.textContent = "MEJORANDO";
+    performance.appendChild(button);
+  }
+
+  // Actualizar después de guardar registros.
+  document.addEventListener("click", event => {
+    if (event.target.closest(
+      "#saveAtt, #saveEv, #noTraining, #runMvp, #tbMvpOpen"
+    )) {
+      setTimeout(refresh, 150);
+    }
+
+    if (event.target.closest('nav button[data-page="mvp"]')) {
+      setTimeout(refresh, 150);
+    }
+  });
+
+  document.addEventListener("change", event => {
+    if (event.target.matches("#mvpMonth, #tbMvpMonth")) {
+      setTimeout(refresh, 50);
+    }
+  });
+
+  refresh();
+
+})();
+</script>  
   
   
 </body>
