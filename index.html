@@ -2848,6 +2848,46 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
 
 })();
 </script>  
-  
+<style>
+#uniformEvaluation .uniform-options {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+
+#uniformEvaluation .uniform-choice {
+  min-height:70px !important;
+  height:75px !important;
+  padding:10px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:5px !important;
+  text-align:center !important;
+}
+
+#uniformEvaluation .uniform-choice span {
+  display:block !important;
+}
+
+#uniformEvaluation .uniform-choice b {
+  font-size:13px !important;
+}
+
+#uniformEvaluation .uniform-choice small {
+  display:none !important;
+}
+
+#uniformEvaluation .uniform-choice strong {
+  font-size:13px !important;
+}
+
+@media(max-width:360px) {
+  #uniformEvaluation .uniform-choice {
+    padding:7px !important;
+  }
+}
+</style>  
 </body>
 </html>
