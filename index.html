@@ -1903,6 +1903,115 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
 })();
     </script>
   
+<script>
+(function(){
+  if(window.tiburonesEvalVisualV1) return;
+  window.tiburonesEvalVisualV1 = true;
+
+  const performance = document.getElementById("performance");
+  const attitude = document.getElementById("attitude");
+  const effort = document.getElementById("effort");
+
+  if(!performance || !attitude || !effort) return;
+
+  // 1. Agregar MEJORANDO sin quitar las opciones existentes
+  if(!performance.querySelector('[data-value="Mejorando"]')){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "c-blue";
+    btn.dataset.value = "Mejorando";
+    btn.textContent = "MEJORANDO";
+    performance.appendChild(btn);
+  }
+
+  // 2. Cambiar la última opción del apartado 3
+  const oldEffort = [...effort.querySelectorAll("button")]
+    .find(b => b.dataset.value === "Necesita mejorar");
+
+  if(oldEffort){
+    oldEffort.dataset.value = "Reforzar la práctica";
+    oldEffort.textContent = "REFORZAR LA PRÁCTICA";
+    oldEffort.className = "c-gold";
+  }
+
+  // 3. Quitar solamente la opción anterior
+  const obsolete = [...effort.querySelectorAll("button")]
+    .find(b => b.dataset.value === "Le costó realizar ejercicios");
+
+  if(obsolete) obsolete.remove();
+
+  // 4. Colores más vivos y profesionales
+  const style = document.createElement("style");
+  style.textContent = `
+    #page-evaluacion .choice-grid button {
+      border-width:2px !important;
+      border-radius:16px !important;
+      font-weight:900 !important;
+      box-shadow:0 4px 12px #0004 !important;
+      transition:filter .15s,box-shadow .15s !important;
+    }
+
+    #page-evaluacion .choice-grid button.c-green {
+      background:linear-gradient(145deg,#16b96d,#087d49) !important;
+      border-color:#42f0a0 !important;
+    }
+
+    #page-evaluacion .choice-grid button.c-blue {
+      background:linear-gradient(145deg,#168fe8,#0756a8) !important;
+      border-color:#42c8ff !important;
+    }
+
+    #page-evaluacion .choice-grid button.c-gold {
+      background:linear-gradient(145deg,#f2b323,#a96808) !important;
+      border-color:#ffd45b !important;
+    }
+
+    #page-evaluacion .choice-grid button.c-red {
+      background:linear-gradient(145deg,#ed4558,#a81735) !important;
+      border-color:#ff8290 !important;
+    }
+
+    #page-evaluacion .choice-grid button.selected {
+      outline:3px solid #ffffff !important;
+      box-shadow:0 0 0 5px #35c8ed55,0 0 16px #36cfff88 !important;
+      filter:brightness(1.12) !important;
+    }
+
+    #page-evaluacion .choice-title {
+      font-size:15px !important;
+      font-weight:900 !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Colores del apartado 1
+  const good = performance.querySelector('[data-value="Buen trabajo"]');
+  const excellent = performance.querySelector('[data-value="Excelente trabajo"]');
+  const improving = performance.querySelector('[data-value="Mejorando"]');
+
+  if(good) good.className = "c-blue" + (good.classList.contains("selected") ? " selected" : "");
+  if(excellent) excellent.className = "c-green" + (excellent.classList.contains("selected") ? " selected" : "");
+  if(improving) improving.className = "c-blue";
+
+  // Colores del apartado 2
+  attitude.querySelectorAll("button").forEach(b => {
+    const value = b.dataset.value;
+    if(["Buena actitud","Prestó atención"].includes(value)) b.className = "c-green";
+    else if(["Estuvo platicador","No siguió indicaciones"].includes(value)) b.className = "c-gold";
+    else if(["No prestó atención","Estuvo jugando"].includes(value)) b.className = "c-red";
+  });
+
+  // Colores del apartado 3
+  effort.querySelectorAll("button").forEach(b => {
+    const value = b.dataset.value;
+    if(value === "Se esforzó mucho") b.className = "c-green";
+    else if(value === "Va mejorando") b.className = "c-blue";
+    else if(value === "Reforzar la práctica") b.className = "c-gold";
+  });
+})();
+      </script>
+  
+  
   
 </body>
 </html>
