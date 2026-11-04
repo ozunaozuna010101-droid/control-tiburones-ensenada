@@ -1836,4 +1836,490 @@ if(document.readyState==="loading"){
 
 </script>
 </body>
+<script>
+// ============================================
+// HISTORIAL PROFESIONAL DESCARGABLE EN PDF
+// CONTROL TIBURONES
+// ============================================
+
+function showPlayerHistoryById(playerId){
+
+  const player=db.players.find(p=>p.id===playerId);
+  if(!player)return;
+
+  const records=db.evaluations
+    .filter(e=>e.playerId===playerId)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+
+  const categories=[
+    {key:"performance",name:"Desempeño"},
+    {key:"attitude",name:"Actitud y atención"},
+    {key:"effort",name:"Esfuerzo y mejora"},
+    {key:"uniform",name:"Uniforme"}
+  ];
+
+  let positive=0;
+  let negative=0;
+  let totalPoints=0;
+  const totals={};
+
+  categories.forEach(c=>totals[c.key]=0);
+
+  records.forEach(e=>{
+    categories.forEach(c=>{
+      const points=Number(e[c.key]?.points)||0;
+      totals[c.key]+=points;
+      if(points>0)positive+=points;
+      if(points<0)negative+=points;
+    });
+    totalPoints+=Number(e.total)||0;
+  });
+
+  $("playerHistoryContent").innerHTML=`
+    <h3>${esc(player.name)}</h3>
+    <p>Horario: ${esc(player.group)}</p>
+
+    <div class="item">
+      <strong>Resumen de progreso</strong>
+      <span class="tag">${records.length} evaluaciones</span>
+      <span class="tag green">+${positive} puntos positivos</span>
+      <span class="tag red">${negative} puntos negativos</span>
+      <span class="tag gold">${totalPoints} puntos netos</span>
+    </div>
+
+    <button class="btn green"
+      onclick="downloadPlayerHistoryPDF('${player.id}')">
+      📄 DESCARGAR HISTORIAL EN PDF
+    </button>
+
+    <div class="divider"></div>
+
+    ${records.length?records.slice().reverse().map(e=>`
+      <div class="item">
+        <strong>${esc(e.date)} · ${e.total} puntos</strong>
+        <small>Desempeño: ${esc(e.performance?.label||"Sin registro")} (${Number(e.performance?.points)||0})</small>
+        <small>Actitud: ${esc(e.attitude?.label||"Sin registro")} (${Number(e.attitude?.points)||0})</small>
+        <small>Esfuerzo: ${esc(e.effort?.label||"Sin registro")} (${Number(e.effort?.points)||0})</small>
+        <small>Uniforme: ${esc(e.uniform?.label||"Sin registro")} (${Number(e.uniform?.points)||0})</small>
+        <small>Observaciones: ${esc(e.notes||"Sin observaciones")}</small>
+      </div>
+    `).join(""):'<div class="empty">Todavía no hay evaluaciones.</div>'}
+  `;
+
+  $("historyDialog").classList.add("show");
+}
+
+
+// ============================================
+// DESCARGAR HISTORIAL COMPLETO
+// ============================================
+
+function downloadPlayerHistoryPDF(playerId){
+
+  const player=db.players.find(p=>p.id===playerId);
+  if(!player)return;
+
+  const records=db.evaluations
+    .filter(e=>e.playerId===playerId)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+
+  if(!records.length){
+    alert("Este jugador todavía no tiene evaluaciones para descargar.");
+    return;
+  }
+
+  const categories=[
+    {key:"performance",name:"Desempeño"},
+    {key:"attitude",name:"Actitud y atención"},
+    {key:"effort",name:"Esfuerzo y mejora"},
+    {key:"uniform",name:"Uniforme"}
+  ];
+
+  let positive=0;
+  let negative=0;
+  let totalPoints=0;
+  const totals={};
+
+  categories.forEach(c=>totals[c.key]=0);
+
+  records.forEach(e=>{
+    categories.forEach(c=>{
+      const points=Number(e[c.key]?.points)||0;
+      totals[c.key]+=points;
+      if(points>0)positive+=points;
+      if(points<0)negative+=points;
+    });
+    totalPoints+=Number(e.total)||0;
+  });
+
+  const formatPoints=n=>n>0?"+"+n:String(n);
+
+  const historyHTML=records.map((e,index)=>`
+    <article class="evaluation">
+      <div class="evaluation-header">
+        <div>
+          <h3>Evaluación ${index+1}</h3>
+          <p class="date">${esc(e.date)}</p>
+        </div>
+        <div class="score">${formatPoints(Number(e.total)||0)} pts</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Registro</th>
+            <th>Puntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${categories.map(c=>{
+            const item=e[c.key]||{};
+            const points=Number(item.points)||0;
+            return `
+              <tr>
+                <td>${c.name}</td>
+                <td>${esc(item.label||"Sin registro")}</td>
+                <td class="${points>0?"positive":points<0?"negative":""}">
+                  ${formatPoints(points)}
+                </td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+
+      <div class="observations">
+        <strong>Observaciones del Coach</strong>
+        <p>${esc(e.notes||"Sin observaciones registradas.")}</p>
+      </div>
+    </article>
+  `).join("");
+
+  const summaryHTML=categories.map(c=>`
+    <tr>
+      <td>${c.name}</td>
+      <td>${formatPoints(totals[c.key])}</td>
+    </tr>
+  `).join("");
+
+  const printWindow=window.open("","_blank");
+
+  if(!printWindow){
+    alert("El navegador bloqueó la ventana. Permite las ventanas emergentes e inténtalo nuevamente.");
+    return;
+  }
+
+  const documentHTML=`
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historial deportivo - ${esc(player.name)}</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  padding:30px;
+  font-family:Arial,Helvetica,sans-serif;
+  color:#243449;
+  background:#fff;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.header{
+  background:#102b47;
+  color:white;
+  padding:25px;
+  border-radius:12px;
+  border-bottom:5px solid #16bde5;
+}
+
+.brand{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+
+.subtitle{
+  color:#c6d8e8;
+  font-size:11px;
+  margin-top:5px;
+}
+
+.header-label{
+  margin-top:23px;
+  font-size:19px;
+  font-weight:bold;
+}
+
+.section-title{
+  color:#123c61;
+  font-size:15px;
+  border-bottom:2px solid #18bde4;
+  padding-bottom:7px;
+  margin-top:24px;
+}
+
+.player-info{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+.info-box{
+  padding:13px;
+  background:#f0f5f9;
+  border-radius:8px;
+}
+
+.info-box small{
+  display:block;
+  color:#62778b;
+  font-size:10px;
+}
+
+.info-box strong{
+  display:block;
+  font-size:14px;
+  margin-top:4px;
+}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:15px;
+}
+
+.summary-box{
+  background:#edf4f9;
+  padding:13px;
+  border-radius:8px;
+  text-align:center;
+}
+
+.summary-box small{
+  display:block;
+  font-size:10px;
+  color:#60758a;
+}
+
+.summary-box strong{
+  display:block;
+  font-size:19px;
+  margin-top:5px;
+}
+
+.evaluation{
+  border:1px solid #d6e0e9;
+  border-radius:9px;
+  padding:15px;
+  margin-top:17px;
+  page-break-inside:avoid;
+  break-inside:avoid;
+}
+
+.evaluation-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.evaluation-header h3{
+  margin:0;
+  color:#123c61;
+  font-size:14px;
+}
+
+.date{
+  margin:3px 0;
+  color:#63788c;
+}
+
+.score{
+  background:#e5f5fa;
+  color:#08668e;
+  padding:8px 12px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:12px;
+}
+
+th{
+  background:#edf3f8;
+  color:#23445f;
+  text-align:left;
+}
+
+th,td{
+  padding:8px;
+  border-bottom:1px solid #e0e7ee;
+  font-size:11px;
+}
+
+.positive{
+  color:#07845e;
+  font-weight:bold;
+}
+
+.negative{
+  color:#c03950;
+  font-weight:bold;
+}
+
+.observations{
+  margin-top:12px;
+  background:#f6f8fa;
+  padding:11px;
+  border-radius:7px;
+}
+
+.observations p{
+  margin:5px 0 0;
+  white-space:pre-wrap;
+}
+
+.footer{
+  margin-top:30px;
+  padding-top:12px;
+  border-top:1px solid #ccd8e2;
+  text-align:center;
+  color:#63788c;
+  font-size:10px;
+}
+
+@page{
+  size:A4;
+  margin:15mm;
+}
+
+@media print{
+  body{padding:0}
+  .no-print{display:none!important}
+}
+
+@media screen{
+  body{max-width:850px;margin:auto}
+  .no-print{
+    display:block;
+    padding:13px;
+    background:#087bbd;
+    color:white;
+    border:0;
+    border-radius:8px;
+    width:100%;
+    font-weight:bold;
+    margin-bottom:20px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<button class="no-print" onclick="window.print()">
+  DESCARGAR / GUARDAR COMO PDF
+</button>
+
+<header class="header">
+  <div class="brand">🦈 CONTROL TIBURONES</div>
+  <div class="subtitle">ACADEMIA TIBURONES ENSENADA</div>
+  <div class="header-label">HISTORIAL DE DESARROLLO DEPORTIVO</div>
+</header>
+
+<section>
+  <h2 class="section-title">INFORMACIÓN DEL JUGADOR</h2>
+
+  <div class="player-info">
+    <div class="info-box">
+      <small>Nombre completo</small>
+      <strong>${esc(player.name)}</strong>
+    </div>
+    <div class="info-box">
+      <small>Horario de entrenamiento</small>
+      <strong>${esc(player.group)}</strong>
+    </div>
+    <div class="info-box">
+      <small>Evaluaciones registradas</small>
+      <strong>${records.length}</strong>
+    </div>
+    <div class="info-box">
+      <small>Fecha de elaboración</small>
+      <strong>${today()}</strong>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">RESUMEN DE PROGRESO</h2>
+
+  <div class="summary">
+    <div class="summary-box">
+      <small>Puntos positivos</small>
+      <strong class="positive">+${positive}</strong>
+    </div>
+    <div class="summary-box">
+      <small>Puntos negativos</small>
+      <strong class="negative">${negative}</strong>
+    </div>
+    <div class="summary-box">
+      <small>Total acumulado</small>
+      <strong>${formatPoints(totalPoints)}</strong>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Área evaluada</th>
+        <th>Puntos acumulados</th>
+      </tr>
+    </thead>
+    <tbody>${summaryHTML}</tbody>
+  </table>
+</section>
+
+<section>
+  <h2 class="section-title">HISTORIAL COMPLETO DE EVALUACIONES</h2>
+  ${historyHTML}
+</section>
+
+<div class="footer">
+  <strong>ACADEMIA TIBURONES ENSENADA</strong><br>
+  CONTROL TIBURONES · HISTORIAL INDIVIDUAL DEL JUGADOR<br>
+  Documento generado desde el registro deportivo de la academia.
+</div>
+
+</body>
 </html>
+`;
+
+  printWindow.document.open();
+  printWindow.document.write(documentHTML);
+  printWindow.document.close();
+
+  printWindow.onload=()=>{
+    printWindow.focus();
+    setTimeout(()=>printWindow.print(),500);
+  };
+
+  // Respaldo por si el evento de carga ya ocurrió.
+  setTimeout(()=>{
+    if(!printWindow.closed){
+      printWindow.focus();
+    }
+  },1200);
+}
+                       </script>
+</body> </html>
