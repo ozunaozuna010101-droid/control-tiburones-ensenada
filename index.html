@@ -2889,5 +2889,601 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
   }
 }
 </style>  
-</body>
+<script> 
+/* ============================================================
+   CONTROL TIBURONES — MVP UNIFICADO + CONTROL DE MENSUALIDADES
+   Instalación: pegar este archivo como <script>...</script>
+   justo antes de </body> del HTML actual.
+   Datos deportivos: conserva KEY existente.
+   Finanzas: almacenamiento independiente.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  if (window.TIBURONES_CONTROL_INTEGRADO_V1) return;
+  window.TIBURONES_CONTROL_INTEGRADO_V1 = true;
+
+  const SPORTS_KEY = "control_tiburones_mvp_2026_v2";
+  const FINANCE_KEY = "control_tiburones_finanzas_v1";
+  const GROUPS = [
+    ["4:30", "Inicial"],
+    ["5:30", "Infantil"],
+    ["6:30", "Juvenil"],
+    ["8:30", "Matutino"]
+  ];
+
+  const POINTS = {
+    performance: {
+      "Excelente trabajo": 3, "Buen trabajo": 2, "Mejorando": 1
+    },
+    attitude: {
+      "Buena actitud": 2, "Prestó atención": 2,
+      "Estuvo platicador": -1, "No siguió indicaciones": -2,
+      "No prestó atención": -3, "Estuvo jugando": -3
+    },
+    effort: {
+      "Se esforzó mucho": 3, "Va mejorando": 2,
+      "Necesita mejorar": 0, "Le costó realizar ejercicios": 0,
+      "Reforzar la práctica": 0
+    },
+    uniform: { "Cumple": 1, "Justificado": 0, "No cumple": -1 }
+  };
+
+  const $ = id => document.getElementById(id);
+  const money = n => "$" + (Number(n) || 0).toLocaleString("es-MX", {
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  });
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+  const today = () => {
+    const d = new Date();
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString().slice(0,10);
+  };
+  const currentMonth = () => today().slice(0,7);
+
+  function readSports() {
+    try {
+      const d = JSON.parse(localStorage.getItem(SPORTS_KEY) || "{}");
+      return {
+        players: Array.isArray(d.players) ? d.players : [],
+        sessions: Array.isArray(d.sessions) ? d.sessions : [],
+        evaluations: Array.isArray(d.evaluations) ? d.evaluations : []
+      };
+    } catch (e) {
+      console.error("No se pudo leer la base deportiva", e);
+      return { players: [], sessions: [], evaluations: [] };
+    }
+  }
+
+  function readFinance() {
+    try {
+      const d = JSON.parse(localStorage.getItem(FINANCE_KEY) || "{}");
+      return {
+        profiles: d.profiles && typeof d.profiles === "object" ? d.profiles : {},
+        payments: Array.isArray(d.payments) ? d.payments : [],
+        expenses: Array.isArray(d.expenses) ? d.expenses : [],
+        settings: {
+          regularFee: 500,
+          morningFee: 600,
+          lateFee: 100,
+          siblingSecondFee: 250,
+          siblingThirdFee: 250,
+          ...(d.settings || {})
+        }
+      };
+    } catch (e) {
+      console.error("No se pudo leer finanzas", e);
+      return {
+        profiles: {}, payments: [], expenses: [],
+        settings: {regularFee:500, morningFee:600, lateFee:100,
+          siblingSecondFee:250, siblingThirdFee:250}
+      };
+    }
+  }
+
+  let finance = readFinance();
+
+  function saveFinance() {
+    try {
+      localStorage.setItem(FINANCE_KEY, JSON.stringify(finance));
+      return true;
+    } catch (e) {
+      alert("No se pudieron guardar las finanzas. Descarga o conserva una copia del navegador.");
+      console.error(e);
+      return false;
+    }
+  }
+
+  function scoreMVP(month) {
+    const db = readSports();
+    return GROUPS.slice(0,3).map(([schedule,label]) => {
+      const sessions = db.sessions.filter(s =>
+        s.schedule === schedule &&
+        String(s.date || "").startsWith(month) &&
+        !s.cancelled
+      );
+      const ranking = db.players.filter(p => p.schedule === schedule).map(p => {
+        let attended = 0, absences = 0, justified = 0, late = 0;
+        let attendancePoints = 0, performancePoints = 0;
+        let attitudePoints = 0, effortPoints = 0, uniformPoints = 0;
+
+        sessions.forEach(s => {
+          const r = (s.records || []).find(x =>
+            String(x.playerId) === String(p.id)
+          );
+          if (!r) return;
+          if (r.status === "Presente") attended++;
+          if (r.status === "Retardo") { attended++; late++; }
+          if (r.status === "Justificada") { attended++; justified++; }
+          if (r.status === "Falta") {
+            absences++;
+            attendancePoints -= 0.5;
+          }
+        });
+
+        const evs = db.evaluations.filter(e =>
+          String(e.playerId) === String(p.id) &&
+          String(e.date || "").startsWith(month) &&
+          (e.schedule || p.schedule) === schedule
+        );
+
+        evs.forEach(e => {
+          performancePoints += POINTS.performance[e.performance] || 0;
+          attitudePoints += POINTS.attitude[e.attitude] || 0;
+          effortPoints += POINTS.effort[e.effort] || 0;
+          uniformPoints += POINTS.uniform[e.uniform] || 0;
+        });
+
+        return {
+          id:p.id, name:p.name, score:attendancePoints+performancePoints+
+            attitudePoints+effortPoints+uniformPoints,
+          attended, absences, justified, late, evaluations:evs.length,
+          attendancePoints, performancePoints, attitudePoints,
+          effortPoints, uniformPoints
+        };
+      }).filter(p => sessions.length > 0 || p.evaluations > 0)
+        .sort((a,b) => b.score-a.score || b.attended-a.attended ||
+          b.evaluations-a.evaluations || a.name.localeCompare(b.name,"es"));
+      return {schedule,label,ranking};
+    });
+  }
+
+  function renderMVP(month, target) {
+    if (!month || !target) return;
+    target.innerHTML = scoreMVP(month).map(group => {
+      if (!group.ranking.length) return `
+        <div class="card"><h3>${group.schedule} · ${group.label}</h3>
+        <div class="empty">Todavía no hay registros para este horario.</div></div>`;
+      const top = group.ranking.slice(0,2).map((p,i) => `
+        <div class="item">
+          <span class="pill gold">${i===0?"🥇 PRIMER LUGAR":"🥈 SEGUNDO LUGAR"}</span>
+          <h3 style="margin-top:10px">${esc(p.name)}</h3>
+          <div class="stat"><span>Puntos acumulados del mes</span>
+          <strong>${p.score.toFixed(2)} pts</strong></div>
+          <div class="muted">Asistencias: ${p.attended} · Faltas: ${p.absences}
+          · Justificadas: ${p.justified} · Retardos: ${p.late}</div>
+        </div>`).join("");
+      const rows = group.ranking.map((p,i) => `
+        <div class="item row"><div><b>${i+1}. ${esc(p.name)}</b>
+        <div class="muted">Asistencia: ${p.attendancePoints.toFixed(2)} ·
+        Desempeño: ${p.performancePoints>=0?"+":""}${p.performancePoints} ·
+        Actitud: ${p.attitudePoints>=0?"+":""}${p.attitudePoints} ·
+        Esfuerzo: ${p.effortPoints>=0?"+":""}${p.effortPoints} ·
+        Uniforme: ${p.uniformPoints>=0?"+":""}${p.uniformPoints}</div></div>
+        <span class="pill ${i<2?"gold":"green"}">${p.score.toFixed(2)} pts</span></div>`
+      ).join("");
+      return `<div class="card"><h3>🏀 ${group.schedule} · ${group.label}</h3>
+        ${top}<h3>Clasificación del horario</h3>${rows}</div>`;
+    }).join("") + `<div class="hint">Todos comienzan desde 0 puntos cada mes.
+      Falta injustificada: −0.50. Uniforme: cumple +1, justificado 0,
+      no cumple −1. Máximo dos MVP por horario.</div>`;
+  }
+
+  function refreshMVP() {
+    const month = $("mvpMonth")?.value || currentMonth();
+    renderMVP(month, $("mvpOutput"));
+    const liveMonth = $("tbMvpMonth")?.value || month;
+    renderMVP(liveMonth, $("tbMvpResults"));
+  }
+
+  // Reemplaza visualmente el aviso antiguo que decía "100 puntos".
+  function fixOldMvpHint() {
+    const hint = $("page-mvp")?.querySelector(".hint");
+    if (hint) hint.textContent =
+      "Cada jugador comienza el mes con 0 puntos. Se suman desempeño, actitud, esfuerzo y uniforme. Falta injustificada: −0.50. Retardos y faltas justificadas: 0 descuentos. Los días sin entrenamiento no cuentan.";
+  }
+
+  // ---------------- FINANZAS ----------------
+  function injectFinancePage() {
+    if ($("page-finanzas")) return;
+    const nav = $("tabs");
+    const main = document.querySelector("main");
+    if (!nav || !main) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.page = "finanzas";
+    btn.textContent = "💰 FINANZAS";
+    nav.appendChild(btn);
+
+    const section = document.createElement("section");
+    section.className = "page";
+    section.id = "page-finanzas";
+    section.innerHTML = `
+      <h2>💰 Control de mensualidades</h2>
+      <div class="hint">Módulo financiero independiente. No modifica asistencias,
+      evaluaciones ni jugadores. Las cuotas se calculan por alumno y pueden
+      configurarse individualmente. Las inasistencias no cancelan la mensualidad.</div>
+
+      <div class="card">
+        <h3>Resumen del mes</h3>
+        <label>Mes a consultar</label>
+        <input type="month" id="finMonth">
+        <div class="grid3">
+          <div class="stat"><span>Por cobrar</span><strong id="finExpected">$0</strong></div>
+          <div class="stat"><span>Ingresos recibidos</span><strong id="finReceived">$0</strong></div>
+          <div class="stat"><span>Falta por pagar</span><strong id="finPending">$0</strong></div>
+        </div>
+        <div class="grid3" style="margin-top:9px">
+          <div class="stat"><span>Alumnos con saldo</span><strong id="finDebtors">0</strong></div>
+          <div class="stat"><span>Gastos del mes</span><strong id="finExpenses">$0</strong></div>
+          <div class="stat"><span>Balance</span><strong id="finBalance">$0</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Registrar / acreditar mensualidad</h3>
+        <label>Jugador</label><select id="finPlayer"></select>
+        <label>Mes que está pagando</label><input type="month" id="finPayMonth">
+        <label>Monto recibido (MXN)</label><input type="number" id="finAmount" min="1" step="0.01" placeholder="Ej. 500">
+        <label>Forma de pago</label>
+        <select id="finMethod"><option>Efectivo</option><option>Transferencia</option><option>Depósito</option><option>Otro</option></select>
+        <label>Referencia / nota (opcional)</label><input id="finNote" placeholder="Folio o comentario">
+        <button class="btn green full" id="finSavePayment">✓ ACREDITAR PAGO</button>
+        <button class="btn primary full" id="finPayFull">ACREDITAR SALDO COMPLETO</button>
+      </div>
+
+      <div class="card">
+        <h3>Cuotas y familias</h3>
+        <p class="muted">Agrupa hermanos con el mismo nombre de familia o responsable.
+        Puedes configurar una cuota especial, exentar o pausar la generación de mensualidad.</p>
+        <label>Jugador</label><select id="finProfilePlayer"></select>
+        <label>Familia / responsable</label><input id="finFamily" placeholder="Ej. Familia Pérez">
+        <label>Cuota mensual individual (MXN)</label><input type="number" id="finFee" min="0" step="1">
+        <label>Situación</label><select id="finStatus">
+          <option value="active">Activo</option>
+          <option value="exempt">Exento de pago</option>
+          <option value="paused">Baja temporal / no generar cuota</option>
+        </select>
+        <button class="btn primary full" id="finSaveProfile">GUARDAR CONFIGURACIÓN</button>
+        <div class="hint">Cuotas iniciales: $500 general, $600 matutino.
+        Desde el día 6 se agrega $100 de recargo. La cuota individual puede
+        ajustarse para aplicar acuerdos familiares o becas.</div>
+      </div>
+
+      <div class="card">
+        <h3>Estado de mensualidades</h3>
+        <div id="finStatusList"></div>
+        <h3 style="margin-top:18px">Resumen por familia</h3>
+        <div id="finFamilySummary"></div>
+      </div>
+
+      <div class="card">
+        <h3>Registrar gasto</h3>
+        <label>Concepto</label><input id="finExpenseName" placeholder="Ej. Material deportivo">
+        <label>Monto (MXN)</label><input type="number" id="finExpenseAmount" min="0.01" step="0.01">
+        <label>Fecha</label><input type="date" id="finExpenseDate">
+        <button class="btn gold full" id="finSaveExpense">REGISTRAR GASTO</button>
+        <div id="finExpenseList"></div>
+      </div>
+
+      <div class="card">
+        <h3>Historial de pagos acreditados</h3>
+        <div id="finPaymentHistory"></div>
+      </div>
+
+      <div class="card">
+        <h3>Configuración de cuotas</h3>
+        <label>Mensualidad regular</label><input type="number" id="setRegular" min="0">
+        <label>Mensualidad grupo matutino</label><input type="number" id="setMorning" min="0">
+        <label>Recargo después del día 5</label><input type="number" id="setLate" min="0">
+        <button class="btn primary full" id="finSaveSettings">GUARDAR CUOTAS</button>  
+      </div>
+    `;
+    main.appendChild(section);
+
+    nav.addEventListener("click", e => {
+      const b = e.target.closest('button[data-page="finanzas"]');
+      if (!b) return;
+      document.querySelectorAll(".page").forEach(x =>
+        x.classList.toggle("active", x.id === "page-finanzas"));
+      nav.querySelectorAll("button").forEach(x =>
+        x.classList.toggle("active", x === b));
+      renderFinance();
+    });
+  }
+
+  function chargeFor(player, month) {
+    const profile = finance.profiles[String(player.id)] || {};
+    if (profile.status === "exempt" || profile.status === "paused") return 0;
+    const defaultFee = player.schedule === "8:30"
+      ? Number(finance.settings.morningFee)
+      : Number(finance.settings.regularFee);
+    let fee = profile.fee === undefined || profile.fee === ""
+      ? defaultFee : Math.max(0, Number(profile.fee) || 0);
+    const nowMonth = currentMonth();
+    const lateApplies = month < nowMonth ||
+      (month === nowMonth && Number(today().slice(8,10)) > 5);
+    if (lateApplies && fee > 0) fee += Number(finance.settings.lateFee) || 0;
+    return fee;
+  }
+
+  function paymentsFor(playerId, month) {
+    return finance.payments.filter(p =>
+      String(p.playerId) === String(playerId) && p.month === month
+    );
+  }
+
+  function totalsFor(player, month) {
+    const charge = chargeFor(player, month);
+    const payments = paymentsFor(player.id, month);
+    const paid = payments.reduce((s,p) => s + Number(p.amount || 0), 0);
+    return {charge, paid, pending:Math.max(0, charge-paid), payments};
+  }
+
+  function renderFinance() {
+    if (!$("page-finanzas")) return;
+    finance = readFinance();
+    const db = readSports();
+    const month = $("finMonth")?.value || currentMonth();
+
+    const players = db.players.slice().sort((a,b) =>
+      String(a.schedule).localeCompare(String(b.schedule)) ||
+      String(a.name).localeCompare(String(b.name),"es")
+    );
+
+    ["finPlayer","finProfilePlayer"].forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      const previous = el.value;
+      el.innerHTML = players.map(p =>
+        `<option value="${esc(p.id)}">${esc(p.name)} · ${esc(p.schedule)}</option>`
+      ).join("");
+      if (players.some(p => String(p.id) === previous)) el.value = previous;
+    });
+
+    const selected = players.find(p => String(p.id) === String($("finProfilePlayer")?.value));
+    if (selected) {
+      const profile = finance.profiles[String(selected.id)] || {};
+      $("finFamily").value = profile.family || "";
+      $("finFee").value = profile.fee ?? (selected.schedule === "8:30"
+        ? finance.settings.morningFee : finance.settings.regularFee);
+      $("finStatus").value = profile.status || "active";
+    }
+
+    const rows = players.map(p => {
+      const t = totalsFor(p, month);
+      return {p,...t};
+    });
+
+    const expected = rows.reduce((s,r) => s+r.charge,0);
+    const received = rows.reduce((s,r) => s+r.paid,0);
+    const pending = rows.reduce((s,r) => s+r.pending,0);
+    const debtors = rows.filter(r => r.pending > 0).length;
+    const expenses = finance.expenses.filter(e => e.date.startsWith(month))
+      .reduce((s,e) => s+Number(e.amount||0),0);
+
+    $("finExpected").textContent = money(expected);
+    $("finReceived").textContent = money(received);
+    $("finPending").textContent = money(pending);
+    $("finDebtors").textContent = debtors;
+    $("finExpenses").textContent = money(expenses);
+    $("finBalance").textContent = money(received-expenses);
+
+    const familyGroups = {};
+    rows.forEach(r => {
+      const profile = finance.profiles[String(r.p.id)] || {};
+      const family = (profile.family || "").trim() || "Sin familia asignada";
+      if (!familyGroups[family]) familyGroups[family] = {charge:0,paid:0,pending:0,count:0};
+      familyGroups[family].charge += r.charge;
+      familyGroups[family].paid += r.paid;
+      familyGroups[family].pending += r.pending;
+      familyGroups[family].count++;
+    });
+    $("finFamilySummary").innerHTML = Object.entries(familyGroups)
+      .sort((a,b) => a[0].localeCompare(b[0],"es"))
+      .map(([family,t]) => `<div class="item">
+        <b>${esc(family)}</b>
+        <div class="muted">${t.count} jugador(es) · Cuotas: ${money(t.charge)}</div>
+        <div class="row"><span>Ingresado: ${money(t.paid)}</span>
+        <b>Por cobrar: ${money(t.pending)}</b></div>
+      </div>`).join("") || `<div class="empty">Todavía no hay familias configuradas.</div>`;
+
+    $("finStatusList").innerHTML = rows.length ? rows.map(r => {
+      const status = r.charge === 0 ? "EXENTO / SIN CUOTA" :
+        r.pending === 0 ? "LIQUIDADO" :
+        r.paid > 0 ? "ABONO PARCIAL" : "PENDIENTE";
+      const cls = r.charge === 0 || r.pending === 0 ? "green" :
+        r.paid > 0 ? "gold" : "red";
+      const profile = finance.profiles[String(r.p.id)] || {};
+      return `<div class="item">
+        <div class="row"><b>${esc(r.p.name)}</b><span class="pill ${cls}">${status}</span></div>
+        <div class="muted">${esc(profile.family || "Sin familia asignada")} · ${esc(r.p.schedule)}</div>
+        <div class="row"><span>Cuota: ${money(r.charge)}</span><span>Pagado: ${money(r.paid)}</span></div>
+        <div class="row"><b>Saldo: ${money(r.pending)}</b>
+          ${r.pending>0?`<button class="btn green small" data-fin-quick="${esc(r.p.id)}">ACREDITAR</button>`:""}
+        </div>
+      </div>`;
+    }).join("") : `<div class="empty">Primero registra jugadores en el módulo Jugadores.</div>`;
+
+    const monthPayments = finance.payments.filter(p => p.month === month)
+      .slice().sort((a,b) => b.date.localeCompare(a.date));
+    $("finPaymentHistory").innerHTML = monthPayments.length ? monthPayments.map(p => {
+      const player = players.find(x => String(x.id) === String(p.playerId));
+      return `<div class="item row"><div><b>${esc(player?.name || "Jugador")}</b>
+        <div class="muted">${esc(p.date)} · ${esc(p.method)} · ${esc(p.note || "")}</div></div>
+        <b>${money(p.amount)}</b></div>`;
+    }).join("") : `<div class="empty">Todavía no hay pagos acreditados para este mes.</div>`;
+
+    const monthExpenses = finance.expenses.filter(e => e.date.startsWith(month))
+      .slice().sort((a,b) => b.date.localeCompare(a.date));
+    $("finExpenseList").innerHTML = monthExpenses.map(e => `
+      <div class="item row"><div><b>${esc(e.description)}</b>
+      <div class="muted">${esc(e.date)}</div></div><b>${money(e.amount)}</b></div>
+    `).join("") || `<div class="empty">No hay gastos registrados este mes.</div>`;
+
+    $("setRegular").value = finance.settings.regularFee;
+    $("setMorning").value = finance.settings.morningFee;
+    $("setLate").value = finance.settings.lateFee;
+  }
+
+  function savePayment(amountOverride) {
+    finance = readFinance();
+    const db = readSports();
+    const playerId = $("finPlayer").value;
+    const player = db.players.find(p => String(p.id) === String(playerId));
+    const month = $("finPayMonth").value;
+    if (!player || !month) return alert("Selecciona un jugador y el mes que está pagando.");
+    const amount = amountOverride ?? Number($("finAmount").value);
+    if (!Number.isFinite(amount) || amount <= 0) return alert("Escribe un monto válido.");
+    const already = totalsFor(player, month);
+    if (already.charge === 0) return alert("Este jugador está exento o no tiene mensualidad activa.");
+    finance.payments.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+      playerId, month, date: today(), amount,
+      method: $("finMethod").value,
+      note: $("finNote").value.trim()
+    });
+    if (!saveFinance()) return;
+    $("finAmount").value = "";
+    $("finNote").value = "";
+    renderFinance();
+    alert("Pago acreditado correctamente.");
+  }
+
+  function bindFinance() {
+    $("finMonth").value = currentMonth();
+    $("finPayMonth").value = currentMonth();
+    $("finExpenseDate").value = today();
+
+    $("finSavePayment").addEventListener("click", () => savePayment());
+    $("finPayFull").addEventListener("click", () => {
+      finance = readFinance();
+      const db = readSports();
+      const player = db.players.find(p => String(p.id) === String($("finPlayer").value));
+      const month = $("finPayMonth").value;
+      if (!player || !month) return alert("Selecciona jugador y mes.");
+      const due = totalsFor(player, month).pending;
+      if (due <= 0) return alert("Este jugador no tiene saldo pendiente.");
+      savePayment(due);
+    });
+
+    $("finSaveProfile").addEventListener("click", () => {
+      finance = readFinance();
+      const id = $("finProfilePlayer").value;
+      if (!id) return alert("Selecciona un jugador.");
+      const fee = Number($("finFee").value);
+      if (!Number.isFinite(fee) || fee < 0) return alert("La cuota debe ser cero o mayor.");
+      finance.profiles[String(id)] = {
+        family:$("finFamily").value.trim(),
+        fee,
+        status:$("finStatus").value
+      };
+      if (!saveFinance()) return;
+      renderFinance();
+      alert("Configuración de cuota guardada.");
+    });
+
+    $("finProfilePlayer").addEventListener("change", renderFinance);
+    $("finMonth").addEventListener("change", renderFinance);
+    $("finPlayer").addEventListener("change", () => {
+      const db = readSports();
+      const p = db.players.find(x => String(x.id) === String($("finPlayer").value));
+      if (p) {
+        const t = totalsFor(p, $("finPayMonth").value || currentMonth());
+        $("finAmount").value = t.pending || "";
+      }
+    });
+
+    $("finStatusList").addEventListener("click", e => {
+      const b = e.target.closest("[data-fin-quick]");
+      if (!b) return;
+      $("finPlayer").value = b.dataset.finQuick;
+      const db = readSports();
+      const p = db.players.find(x => String(x.id) === String(b.dataset.finQuick));
+      const t = p ? totalsFor(p, $("finPayMonth").value || currentMonth()) : null;
+      $("finAmount").value = t?.pending || "";
+      $("finPayMonth").scrollIntoView({behavior:"smooth",block:"center"});
+    });
+
+    $("finSaveExpense").addEventListener("click", () => {
+      finance = readFinance();
+      const description = $("finExpenseName").value.trim();
+      const amount = Number($("finExpenseAmount").value);
+      const date = $("finExpenseDate").value;
+      if (!description || !Number.isFinite(amount) || amount <= 0 || !date)
+        return alert("Completa concepto, monto y fecha del gasto.");
+      finance.expenses.push({
+        id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+        description, amount, date
+      });
+      if (!saveFinance()) return;
+      $("finExpenseName").value = "";
+      $("finExpenseAmount").value = "";
+      renderFinance();
+      alert("Gasto registrado.");
+    });
+
+    $("finSaveSettings").addEventListener("click", () => {
+      finance = readFinance();
+      const regular = Number($("setRegular").value);
+      const morning = Number($("setMorning").value);
+      const late = Number($("setLate").value);
+      if ([regular,morning,late].some(n => !Number.isFinite(n) || n < 0))
+        return alert("Revisa las cuotas; no pueden ser negativas.");
+      finance.settings.regularFee = regular;
+      finance.settings.morningFee = morning;
+      finance.settings.lateFee = late;
+      if (!saveFinance()) return;
+      renderFinance();
+      alert("Cuotas actualizadas.");
+    });
+  }
+
+  // Captura los clics antes que los cálculos antiguos y vuelve a pintar
+  // ambos resultados con la misma función oficial.
+  document.addEventListener("click", e => {
+    if (e.target.closest("#runMvp, #tbMvpRefresh, #tbMvpOpen, #saveAtt, #saveEv, #noTraining")) {
+      setTimeout(() => {
+        fixOldMvpHint();
+        refreshMVP();
+      }, 700);
+    }
+    if (e.target.closest('nav button[data-page="mvp"]')) {
+      setTimeout(refreshMVP, 200);
+    }
+  }, true);
+
+  document.addEventListener("change", e => {
+    if (e.target.matches("#mvpMonth, #tbMvpMonth")) setTimeout(refreshMVP, 100);
+  });
+
+  function init() {
+    injectFinancePage();
+    if (!$("finMonth")) return;
+    bindFinance();
+    fixOldMvpHint();
+    refreshMVP();
+    renderFinance();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+      </script> </body>
 </html>
