@@ -3133,4 +3133,802 @@ console.log("CONTROL TIBURONES: nuevo módulo financiero cargado.");
 })();
 </script>  
   
+<script>
+// ==================================================
+// CONTROL TIBURONES
+// DESCUENTOS ADICIONALES E HISTORIAL CRONOLÓGICO
+// EL APARTADO DE UNIFORME NO SE MODIFICA
+// ==================================================
+(function(){
+
+  const tibCategories=[
+    {key:"performance",label:"Desempeño"},
+    {key:"attitude",label:"Actitud y atención"},
+    {key:"effort",label:"Esfuerzo y mejora"}
+  ];
+
+  let tibDeductions={
+    performance:{count:0},
+    attitude:{count:0},
+    effort:{count:0}
+  };
+
+  const originalReset=window.resetEvalSelections;
+
+  function safe(value){
+    return esc(value);
+  }
+
+  // ------------------------------------------
+  // AGREGAR LOS CONTROLES SOLO A LAS 3 CATEGORÍAS
+  // ------------------------------------------
+  function installDeductionControls(){
+
+    const headings=Array.from(
+      document.querySelectorAll("#evaluaciones h3")
+    );
+
+    tibCategories.forEach(category=>{
+
+      const heading=headings.find(h=>
+        h.textContent.trim().includes(category.label)
+      );
+
+      if(!heading)return;
+
+      const grid=heading.nextElementSibling;
+
+      if(!grid||!grid.classList.contains("choice-grid"))return;
+
+      if(document.getElementById("tibDeduction-"+category.key))return;
+
+      const panel=document.createElement("div");
+
+      panel.id="tibDeduction-"+category.key;
+      panel.className="item";
+      panel.style.borderColor="#ed4562";
+
+      panel.innerHTML=`
+        <strong style="color:#ff8298">
+          Descuento adicional · ${category.label}
+        </strong>
+
+        <div class="row" style="justify-content:flex-start;flex-wrap:wrap">
+
+          <button type="button"
+            class="btn red small"
+            onclick="tibChangeDeduction('${category.key}',-1)">
+            − DESCUENTO ADICIONAL
+          </button>
+
+          <span class="tag red"
+            id="tibDeductionCount-${category.key}">
+            0 puntos descontados
+          </span>
+
+          <button type="button"
+            class="btn small"
+            onclick="tibChangeDeduction('${category.key}',1)">
+            DESHACER −1
+          </button>
+
+        </div>
+
+        <div class="field" style="margin-bottom:0">
+          <label>Motivo del descuento</label>
+
+          <textarea
+            id="tibDeductionReason-${category.key}"
+            placeholder="Explica qué sucedió durante el entrenamiento...">
+          </textarea>
+        </div>
+      `;
+
+      grid.insertAdjacentElement("afterend",panel);
+
+    });
+  }
+
+  // ------------------------------------------
+  // SUMAR O DESHACER DESCUENTOS
+  // ------------------------------------------
+  window.tibChangeDeduction=function(category,change){
+
+    if(!tibDeductions[category])return;
+
+    tibDeductions[category].count=Math.max(
+      0,
+      tibDeductions[category].count+(change<0?1:-1)
+    );
+
+    const count=tibDeductions[category].count;
+
+    const label=document.getElementById(
+      "tibDeductionCount-"+category
+    );
+
+    if(label){
+      label.textContent=count+" puntos descontados";
+    }
+
+    tibUpdateEvalTotal();
+  };
+
+  // ------------------------------------------
+  // ACTUALIZAR EL TOTAL
+  // ------------------------------------------
+  function tibUpdateEvalTotal(){
+
+    const base=Object.values(evalSelections)
+      .reduce((sum,item)=>sum+(Number(item.points)||0),0);
+
+    const deductions=Object.values(tibDeductions)
+      .reduce((sum,item)=>sum+item.count,0);
+
+    const total=document.getElementById("evalTotal");
+
+    if(total){
+      total.textContent=base-deductions;
+    }
+  }
+
+  window.updateEvalTotal=tibUpdateEvalTotal;
+
+  // ------------------------------------------
+  // REINICIAR EVALUACIÓN Y DESCUENTOS
+  // ------------------------------------------
+  window.resetEvalSelections=function(){
+
+    if(typeof originalReset==="function"){
+      originalReset();
+    }
+
+    tibCategories.forEach(category=>{
+
+      tibDeductions[category.key]={count:0};
+
+      const reason=document.getElementById(
+        "tibDeductionReason-"+category.key
+      );
+
+      const count=document.getElementById(
+        "tibDeductionCount-"+category.key
+      );
+
+      if(reason)reason.value="";
+
+      if(count)count.textContent="0 puntos descontados";
+
+    });
+
+    tibUpdateEvalTotal();
+  };
+
+  // ------------------------------------------
+  // GUARDAR EVALUACIÓN
+  // ------------------------------------------
+  window.saveEvaluation=function(){
+
+    const date=$("evalDate").value;
+    const playerId=$("evalPlayer").value;
+
+    const player=db.players.find(p=>p.id===playerId);
+
+    if(!date||!player){
+      alert("Selecciona la fecha y el jugador.");
+      return;
+    }
+
+    const categories=[
+      "performance",
+      "attitude",
+      "effort",
+      "uniform"
+    ];
+
+    if(categories.some(category=>!evalSelections[category])){
+      alert("Completa las cuatro categorías.");
+      return;
+    }
+
+    const duplicate=db.evaluations.some(e=>
+      e.date===date&&e.playerId===playerId
+    );
+
+    if(duplicate){
+      alert("Este jugador ya tiene evaluación registrada en esa fecha.");
+      return;
+    }
+
+    // Los descuentos adicionales solo corresponden
+    // a desempeño, actitud y esfuerzo.
+    const extraDeductions={};
+
+    for(const category of tibCategories){
+
+      const count=tibDeductions[category.key].count;
+
+      const reason=(
+        document.getElementById(
+          "tibDeductionReason-"+category.key
+        )?.value||""
+      ).trim();
+
+      if(count>0&&!reason){
+
+        alert(
+          "Escribe el motivo del descuento adicional en "+
+          category.label+"."
+        );
+
+        document.getElementById(
+          "tibDeductionReason-"+category.key
+        )?.focus();
+
+        return;
+      }
+
+      if(count>0){
+
+        extraDeductions[category.key]={
+          points:-count,
+          reason:reason
+        };
+
+      }
+    }
+
+    const baseTotal=Object.values(evalSelections)
+      .reduce((sum,item)=>sum+(Number(item.points)||0),0);
+
+    const deductionTotal=Object.values(extraDeductions)
+      .reduce((sum,item)=>sum+(Number(item.points)||0),0);
+
+    const record={
+
+      id:uid(),
+      date:date,
+      month:date.slice(0,7),
+
+      playerId:player.id,
+      playerName:player.name,
+      group:player.group,
+
+      performance:{...evalSelections.performance},
+      attitude:{...evalSelections.attitude},
+      effort:{...evalSelections.effort},
+
+      // EL UNIFORME CONSERVA SU VALOR ORIGINAL
+      uniform:{...evalSelections.uniform},
+
+      extraDeductions:extraDeductions,
+
+      baseTotal:baseTotal,
+      deductionTotal:deductionTotal,
+      total:baseTotal+deductionTotal,
+
+      notes:$("evalNotes").value.trim()
+    };
+
+    db.evaluations.push(record);
+
+    saveDB("Evaluación registrada: "+player.name);
+
+    $("evalNotes").value="";
+
+    window.resetEvalSelections();
+
+    window.renderEvalHistory();
+    window.renderMVP();
+    renderDashboard();
+
+    alert(
+      "Evaluación guardada correctamente. "+
+      "Los descuentos se reflejaron en el total y en el MVP."
+    );
+  };
+
+  // ------------------------------------------
+  // MOSTRAR DESCUENTOS EN EL HISTORIAL
+  // ------------------------------------------
+  function deductionHTML(e){
+
+    return tibCategories.map(category=>{
+
+      const deduction=e.extraDeductions?.[category.key];
+
+      if(!deduction||Number(deduction.points)>=0)return "";
+
+      return `
+        <small style="color:#ff91a5">
+          Descuento adicional en ${category.label}:
+          ${deduction.points} puntos.
+          Motivo: ${safe(deduction.reason||"Sin motivo registrado")}
+        </small>
+      `;
+
+    }).join("");
+  }
+
+  // ------------------------------------------
+  // HISTORIAL DE EVALUACIONES DEL DÍA
+  // ------------------------------------------
+  window.renderEvalHistory=function(){
+
+    const date=$("evalDate").value||today();
+    const group=$("evalGroup").value;
+
+    const records=db.evaluations
+      .filter(e=>e.date===date&&e.group===group)
+      .sort((a,b)=>
+        (a.playerName||"").localeCompare(
+          b.playerName||"",
+          "es"
+        )
+      );
+
+    $("evalHistory").innerHTML=records.length
+      ?records.map(e=>`
+
+        <div class="item">
+
+          <div class="row">
+            <strong>${safe(e.playerName)}</strong>
+            <span class="tag">${Number(e.total)||0} puntos netos</span>
+          </div>
+
+          <small>Fecha: ${safe(e.date)}</small>
+
+          <small>
+            Desempeño:
+            ${safe(e.performance?.label||"Sin registro")}
+            (${Number(e.performance?.points)||0})
+          </small>
+
+          <small>
+            Actitud:
+            ${safe(e.attitude?.label||"Sin registro")}
+            (${Number(e.attitude?.points)||0})
+          </small>
+
+          <small>
+            Esfuerzo:
+            ${safe(e.effort?.label||"Sin registro")}
+            (${Number(e.effort?.points)||0})
+          </small>
+
+          <small>
+            Uniforme:
+            ${safe(e.uniform?.label||"Sin registro")}
+            (${Number(e.uniform?.points)||0})
+          </small>
+
+          ${deductionHTML(e)}
+
+          <small>
+            Observaciones del Coach:
+            ${safe(e.notes||"Sin observaciones")}
+          </small>
+
+        </div>
+
+      `).join("")
+      :'<div class="empty">No hay evaluaciones para esta fecha y horario.</div>';
+  };
+
+  // ------------------------------------------
+  // HISTORIAL INDIVIDUAL DEL JUGADOR
+  // ------------------------------------------
+  window.showPlayerHistoryById=function(playerId){
+
+    const player=db.players.find(p=>p.id===playerId);
+
+    if(!player)return;
+
+    const records=db.evaluations
+      .filter(e=>e.playerId===playerId)
+      .sort((a,b)=>a.date.localeCompare(b.date));
+
+    const baseTotal=records.reduce((sum,e)=>
+      sum+(
+        Number.isFinite(Number(e.baseTotal))
+          ?Number(e.baseTotal)
+          :Number(e.performance?.points||0)+
+           Number(e.attitude?.points||0)+
+           Number(e.effort?.points||0)+
+           Number(e.uniform?.points||0)
+      ),0
+    );
+
+    const extraTotal=records.reduce((sum,e)=>
+      sum+(
+        Number.isFinite(Number(e.deductionTotal))
+          ?Number(e.deductionTotal)
+          :Object.values(e.extraDeductions||{})
+            .reduce((s,d)=>s+(Number(d.points)||0),0)
+      ),0
+    );
+
+    const netTotal=records.reduce((sum,e)=>
+      sum+(Number(e.total)||0),0
+    );
+
+    $("playerHistoryContent").innerHTML=`
+
+      <h3>${safe(player.name)}</h3>
+
+      <p>Horario: ${safe(player.group)}</p>
+
+      <div class="item">
+
+        <strong>Resumen de progreso</strong>
+
+        <span class="tag">
+          ${records.length} entrenamientos evaluados
+        </span>
+
+        <span class="tag green">
+          ${baseTotal} puntos antes de descuentos
+        </span>
+
+        <span class="tag red">
+          ${extraTotal} puntos de descuentos adicionales
+        </span>
+
+        <span class="tag gold">
+          ${netTotal} puntos netos acumulados
+        </span>
+
+      </div>
+
+      <button class="btn green"
+        onclick="downloadPlayerHistoryPDF('${player.id}')">
+        📄 DESCARGAR HISTORIAL EN PDF
+      </button>
+
+      <div class="divider"></div>
+
+      ${
+        records.length
+        ?records.map(e=>`
+
+          <div class="item">
+
+            <strong>
+              📅 ${safe(e.date)} · ${Number(e.total)||0} puntos netos
+            </strong>
+
+            <small>Horario: ${safe(e.group||player.group)}</small>
+
+            <small>
+              Desempeño:
+              ${safe(e.performance?.label||"Sin registro")}
+              (${Number(e.performance?.points)||0})
+            </small>
+
+            <small>
+              Actitud y atención:
+              ${safe(e.attitude?.label||"Sin registro")}
+              (${Number(e.attitude?.points)||0})
+            </small>
+
+            <small>
+              Esfuerzo y mejora:
+              ${safe(e.effort?.label||"Sin registro")}
+              (${Number(e.effort?.points)||0})
+            </small>
+
+            <small>
+              Uniforme:
+              ${safe(e.uniform?.label||"Sin registro")}
+              (${Number(e.uniform?.points)||0})
+            </small>
+
+            ${deductionHTML(e)}
+
+            <small>
+              Observaciones del Coach:
+              ${safe(e.notes||"Sin observaciones registradas")}
+            </small>
+
+          </div>
+
+        `).join("")
+        :'<div class="empty">Todavía no hay evaluaciones registradas.</div>'
+      }
+
+    `;
+
+    $("historyDialog").classList.add("show");
+  };
+
+  // ------------------------------------------
+  // PDF DEL HISTORIAL INDIVIDUAL
+  // ------------------------------------------
+  window.downloadPlayerHistoryPDF=function(playerId){
+
+    const player=db.players.find(p=>p.id===playerId);
+
+    if(!player)return;
+
+    const records=db.evaluations
+      .filter(e=>e.playerId===playerId)
+      .sort((a,b)=>a.date.localeCompare(b.date));
+
+    if(!records.length){
+      alert("Este jugador todavía no tiene evaluaciones para descargar.");
+      return;
+    }
+
+    const categories=[
+      {key:"performance",name:"Desempeño"},
+      {key:"attitude",name:"Actitud y atención"},
+      {key:"effort",name:"Esfuerzo y mejora"},
+      {key:"uniform",name:"Uniforme"}
+    ];
+
+    const baseTotal=records.reduce((sum,e)=>
+      sum+(
+        Number.isFinite(Number(e.baseTotal))
+          ?Number(e.baseTotal)
+          :categories.reduce(
+            (s,c)=>s+(Number(e[c.key]?.points)||0),0
+          )
+      ),0
+    );
+
+    const deductionTotal=records.reduce((sum,e)=>
+      sum+(
+        Number.isFinite(Number(e.deductionTotal))
+          ?Number(e.deductionTotal)
+          :Object.values(e.extraDeductions||{})
+            .reduce((s,d)=>s+(Number(d.points)||0),0)
+      ),0
+    );
+
+    const netTotal=records.reduce((sum,e)=>
+      sum+(Number(e.total)||0),0
+    );
+
+    const sessions=records.map((e,index)=>`
+
+      <article class="session">
+
+        <header>
+          <div>
+            <h2>Entrenamiento ${index+1}</h2>
+            <p>Fecha: ${safe(e.date)}</p>
+            <p>Horario: ${safe(e.group||player.group)}</p>
+          </div>
+
+          <strong>${Number(e.total)||0} puntos netos</strong>
+        </header>
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Registro</th>
+              <th>Puntos</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            ${categories.map(c=>`
+
+              <tr>
+                <td>${c.name}</td>
+                <td>${safe(e[c.key]?.label||"Sin registro")}</td>
+                <td>${Number(e[c.key]?.points)||0}</td>
+              </tr>
+
+            `).join("")}
+
+            ${tibCategories.map(c=>{
+
+              const d=e.extraDeductions?.[c.key];
+
+              return d&&Number(d.points)<0?`
+
+                <tr class="deduction">
+                  <td>Descuento adicional · ${c.name}</td>
+                  <td>${safe(d.reason||"Sin motivo registrado")}</td>
+                  <td>${Number(d.points)}</td>
+                </tr>
+
+              `:"";
+
+            }).join("")}
+
+          </tbody>
+
+        </table>
+
+        <p>
+          <strong>Observaciones del Coach:</strong>
+          ${safe(e.notes||"Sin observaciones registradas")}
+        </p>
+
+      </article>
+
+    `).join("");
+
+    const printWindow=window.open("","_blank");
+
+    if(!printWindow){
+      alert("El navegador bloqueó la ventana. Permite las ventanas emergentes e inténtalo nuevamente.");
+      return;
+    }
+
+    printWindow.document.open();
+
+    printWindow.document.write(`
+
+      <!DOCTYPE html>
+      <html lang="es">
+
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+
+        <title>Historial deportivo - ${safe(player.name)}</title>
+
+        <style>
+
+          body{
+            font-family:Arial,sans-serif;
+            color:#243449;
+            margin:28px;
+            line-height:1.45;
+          }
+
+          .top{
+            background:#102b47;
+            color:white;
+            padding:22px;
+            border-bottom:5px solid #16bde5;
+          }
+
+          .summary{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin:18px 0;
+          }
+
+          .box{
+            border:1px solid #ccd6df;
+            padding:12px;
+            border-radius:8px;
+          }
+
+          .session{
+            page-break-inside:avoid;
+            border:1px solid #cbd5df;
+            border-radius:9px;
+            padding:15px;
+            margin:16px 0;
+          }
+
+          .session header{
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+          }
+
+          .session h2{font-size:17px}
+
+          table{
+            width:100%;
+            border-collapse:collapse;
+            margin:12px 0;
+          }
+
+          th,td{
+            border:1px solid #cbd5df;
+            padding:8px;
+            text-align:left;
+            font-size:12px;
+          }
+
+          th{background:#edf2f7}
+
+          .deduction{
+            background:#fff0f2;
+            color:#9d1836;
+          }
+
+          .footer{
+            margin-top:30px;
+            border-top:1px solid #ccd6df;
+            padding-top:12px;
+            text-align:center;
+            font-size:11px;
+          }
+
+          @media print{
+            body{margin:14mm}
+            .session{break-inside:avoid}
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <div class="top">
+
+          <h1>CONTROL TIBURONES</h1>
+
+          <div>ACADEMIA TIBURONES ENSENADA</div>
+
+          <h2>Historial deportivo individual</h2>
+
+          <strong>${safe(player.name)}</strong>
+
+          <div>Horario: ${safe(player.group)}</div>
+
+        </div>
+
+        <div class="summary">
+
+          <div class="box">
+            Entrenamientos evaluados<br>
+            <b>${records.length}</b>
+          </div>
+
+          <div class="box">
+            Puntos antes de descuentos<br>
+            <b>${baseTotal}</b>
+          </div>
+
+          <div class="box">
+            Descuentos adicionales<br>
+            <b>${deductionTotal}</b>
+          </div>
+
+          <div class="box">
+            Total neto acumulado<br>
+            <b>${netTotal}</b>
+          </div>
+
+        </div>
+
+        <h2>Bitácora cronológica de entrenamientos</h2>
+
+        ${sessions}
+
+        <div class="footer">
+          <strong>ACADEMIA TIBURONES ENSENADA</strong><br>
+          Historial generado desde CONTROL TIBURONES.
+        </div>
+
+      </body>
+      </html>
+
+    `);
+
+    printWindow.document.close();
+
+    printWindow.onload=function(){
+      printWindow.focus();
+      setTimeout(()=>printWindow.print(),400);
+    };
+
+  };
+
+  // ------------------------------------------
+  // INICIAR CONTROLES
+  // ------------------------------------------
+  installDeductionControls();
+
+  console.log(
+    "CONTROL TIBURONES: descuentos adicionales activados. Uniforme intacto."
+  );
+
+})();
+</script>
 </body> </html>
