@@ -173,14 +173,14 @@ footer{text-align:center;padding:20px;color:#8da8bf;font-size:11px}
 <footer>CONTROL TIBURONES · Academia Tiburones Ensenada</footer>
 <div class="notice" id="notice"></div>
 <script>
-"use strict";
+  "use strict";
 const $=id=>document.getElementById(id),KEY="control_tiburones_mvp_2026_v2";
 let db={players:[],sessions:[],evaluations:[]};
 const schedules=["4:30","5:30","6:30"];
 const labels={"4:30":"Inicial","5:30":"Infantil","6:30":"Juvenil"};
 const today=()=>{let d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const monthNow=()=>today().slice(0,7);
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"\']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function msg(t){$("notice").textContent=t;$("notice").style.display="block";setTimeout(()=>$("notice").style.display="none",2400)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){msg("No se pudieron guardar los datos. Descarga un respaldo.");return false}}
 function load(){try{let x=JSON.parse(localStorage.getItem(KEY)||"{}");["players","sessions","evaluations"].forEach(k=>{if(Array.isArray(x[k]))db[k]=x[k]})}catch(e){console.error(e)}}
@@ -348,7 +348,7 @@ init();
 "use strict";
 
 const DB_KEY="control_tiburones_mvp_2026_v2";
-const saveButton=document.getElementById("saveEv");
+  const saveButton=document.getElementById("saveEv");
 
 if(!saveButton || document.getElementById("historyButton")) return;
 
@@ -457,8 +457,8 @@ const monthInput=document.getElementById("historyMonth");
 const report=document.getElementById("historyReport");
 
 function esc(value){
- return String(value??"").replace(/[&<>"']/g,c=>({
- "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ return String(value??"").replace(/[&<>"\']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",\'"\':"&quot;","\'":"&#39;"
  }[c]));
 }
 
@@ -522,183 +522,7 @@ function showHistory(){
   const evaluation=evaluations.find(e=>e.date===date);
 
   let status="Sin registro de asistencia";
-
-  if(session?.cancelled){
-   status="NO HUBO ENTRENAMIENTO";
-   noTraining++;
-  }else if(record){
-   switch(record.status){
-    case "Presente":
-     status="ASISTIÓ";
-     present++;
-     break;
-    case "Retardo":
-     status="ASISTIÓ CON RETARDO";
-     present++;
-     late++;
-     break;
-    case "Falta":
-     status="NO ASISTIÓ";
-     absent++;
-     break;
-    case "Justificada":
-     status="FALTA JUSTIFICADA · CUENTA COMO ASISTENCIA";
-     present++;
-     justified++;
-     break;
-   }
-  }
-
-  let evaluationHTML=evaluation?`
-   <div class="ph-detail">
-    <b>Desempeño:</b> ${esc(evaluation.performance)}<br>
-    <b>Actitud:</b> ${esc(evaluation.attitude)}<br>
-    <b>Esfuerzo:</b> ${esc(evaluation.effort)}
-   </div>
-  `:`<div class="ph-detail">No hay evaluación registrada.</div>`;
-
-  return `
-   <div class="ph-entry">
-    <div class="ph-date">${esc(date)}</div>
-    <div class="ph-detail"><b>Asistencia:</b> ${esc(status)}</div>
-    ${evaluationHTML}
-   </div>
-  `;
- }).join("");
-
- const monthName=new Date(month+"-15T12:00:00")
-  .toLocaleDateString("es-MX",{month:"long",year:"numeric"});
-
- report.innerHTML=`
-  <div id="historyPrintable">
-   <div class="ph-head">
-    <div style="font-size:30px">🦈</div>
-    <h2>ACADEMIA TIBURONES ENSENADA</h2>
-    <p>REPORTE DE SEGUIMIENTO DEPORTIVO</p>
-    <h2>${esc(player.name)}</h2>
-    <p>
-     Horario: ${esc(player.schedule)} PM<br>
-     Categoría: ${esc(
-      player.schedule==="4:30"?"Inicial":
-      player.schedule==="5:30"?"Infantil":"Juvenil"
-     )}<br>
-     Periodo: ${esc(monthName)}
-    </p>
-   </div>
-
-   <h3>RESUMEN DEL MES</h3>
-   <div class="ph-stats">
-    <div class="ph-stat">
-     <strong>${present}</strong><span>Asistencias</span>
-    </div>
-    <div class="ph-stat">
-     <strong>${absent}</strong><span>Faltas</span>
-    </div>
-    <div class="ph-stat">
-     <strong>${justified}</strong><span>Justificadas</span>
-    </div>
-   </div>
-
-   <div class="ph-entry">
-    <b>RESUMEN GENERAL</b>
-    <div class="ph-detail">
-     Total de asistencias: ${present}<br>
-     Faltas injustificadas: ${absent}<br>
-     Faltas justificadas: ${justified}<br>
-     Retardos: ${late}<br>
-     Días sin entrenamiento: ${noTraining}<br>
-     Evaluaciones realizadas: ${evaluations.length}
-    </div>
-   </div>
-
-   <h3>HISTORIAL POR FECHA</h3>
-   ${details||'<div class="ph-entry">No existen registros para este mes.</div>'}
-
-   <div class="ph-entry">
-    <b>ACADEMIA TIBURONES ENSENADA</b>
-    <div class="ph-detail">
-     Seguimiento de asistencia, actitud, esfuerzo y desarrollo deportivo.
-    </div>
-   </div>
-  </div>
- `;
-
- panel.scrollIntoView({behavior:"smooth",block:"start"});
-}
-
-document.getElementById("historyButton").addEventListener("click",()=>{
- panel.style.display="block";
- showHistory();
-});
-
-document.getElementById("historySearch").addEventListener("click",showHistory);
-
-document.getElementById("historyClose").addEventListener("click",()=>{
- panel.style.display="none";
-});
-
-document.getElementById("historyPDF").addEventListener("click", async () => {
-  try {
-    const playerId = document.getElementById("evPlayer").value;
-    const month = monthInput.value;
-    const db = getDatabase();
-
-    if (!playerId || !month || !db) {
-      alert("Selecciona un jugador y un mes para consultar.");
-      return;
-    }
-
-    const player = db.players.find(p => p.id === playerId);
-    if (!player) return alert("No se encontró al jugador.");
-
-    const loadScript = src => new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-
-    if (!window.jspdf) {
-      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
-    }
-
-    if (!window.jspdf.jsPDF.API.autoTable) {
-      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js");
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "mm",
-      format: "a4"
-    });
-
-    const sesiones = (db.sessions || []).filter(s =>
-      s.schedule === player.schedule &&
-      s.date.startsWith(month)
-    );
-
-    const evaluaciones = (db.evaluations || []).filter(e =>
-      e.playerId === playerId &&
-      e.date.startsWith(month)
-    );
-
-    const fechas = [...new Set([
-      ...sesiones.map(s => s.date),
-      ...evaluaciones.map(e => e.date)
-    ])].sort();
-
-    let asistencias = 0;
-    let faltas = 0;
-    let justificadas = 0;
-    let retardos = 0;
-    let sinEntrenamiento = 0;
-
-    const filas = fechas.map(fecha => {
-      const sesion = sesiones.find(s => s.date === fecha);
-      const registro = sesion?.records?.find(r => r.playerId === playerId);
-      const ev = evaluaciones.find(e => e.date === fecha);
+        const ev = evaluaciones.find(e => e.date === fecha);
 
       let estado = "Sin registro";
       if (sesion?.cancelled) {
@@ -872,8 +696,8 @@ document.getElementById("historyPDF").addEventListener("click", async () => {
             data.cell.styles.textColor = [165, 90, 20];
           }
         }
-
-        if (data.column.index === 2) {
+      }, 
+              if (data.column.index === 2) {
           data.cell.styles.fillColor = [230, 241, 252];
         }
 
@@ -962,8 +786,8 @@ const now=new Date();
 monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
 
 })();
-  
-   </script> 
+
+  </script> 
 
 <script>
 (function () {
@@ -977,7 +801,7 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
   ];
 
   function safe(text) {
-    return String(text ?? "").replace(/[&<>"']/g, c => ({
+    return String(text ?? "").replace(/[&<>"\']/g, c => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;",
       '"': "&quot;", "'": "&#39;"
     }[c]));
@@ -1048,7 +872,7 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
       style="display:block;padding:12px;margin:12px 0;
       font-size:17px;width:90%;border-radius:10px">
     <button id="tbMvpRefresh">🔄 ACTUALIZAR</button>
-    <button id="tbMvpClose">✕ CERRAR</button>
+        <button id="tbMvpClose">✕ CERRAR</button>
     <div id="tbMvpResults"></div>
   `;
   document.body.appendChild(panel);
@@ -1118,7 +942,7 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
   if (attitude === "Estuvo jugando") deductions += 3;
   if (attitude === "No siguió indicaciones") deductions += 4;
 });
-    
+
 
         return {
           name: p.name,
@@ -1209,6 +1033,7 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
   });
 
 })();
+
         </script>
   <script>
 (function () {
@@ -1224,6 +1049,7 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
     } catch {
       return [];
     }
+        }
   }
 
   function saveVacations(list) {
@@ -1397,8 +1223,7 @@ monthInput.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
       .sort((a,b) => a.start.localeCompare(b.start))[0];
 
     let html = "";
-
-    if (pending.length) {
+        if (pending.length) {
       html += `
         <div class="tc-status tc-red">
           <h3>⚠️ EVALUACIONES PENDIENTES</h3>
@@ -1572,8 +1397,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
       border:1px solid #477596 !important;
       box-shadow:0 8px 22px #0003 !important;
     }
-
-    nav {
+        nav {
       background:#081d34 !important;
       gap:8px !important;
     }
@@ -1632,7 +1456,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
   document.head.appendChild(style);
 })();
   </script>
-  
+
 <script>
 (function(){
   const style = document.createElement("style");
@@ -1747,183 +1571,162 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
     const list = card.querySelector("#tcVacationList");
     if(list){
       new MutationObserver(updateLabel).observe(list,{childList:true,subtree:true});
+  }
+      function styleButtons(container, type){
+    container.querySelectorAll("button").forEach(btn=>{
+      btn.classList.add("eval-option");
+      const value = btn.dataset.value || "";
+      if(type === "performance"){
+        if(value === "Excelente") btn.classList.add("eval-excellent");
+        else if(value === "Mejorando") btn.classList.add("eval-improving");
+        else btn.classList.add("eval-normal");
+      }
+      if(type === "attitude"){
+        if(value === "Excelente") btn.classList.add("eval-excellent");
+        else if(value === "Estuvo platicador") btn.classList.add("eval-warning");
+        else btn.classList.add("eval-negative");
+      }
+      if(type === "effort"){
+        if(value === "Excelente") btn.classList.add("eval-excellent");
+        else if(value === "Mejorando") btn.classList.add("eval-improving");
+        else btn.classList.add("eval-normal");
+      }
+    });
+  }
+
+  styleButtons(performance,"performance");
+  styleButtons(attitude,"attitude");
+  styleButtons(effort,"effort");
+
+  const style = document.createElement("style");
+  style.textContent = `
+    .eval-option{
+      border:1px solid #52728d !important;
+      border-radius:12px !important;
+      padding:11px 8px !important;
+      font-weight:800 !important;
+      font-size:12px !important;
+      color:#fff !important;
+      transition:.15s ease;
+      opacity:.78;
     }
-  }
-
-  function apply(){
-    document.querySelectorAll("#tcCards .tc-status")
-      .forEach(compactStatus);
-    const vacation = document.querySelector("#page-inicio .tc-vacation");
-    if(vacation) compactVacation(vacation);
-  }
-
-  apply();
-
-  const cards = document.getElementById("tcCards");
-  if(cards){
-    new MutationObserver(apply).observe(cards,{childList:true,subtree:true});
-  }
+    .eval-option.selected{
+      opacity:1 !important;
+      outline:3px solid #fff !important;
+      outline-offset:1px;
+      transform:scale(1.02);
+      box-shadow:0 0 14px #55dfff88 !important;
+    }
+    .eval-excellent{background:#087f54 !important}
+    .eval-improving{background:#087eb5 !important}
+    .eval-normal{background:#455c75 !important}
+    .eval-warning{background:#a96a13 !important}
+    .eval-negative{background:#9b3542 !important}
+    #page-evaluaciones .item{
+      border-radius:15px !important;
+      padding:14px !important;
+      border:1px solid #456b89 !important;
+    }
+    #page-evaluaciones h3{
+      font-size:16px !important;
+      margin-bottom:9px !important;
+    }
+  `;
+  document.head.appendChild(style);
 })();
 </script>
-  <script>
-(function(){
-  const style = document.createElement("style");
-  style.textContent = `
-    .tc-vacation.tc-compact {
-      padding:8px !important;
-      border:0 !important;
-      background:transparent !important;
-      box-shadow:none !important;
-    }
-    .tc-vacation.tc-compact > .tc-compact-toggle {
-      background:#087fbd !important;
-      border:1px solid #42c8f0 !important;
-      border-radius:15px !important;
-      padding:15px !important;
-      min-height:64px;
-    }
-    .tc-vacation.tc-compact .tc-compact-details > h3 {
-      display:none !important;
-    }
-    .tc-vacation.tc-compact .tc-compact-details {
-      padding:12px 8px 5px !important;
-    }
-  `;
-  document.head.appendChild(style);
-})();
-  </script>
-  
 <script>
 (function(){
-  const card = document.getElementById("totalPlayers")?.closest(".card");
-  if(!card || card.dataset.compactSummary) return;
+  "use strict";
 
-  const grid = card.querySelector(".grid3");
-  const groups = document.getElementById("groupSummary");
-  const total = document.getElementById("totalPlayers");
-  const present = document.getElementById("totalPresent");
-
-  if(!grid || !groups || !total || !present) return;
-
-  card.dataset.compactSummary = "1";
-  card.classList.add("tc-summary-compact");
-
-  const labels = grid.querySelectorAll(".stat span");
-  if(labels.length >= 3){
-    labels[0].textContent = "Jugadores";
-    labels[1].textContent = "Presentes";
-    labels[2].textContent = "Evaluados";
-  }
-
-  const percentCard = document.createElement("div");
-  percentCard.className = "stat tc-attendance-stat";
-  percentCard.innerHTML =
-    '<span>Asistencia</span><strong id="totalAttendancePct">0%</strong>';
-  grid.appendChild(percentCard);
-
-  groups.classList.add("tc-group-compact");
+  const KEY = "control_tiburones_mvp_2026_v2";
+  const $ = id => document.getElementById(id);
 
   const style = document.createElement("style");
   style.textContent = `
-    #page-inicio .tc-summary-compact {
-      padding:10px !important;
-      margin:8px 0 !important;
-      border-radius:15px !important;
-    }
-    #page-inicio .tc-summary-compact h3 {
-      font-size:15px !important;
-      margin:0 0 8px !important;
-    }
-    #page-inicio .tc-summary-compact .grid3 {
-      display:grid !important;
-      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-      gap:5px !important;
-    }
-    #page-inicio .tc-summary-compact .stat {
-      padding:8px 4px !important;
-      border-radius:11px !important;
-      min-width:0 !important;
-      text-align:center !important;
-    }
-    #page-inicio .tc-summary-compact .stat span {
-      font-size:9px !important;
-      line-height:1.2 !important;
-    }
-    #page-inicio .tc-summary-compact .stat strong {
-      font-size:20px !important;
-      margin-top:4px !important;
-    }
-    #page-inicio .tc-attendance-stat {
-      background:linear-gradient(145deg,#174c68,#10334f) !important;
-      border-color:#42bfe9 !important;
-    }
-    #page-inicio .tc-group-compact {
-      display:grid !important;
-      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-      gap:5px !important;
-      margin-top:8px !important;
-    }
-    #page-inicio .tc-group-compact .item {
+    #page-inicio .tc-status.tc-compact{
       display:flex !important;
       flex-direction:column !important;
-      align-items:center !important;
-      justify-content:center !important;
-      text-align:center !important;
       gap:5px !important;
-      padding:8px 3px !important;
-      margin:0 !important;
-      border-radius:11px !important;
-      font-size:10px !important;
-      min-width:0 !important;
+      padding:11px 13px !important;
     }
-    #page-inicio .tc-group-compact .pill {
-      font-size:9px !important;
-      padding:4px 5px !important;
+    #page-inicio .tc-status.tc-compact .tc-compact-toggle{
+      width:100% !important;
+      padding:0 !important;
+      min-height:40px !important;
+      background:transparent !important;
+      border:0 !important;
+      box-shadow:none !important;
+    }
+    #page-inicio .tc-status.tc-compact .tc-compact-toggle span:first-child{
+      font-size:13px !important;
+      line-height:1.3 !important;
+    }
+    #page-inicio .tc-status.tc-compact .tc-compact-toggle span:last-child{
+      font-size:10px !important;
+    }
+    #page-inicio .tc-status.tc-compact .tc-compact-details{
+      padding-top:5px !important;
+      font-size:12px !important;
+      line-height:1.4 !important;
+    }
+    #page-inicio .tc-status.tc-compact .tc-compact-details strong{
+      font-size:21px !important;
+      margin:3px 0 !important;
+    }
+    #page-inicio .tc-status.tc-compact .tc-compact-details h3{
+      display:none !important;
+    }
+    #page-inicio .tc-status.tc-compact .tc-compact-details > div{
+      font-size:12px !important;
+    }
+    #page-inicio .tc-vacation.tc-compact{
+      margin:5px 0 !important;
+      padding:5px !important;
+    }
+    #page-inicio .tc-vacation.tc-compact > .tc-compact-toggle{
+      min-height:48px !important;
+      padding:10px 13px !important;
+      border-radius:13px !important;
+      font-size:13px !important;
+    }
+    #page-inicio .tc-vacation.tc-compact .tc-compact-details{
+      padding:10px !important;
     }
   `;
   document.head.appendChild(style);
 
-  function updatePercent(){
-    const players = Number(total.textContent) || 0;
-    const attendees = Number(present.textContent) || 0;
-    const pct = players ? Math.round(attendees / players * 100) : 0;
-    document.getElementById("totalAttendancePct").textContent = pct + "%";
+  function getDB(){
+    try{return JSON.parse(localStorage.getItem(KEY)||"{}")}
+    catch{return {}}
   }
 
-  updatePercent();
+  function update(){
+    const db=getDB();
+    const total=(db.players||[]).length;
+    const sessions=(db.sessions||[]).filter(s=>!s.cancelled);
+    const present=sessions.reduce((sum,s)=>
+      sum+(s.records||[]).filter(r=>
+        ["Presente","Retardo","Justificada"].includes(r.status)
+      ).length,0
+    );
 
-  const observer = new MutationObserver(updatePercent);
-  [total,present].forEach(el => {
-    observer.observe(el,{
-      childList:true,
-      characterData:true,
-      subtree:true
-    });
-  });
+    const totalEl=$("totalPlayers");
+    const presentEl=$("totalPresent");
+    if(totalEl)totalEl.textContent=total;
+    if(presentEl)presentEl.textContent=present;
+  }
+
+  update();
+
+  const observer=new MutationObserver(update);
+  const totalEl=$("totalPlayers");
+  const presentEl=$("totalPresent");
+  if(totalEl)observer.observe(totalEl,{childList:true,subtree:true});
+  if(presentEl)observer.observe(presentEl,{childList:true,subtree:true});
+
 })();
-    </script>
-  
-<script>
-(function(){
-  if(window.tiburonesEvalVisualV1) return;
-  window.tiburonesEvalVisualV1 = true;
-
-  const performance = document.getElementById("performance");
-  const attitude = document.getElementById("attitude");
-  const effort = document.getElementById("effort");
-
-  if(!performance || !attitude || !effort) return;
-
-  // 1. Agregar MEJORANDO sin quitar las opciones existentes
-  if(!performance.querySelector('[data-value="Mejorando"]')){
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "c-blue";
-    btn.dataset.value = "Mejorando";
-    btn.textContent = "MEJORANDO";
-    performance.appendChild(btn);
-  }
-
+</script>
   // 2. Cambiar la última opción del apartado 3
   const oldEffort = [...effort.querySelectorAll("button")]
     .find(b => b.dataset.value === "Necesita mejorar");
@@ -2054,7 +1857,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
   }
 
   function safe(value) {
-    return String(value ?? "").replace(/[&<>"']/g, c => ({
+    return String(value ?? "").replace(/[&<>"\']/g, c => ({
       "&": "&amp;",
       "<": "&lt;",
       ">": "&gt;",
@@ -2098,8 +1901,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
               const record = (session.records || []).find(r =>
                 String(r.playerId) === String(player.id)
               );
-
-              if (!record) return;
+                            if (!record) return;
 
               if (record.status === "Presente") {
                 attended++;
@@ -2271,9 +2073,8 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
       "#saveAtt, #saveEv, #noTraining, #runMvp, #tbMvpOpen"
     )) {
       setTimeout(refresh, 150);
-    }
-
-    if (event.target.closest('nav button[data-page="mvp"]')) {
+  }
+        if (event.target.closest('nav button[data-page="mvp"]')) {
       setTimeout(refresh, 150);
     }
   });
@@ -2333,7 +2134,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
 
   const $ = id => document.getElementById(id);
 
-  const safe = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+  const safe = value => String(value ?? "").replace(/[&<>"\']/g, c => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -2448,7 +2249,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
         <span>
           <b>CUMPLE</b>
           <small>
-            Lleva correctamente el uniforme completo.
+                      Lleva correctamente el uniforme completo.
           </small>
         </span>
 
@@ -2623,7 +2424,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
 
           let attendancePoints = 0;
           let performancePoints = 0;
-          let attitudePoints = 0;
+                    let attitudePoints = 0;
           let effortPoints = 0;
           let uniformPoints = 0;
 
@@ -2798,7 +2599,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
           <h3>Clasificación del horario</h3>
 
           ${rows}
-        </div>
+                  </div>
       `;
 
     }).join("") + `
@@ -2933,7 +2734,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
   const money = n => "$" + (Number(n) || 0).toLocaleString("es-MX", {
     minimumFractionDigits: 2, maximumFractionDigits: 2
   });
-  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({
+  const esc = v => String(v ?? "").replace(/[&<>"\']/g, c => ({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
   }[c]));
   const today = () => {
@@ -2973,7 +2774,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
           ...(d.settings || {})
         }
       };
-    } catch (e) {
+          } catch (e) {
       console.error("No se pudo leer finanzas", e);
       return {
         profiles: {}, payments: [], expenses: [],
@@ -3148,7 +2949,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
       <div class="card">
         <h3>Cuotas y familias</h3>
         <p class="muted">Agrupa hermanos con el mismo nombre de familia o responsable.
-        Puedes configurar una cuota especial, exentar o pausar la generación de mensualidad.</p>
+                  Puedes configurar una cuota especial, exentar o pausar la generación de mensualidad.</p>
         <label>Jugador</label><select id="finProfilePlayer"></select>
         <label>Familia / responsable</label><input id="finFamily" placeholder="Ej. Familia Pérez">
         <label>Cuota mensual individual (MXN)</label><input type="number" id="finFee" min="0" step="1">
@@ -3173,8 +2974,8 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
       <div class="card">
         <h3>Registrar gasto</h3>
         <label>Concepto</label><input id="finExpenseName" placeholder="Ej. Material deportivo">
-        <label>Monto (MXN)</label><input type="number" id="finExpenseAmount" min="0.01" step="0.01">
-        <label>Fecha</label><input type="date" id="finExpenseDate">
+        <label>Monto (MXN)</label><input id="finExpenseAmount" type="number" min="0.01" step="0.01">
+        <label>Fecha</label><input id="finExpenseDate" type="date">
         <button class="btn gold full" id="finSaveExpense">REGISTRAR GASTO</button>
         <div id="finExpenseList"></div>
       </div>
@@ -3322,8 +3123,7 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
       .slice().sort((a,b) => b.date.localeCompare(a.date));
     $("finPaymentHistory").innerHTML = monthPayments.length ? monthPayments.map(p => {
       const player = players.find(x => String(x.id) === String(p.playerId));
-      return `<div class="item row"><div><b>${esc(player?.name || "Jugador")}</b>
-        <div class="muted">${esc(p.date)} · ${esc(p.method)} · ${esc(p.note || "")}</div></div>
+              <div class="muted">${esc(p.date)} · ${esc(p.method)} · ${esc(p.note || "")}</div></div>
         <b>${money(p.amount)}</b></div>`;
     }).join("") : `<div class="empty">Todavía no hay pagos acreditados para este mes.</div>`;
 
@@ -3486,4 +3286,4 @@ document.querySelectorAll("#page-inicio .card").forEach(card => {
   }
 })();
       </script> </body>
-</html>
+      </html>
