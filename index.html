@@ -2867,5 +2867,270 @@ console.log("CONTROL TIBURONES: nuevo módulo financiero cargado.");
 
 })();
 </script>
+<script>
+// ==========================================
+// HISTORIAL HISTÓRICO DE MVP
+// CONTROL TIBURONES
+// ==========================================
+
+(function(){
+
+  // Crear el historial si todavía no existe
+  if(!Array.isArray(db.mvpHistory)){
+    db.mvpHistory=[];
+  }
+
+  // Evitar crear el apartado dos veces
+  if(document.getElementById("tibMvpHistory")) return;
+
+  // Crear el apartado debajo de la clasificación mensual
+  const results=$("mvpResults");
+
+  if(!results) return;
+
+  results.insertAdjacentHTML("afterend",`
+    <div class="card" id="tibMvpHistory">
+
+      <h3>🏆 HISTORIAL DE MVP</h3>
+
+      <p class="muted">
+        Registra los reconocimientos que los jugadores ganaron
+        en meses anteriores. No afectan la puntuación mensual.
+      </p>
+
+      <div class="field">
+        <label>Seleccionar jugador</label>
+        <select id="tibMvpPlayer">
+          <option value="">Selecciona un jugador</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Mes y año del reconocimiento</label>
+        <input type="month" id="tibMvpDate">
+      </div>
+
+      <button class="btn green" onclick="tibAddHistoricalMVP()">
+        ➕ REGISTRAR MVP ANTERIOR
+      </button>
+
+      <div class="divider"></div>
+
+      <h3>⭐ ACUMULADO HISTÓRICO</h3>
+      <div id="tibMvpTotals"></div>
+
+      <div class="divider"></div>
+
+      <h3>📚 RECONOCIMIENTOS REGISTRADOS</h3>
+      <div id="tibMvpRecords"></div>
+
+    </div>
+  `);
+
+  // Cargar jugadores
+  window.tibLoadMVPPlayers=function(){
+
+    const select=$("tibMvpPlayer");
+    if(!select) return;
+
+    const previous=select.value;
+
+    const players=[...db.players].sort((a,b)=>
+      a.name.localeCompare(b.name,"es")
+    );
+
+    select.innerHTML=
+      '<option value="">Selecciona un jugador</option>'+
+      players.map(p=>`
+        <option value="${esc(p.id)}">
+          ${esc(p.name)} · ${esc(p.group)}
+        </option>
+      `).join("");
+
+    if(players.some(p=>String(p.id)===previous)){
+      select.value=previous;
+    }
+  };
+
+  // Registrar un MVP anterior
+  window.tibAddHistoricalMVP=function(){
+
+    const playerId=$("tibMvpPlayer").value;
+    const month=$("tibMvpDate").value;
+
+    const player=db.players.find(p=>
+      String(p.id)===playerId
+    );
+
+    if(!player){
+      alert("Selecciona un jugador.");
+      return;
+    }
+
+    if(!month){
+      alert("Selecciona el mes y año del reconocimiento.");
+      return;
+    }
+
+    const duplicate=db.mvpHistory.some(item=>
+      String(item.playerId)===playerId &&
+      item.month===month
+    );
+
+    if(duplicate){
+      alert("Este jugador ya tiene un MVP registrado en ese mes.");
+      return;
+    }
+
+    db.mvpHistory.push({
+      id:uid(),
+      playerId:player.id,
+      month:month
+    });
+
+    saveDB(
+      "MVP histórico registrado: "+player.name+" · "+month
+    );
+
+    $("tibMvpPlayer").value="";
+    $("tibMvpDate").value="";
+
+    window.tibRenderHistoricalMVP();
+
+    alert("¡Reconocimiento MVP registrado correctamente!");
+  };
+
+  // Mostrar historial y acumulados
+  window.tibRenderHistoricalMVP=function(){
+
+    if(!Array.isArray(db.mvpHistory)){
+      db.mvpHistory=[];
+    }
+
+    const records=$("tibMvpRecords");
+    const totals=$("tibMvpTotals");
+
+    if(!records||!totals) return;
+
+    const history=[...db.mvpHistory].sort((a,b)=>
+      b.month.localeCompare(a.month)
+    );
+
+    // Calcular reconocimientos por jugador
+    const counts={};
+
+    history.forEach(item=>{
+      const key=String(item.playerId);
+      counts[key]=(counts[key]||0)+1;
+    });
+
+    // Mostrar acumulado histórico
+    const ranking=Object.entries(counts)
+      .map(([id,total])=>{
+
+        const player=db.players.find(p=>
+          String(p.id)===id
+        );
+
+        return {
+          name:player?player.name:"Jugador archivado",
+          total:total
+        };
+
+      })
+      .sort((a,b)=>
+        b.total-a.total ||
+        a.name.localeCompare(b.name,"es")
+      );
+
+    totals.innerHTML=ranking.length
+      ?ranking.map((item,index)=>`
+        <div class="item">
+          <div class="row">
+            <strong>
+              ${index===0?"🥇":index===1?"🥈":index===2?"🥉":"🏀"}
+              ${esc(item.name)}
+            </strong>
+            <span class="tag gold">
+              ${item.total} MVP
+            </span>
+          </div>
+        </div>
+      `).join("")
+      :'<div class="empty">Todavía no hay reconocimientos registrados.</div>';
+
+    // Mostrar cada reconocimiento
+    records.innerHTML=history.length
+      ?history.map(item=>{
+
+        const player=db.players.find(p=>
+          String(p.id)===String(item.playerId)
+        );
+
+        const name=player?player.name:"Jugador archivado";
+
+        return `
+          <div class="item">
+
+            <div class="row">
+              <strong>🏆 ${esc(name)}</strong>
+              <span class="tag gold">${esc(item.month)}</span>
+            </div>
+
+            <small>
+              Total histórico: ${counts[String(item.playerId)]||0} MVP
+            </small>
+
+            <button
+              class="btn small red"
+              onclick="tibDeleteHistoricalMVP('${esc(item.id)}')">
+              ELIMINAR REGISTRO
+            </button>
+
+          </div>
+        `;
+
+      }).join("")
+      :'<div class="empty">No hay MVP anteriores registrados.</div>';
+  };
+
+  // Eliminar únicamente el reconocimiento seleccionado
+  window.tibDeleteHistoricalMVP=function(id){
+
+    if(!confirm("¿Deseas eliminar este reconocimiento del historial?")){
+      return;
+    }
+
+    db.mvpHistory=db.mvpHistory.filter(item=>
+      String(item.id)!==String(id)
+    );
+
+    saveDB("Se eliminó un reconocimiento histórico de MVP.");
+
+    window.tibRenderHistoricalMVP();
+  };
+
+  // Actualizar el historial cuando se calcule el MVP mensual
+  const originalRenderMVP=window.renderMVP;
+
+  if(typeof originalRenderMVP==="function"){
+
+    window.renderMVP=function(){
+
+      originalRenderMVP.apply(this,arguments);
+
+      window.tibRenderHistoricalMVP();
+    };
+
+  }
+
+  // Inicializar apartado
+  window.tibLoadMVPPlayers();
+  window.tibRenderHistoricalMVP();
+
+  console.log("CONTROL TIBURONES: historial de MVP activado.");
+
+})();
+</script>  
   
 </body> </html>
