@@ -2383,4 +2383,489 @@ th,td{
   console.log("CONTROL TIBURONES: ajuste sin recargos activado.");
 })();
 </script>
+  
+<!-- ==========================================
+ CONTROL TIBURONES
+ MODULO FINANCIERO ACTUALIZADO
+ PAGOS NORMALES Y ADELANTADOS
+ ========================================== -->
+
+<style>
+.tib-pay-card{
+  background:#0a2036;
+  border:1px solid #426783;
+  border-radius:18px;
+  padding:17px;
+  margin:12px 0;
+}
+.tib-pay-card .tib-name{
+  font-size:17px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+.tib-pay-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:15px;
+}
+.tib-pay-actions button{
+  border:0;
+  border-radius:12px;
+  padding:13px 6px;
+  min-height:48px;
+  color:white;
+  font-size:12px;
+  font-weight:900;
+}
+.tib-normal{background:linear-gradient(135deg,#0aaee9,#0866c1)}
+.tib-advance{background:linear-gradient(135deg,#f4bd36,#c98208)}
+.tib-pay-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  background:#000c;
+  padding:15px;
+  overflow:auto;
+}
+.tib-pay-modal.show{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.tib-pay-box{
+  width:100%;
+  max-width:430px;
+  background:#102b47;
+  border:1px solid #426783;
+  border-radius:20px;
+  padding:20px;
+  margin:auto;
+}
+.tib-pay-box input,
+.tib-pay-box select{
+  width:100%;
+  padding:14px;
+  margin:8px 0 15px;
+  background:#091f35;
+  color:white;
+  border:2px solid #426783;
+  border-radius:12px;
+}
+.tib-pay-box button{
+  width:100%;
+  padding:14px;
+  margin-top:8px;
+  border:0;
+  border-radius:12px;
+  color:white;
+  font-weight:900;
+}
+.tib-confirm{background:#07845e}
+.tib-cancel{background:#a52c48}
+.tib-green{color:#24dba7}
+.tib-red{color:#ff7188}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+const tibEl=id=>document.getElementById(id);
+
+function tibCash(n){
+  return "$"+(Number(n)||0).toLocaleString("es-MX")+" MXN";
+}
+
+function tibNextMonth(month){
+  const [y,m]=month.split("-").map(Number);
+  const d=new Date(y,m,1);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+
+function tibMonthPaid(id,month){
+  return db.payments
+    .filter(p=>
+      p.playerId===id &&
+      p.month===month &&
+      p.concept==="Mensualidad"
+    )
+    .reduce((s,p)=>s+(Number(p.amount)||0),0);
+}
+
+function tibMonthBalance(player,month){
+  return Math.max(
+    0,
+    (Number(player.fee)||0)-tibMonthPaid(player.id,month)
+  );
+}
+
+function tibCreatePaymentWindow(){
+  if(tibEl("tibNewPayment"))return;
+
+  const modal=document.createElement("div");
+  modal.id="tibNewPayment";
+  modal.className="tib-pay-modal";
+
+  modal.innerHTML=`
+    <div class="tib-pay-box">
+      <h3 id="tibPayTitle">Registrar pago</h3>
+      <div id="tibPayInfo"></div>
+
+      <label>Cantidad recibida</label>
+      <input id="tibPayAmount" type="number"
+        min="1" step="0.01" placeholder="Cantidad en pesos">
+
+      <label>Forma de pago</label>
+      <select id="tibPayMethod">
+        <option>Efectivo</option>
+        <option>Transferencia</option>
+        <option>Depósito</option>
+        <option>Otro</option>
+      </select>
+
+      <button class="tib-confirm"
+        onclick="tibSaveNewPayment()">
+        CONFIRMAR PAGO
+      </button>
+
+      <button class="tib-cancel"
+        onclick="tibCloseNewPayment()">
+        CANCELAR
+      </button>
+    </div>`;
+
+  document.body.appendChild(modal);
+}
+
+let tibDraft=null;
+
+window.tibCloseNewPayment=function(){
+  const modal=tibEl("tibNewPayment");
+  if(modal)modal.classList.remove("show");
+  tibDraft=null;
+};
+
+window.tibOpenMonthly=function(id){
+  const player=db.players.find(p=>p.id===id);
+  if(!player)return;
+
+  const month=tibEl("finMonth").value||currentMonth();
+  const balance=tibMonthBalance(player,month);
+
+  if(balance<=0){
+    alert("La mensualidad de este mes ya está liquidada.");
+    return;
+  }
+
+  tibCreatePaymentWindow();
+
+  tibDraft={id,month,type:"monthly"};
+
+  tibEl("tibPayTitle").textContent="Confirmar pago";
+  tibEl("tibPayInfo").innerHTML=`
+    <div class="tib-pay-card">
+      <strong>${esc(player.name)}</strong><br>
+      Horario: ${esc(player.group)}<br>
+      Mes: ${esc(month)}<br>
+      Mensualidad: ${tibCash(player.fee)}<br>
+      Pagado: ${tibCash(tibMonthPaid(id,month))}<br>
+      <strong>Saldo: ${tibCash(balance)}</strong>
+    </div>`;
+
+  tibEl("tibPayAmount").value=balance;
+  tibEl("tibPayAmount").max=balance;
+  tibEl("tibNewPayment").classList.add("show");
+};
+
+window.tibOpenAdvance=function(id){
+  const player=db.players.find(p=>p.id===id);
+  if(!player)return;
+
+  if(Number(player.fee)<=0){
+    alert("Este jugador no tiene una mensualidad configurada. Revisa su ficha antes de adelantar pagos.");
+    return;
+  }
+
+  const month=tibEl("finMonth").value||currentMonth();
+
+  tibCreatePaymentWindow();
+
+  tibDraft={id,month,type:"advance"};
+
+  tibEl("tibPayTitle").textContent="Adelantar mensualidades";
+  tibEl("tibPayInfo").innerHTML=`
+    <div class="tib-pay-card">
+      <strong>${esc(player.name)}</strong><br>
+      Mensualidad: ${tibCash(player.fee)}<br>
+      El adelanto comenzará desde ${esc(month)}.
+      <br><br>
+      El sistema distribuirá el importe entre los meses pendientes.
+    </div>`;
+
+  tibEl("tibPayAmount").value="";
+  tibEl("tibPayAmount").removeAttribute("max");
+  tibEl("tibNewPayment").classList.add("show");
+};
+
+window.tibSaveNewPayment=function(){
+  if(!tibDraft)return;
+
+  const player=db.players.find(p=>p.id===tibDraft.id);
+  if(!player)return;
+
+  const amount=Number(tibEl("tibPayAmount").value);
+  const method=tibEl("tibPayMethod").value;
+
+  if(!Number.isFinite(amount)||amount<=0){
+    alert("Escribe una cantidad válida.");
+    return;
+  }
+
+  if(!confirm(
+    "¿Confirmas el pago de "+tibCash(amount)+
+    " para "+player.name+"?"
+  ))return;
+
+  const newPayments=[];
+
+  if(tibDraft.type==="monthly"){
+    const balance=tibMonthBalance(player,tibDraft.month);
+
+    if(amount>balance){
+      alert("El importe supera el saldo pendiente. Usa Adelantar pago para cubrir meses futuros.");
+      return;
+    }
+
+    newPayments.push({
+      id:uid(),
+      playerId:player.id,
+      playerName:player.name,
+      group:player.group,
+      date:today(),
+      month:tibDraft.month,
+      concept:"Mensualidad",
+      amount:amount,
+      method:method,
+      notes:"Pago mensual registrado."
+    });
+  }
+
+  if(tibDraft.type==="advance"){
+    let remaining=amount;
+    let month=tibDraft.month;
+    let count=0;
+
+    while(remaining>0.001 && count<60){
+      const balance=tibMonthBalance(player,month);
+
+      if(balance>0){
+        const applied=Math.min(remaining,balance);
+
+        newPayments.push({
+          id:uid(),
+          playerId:player.id,
+          playerName:player.name,
+          group:player.group,
+          date:today(),
+          month:month,
+          concept:"Mensualidad",
+          amount:applied,
+          method:method,
+          notes:"Adelanto de mensualidad."
+        });
+
+        remaining-=applied;
+      }
+
+      month=tibNextMonth(month);
+      count++;
+    }
+
+    if(remaining>0.001){
+      alert("El importe supera el límite de 60 meses. No se registró.");
+      return;
+    }
+  }
+
+  if(!newPayments.length){
+    alert("No se encontraron mensualidades para cubrir.");
+    return;
+  }
+
+  db.payments.push(...newPayments);
+
+  if(db.config)db.config.late=0;
+
+  try{
+    saveDB(
+      "Pago registrado: "+player.name+
+      " · "+tibCash(amount)
+    );
+  }catch(error){
+    db.payments.splice(
+      db.payments.length-newPayments.length,
+      newPayments.length
+    );
+    alert("No se pudo guardar el pago. No se conservaron los nuevos movimientos.");
+    return;
+  }
+
+  tibCloseNewPayment();
+
+  window.renderFinance();
+
+  if(typeof renderDashboard==="function")renderDashboard();
+  if(typeof renderReports==="function")renderReports();
+
+  alert(
+    tibDraft===null
+      ? "Pago registrado correctamente."
+      : "Pago registrado correctamente."
+  );
+};
+
+// ==========================================
+// MOSTRAR JUGADORES ORDENADOS ALFABÉTICAMENTE
+// ==========================================
+
+window.renderFinance=function(){
+  const month=tibEl("finMonth").value||currentMonth();
+
+  const players=db.players
+    .filter(p=>p.active!==false)
+    .slice()
+    .sort((a,b)=>a.name.localeCompare(b.name,"es"));
+
+  const rows=players.map(player=>{
+    const fee=Number(player.fee)||0;
+    const paid=tibMonthPaid(player.id,month);
+    const balance=Math.max(0,fee-paid);
+
+    return {player,fee,paid,balance};
+  });
+
+  const expected=rows.reduce((s,r)=>s+r.fee,0);
+
+  const collected=db.payments
+    .filter(p=>p.month===month)
+    .reduce((s,p)=>s+(Number(p.amount)||0),0);
+
+  const pending=rows.reduce((s,r)=>s+r.balance,0);
+  const settled=rows.filter(r=>r.balance===0).length;
+
+  tibEl("financeStats").innerHTML=`
+    <div class="stat">
+      <small>Cuotas calculadas</small>
+      <strong>${tibCash(expected)}</strong>
+    </div>
+    <div class="stat">
+      <small>Dinero recibido</small>
+      <strong>${tibCash(collected)}</strong>
+    </div>
+    <div class="stat">
+      <small>Saldo pendiente</small>
+      <strong>${tibCash(pending)}</strong>
+    </div>
+    <div class="stat">
+      <small>Jugadores liquidados</small>
+      <strong>${settled}/${players.length}</strong>
+    </div>`;
+
+  tibEl("playerBalances").innerHTML=rows.length
+    ?rows.map(r=>`
+      <div class="tib-pay-card">
+        <div class="row">
+          <strong class="tib-name">🏀 ${esc(r.player.name)}</strong>
+          <span class="tag ${r.balance===0?"green":"red"}">
+            ${r.balance===0?"LIQUIDADO":"PENDIENTE"}
+          </span>
+        </div>
+
+        <small>Horario: ${esc(r.player.group)}</small>
+        <small>Mensualidad: ${tibCash(r.fee)}</small>
+        <small>Pagado: ${tibCash(r.paid)}</small>
+        <small>
+          Saldo:
+          <strong class="${r.balance===0?"tib-green":"tib-red"}">
+            ${tibCash(r.balance)}
+          </strong>
+        </small>
+
+        <div class="tib-pay-actions">
+          <button class="tib-normal"
+            onclick="tibOpenMonthly('${r.player.id}')">
+            CONFIRMAR PAGO
+          </button>
+
+          <button class="tib-advance"
+            onclick="tibOpenAdvance('${r.player.id}')">
+            ADELANTAR PAGO
+          </button>
+        </div>
+      </div>
+    `).join("")
+    :'<div class="empty">Todavía no hay jugadores registrados.</div>';
+
+  const movements=db.payments
+    .filter(p=>p.month===month)
+    .slice()
+    .sort((a,b)=>b.date.localeCompare(a.date));
+
+  tibEl("paymentHistory").innerHTML=movements.length
+    ?movements.map(p=>`
+      <div class="item">
+        <strong>${esc(p.playerName)}</strong>
+        <span class="tag green">${tibCash(p.amount)}</span>
+        <small>${esc(p.date)} · ${esc(p.concept)}</small>
+        <small>Forma de pago: ${esc(p.method)}</small>
+        <small>${esc(p.notes||"Sin observaciones")}</small>
+      </div>
+    `).join("")
+    :'<div class="empty">No hay movimientos registrados en este mes.</div>';
+
+  // Desactivar recargos
+  if(db.config)db.config.late=0;
+
+  const late=tibEl("lateFee");
+  if(late){
+    late.value=0;
+    late.disabled=true;
+    const field=late.closest(".field");
+    if(field)field.style.display="none";
+  }
+
+  const concept=tibEl("payConcept");
+  if(concept){
+    Array.from(concept.options).forEach(o=>{
+      if(o.value==="Recargo")o.remove();
+    });
+  }
+
+  // Ocultar formulario financiero anterior
+  const old=tibEl("payPlayer");
+  if(old){
+    const card=old.closest(".card");
+    if(card)card.style.display="none";
+  }
+};
+
+// ==========================================
+// INICIO
+// ==========================================
+
+tibCreatePaymentWindow();
+window.renderFinance();
+
+const monthSelector=tibEl("finMonth");
+if(monthSelector){
+  monthSelector.addEventListener("change",window.renderFinance);
+}
+
+console.log("CONTROL TIBURONES: nuevo módulo financiero cargado.");
+
+})();
+</script>
+  
 </body> </html>
