@@ -1,397 +1,1203 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071a2e">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#061a30">
 <title>CONTROL TIBURONES | Academia</title>
+
 <style>
 :root{
- --bg:#071522;--surface:#10283d;--surface2:#16364f;--surface3:#1c4560;
- --line:#2b5874;--text:#f3f8fc;--muted:#a9c0d1;--blue:#29a8e8;
- --cyan:#54d7e8;--green:#20c58a;--gold:#f2bd52;--red:#ef6977;
- --purple:#9b8af7;--shadow:0 12px 32px #0004
+--bg:#061a30;
+--panel:#102d4a;
+--panel2:#0a223b;
+--blue:#087fd0;
+--cyan:#32c9ff;
+--green:#09b978;
+--red:#e52d50;
+--gold:#e6a51a;
+--purple:#9164e8;
+--text:#f4f8ff;
+--muted:#a9c1d8;
+--line:#315979;
+--shadow:0 8px 24px #0005;
 }
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at top right,#123b57 0,#071522 48%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Arial,sans-serif;min-height:100vh}
+body{
+margin:0;
+background:linear-gradient(160deg,#061525,#0b2947 65%,#061a30);
+color:var(--text);
+font-family:Arial,Helvetica,sans-serif;
+font-size:15px;
+min-height:100vh;
+}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-header{padding:18px 16px 14px;background:#091d30ee;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
-.brand{display:flex;align-items:center;gap:12px;max-width:1100px;margin:auto}
-.mark{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#36c6ed,#1265a2);display:grid;place-items:center;font-size:25px;box-shadow:0 7px 20px #0005}
-h1{font-size:18px;letter-spacing:.8px;margin:0}.subtitle{font-size:12px;color:var(--muted);margin-top:2px}
-.topline{margin-left:auto;text-align:right;color:var(--muted);font-size:11px}
-nav{display:flex;gap:7px;overflow:auto;padding:11px 12px;background:#0a2034;border-bottom:1px solid var(--line);position:sticky;top:80px;z-index:4}
-nav button{flex:0 0 auto;border:1px solid #315a73;background:#112d44;color:#c9dce9;padding:9px 12px;border-radius:12px;font-size:12px;font-weight:750}
-nav button.active{background:linear-gradient(135deg,#168fd0,#12629b);border-color:#56c7ee;color:white}
-main{max-width:1100px;margin:0 auto;padding:17px 13px 50px}
-.page{display:none}.page.active{display:block}
-.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 15px;flex-wrap:wrap}
-h2{font-size:21px;margin:0}h3{font-size:15px;margin:0 0 12px}
-.muted,.hint{color:var(--muted);font-size:12px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
-.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.card{background:linear-gradient(145deg,#14334b,#0e263a);border:1px solid var(--line);border-radius:17px;padding:14px;box-shadow:var(--shadow);min-width:0}
-.stat{font-size:25px;font-weight:850;letter-spacing:-.5px;margin-top:5px}.statlabel{font-size:12px;color:var(--muted)}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{border:0;border-radius:11px;padding:10px 13px;font-weight:800;color:white;background:linear-gradient(135deg,#199bd8,#12629b);box-shadow:0 5px 14px #0003}
-.btn.secondary{background:#24465e;border:1px solid #47718a}.btn.green{background:linear-gradient(135deg,#20bd88,#087d62)}.btn.gold{background:linear-gradient(135deg,#f2c45e,#b77a1b);color:#1c2630}.btn.red{background:linear-gradient(135deg,#ec7580,#b83d52)}.btn.small{padding:7px 10px;font-size:12px}
-.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;min-width:0}
-label{font-size:12px;color:#c5d9e6;font-weight:700}
-input,select,textarea{width:100%;min-width:0;background:#081d2e;border:1px solid #365e78;color:var(--text);border-radius:10px;padding:10px 11px;outline:none}
-  input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 2px #54d7e822}
-textarea{min-height:72px;resize:vertical}
-.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
-.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:13px}
-table{width:100%;border-collapse:collapse;min-width:570px;font-size:13px}
-th,td{padding:10px 9px;border-bottom:1px solid #294b62;text-align:left;vertical-align:middle}
-th{background:#173950;color:#d5e8f4;font-size:11px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0}
-tr:last-child td{border-bottom:0}
-.pill{display:inline-block;border-radius:30px;padding:4px 8px;font-size:10px;font-weight:850;white-space:nowrap}
-.pill.green{background:#0b5b49;color:#8ff2cc}.pill.red{background:#662d3c;color:#ffb2bd}.pill.gold{background:#604b22;color:#ffe09a}.pill.blue{background:#174d70;color:#a8e5ff}.pill.purple{background:#443c75;color:#d3caff}
-.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
-.tabs button{background:#102b40;border:1px solid #315b74;color:#c6dce9;border-radius:10px;padding:8px 11px;font-size:12px;font-weight:750}
-.tabs button.active{background:#176d9e;color:#fff}
-.notice{padding:11px 12px;border:1px solid #876b32;background:#40351f;border-radius:12px;color:#ffe4a6;font-size:12px;margin:10px 0}
-.empty{text-align:center;padding:25px;color:var(--muted);font-size:13px}
-.actions{display:flex;gap:6px;flex-wrap:wrap}
-.studentrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border-bottom:1px solid #294b62}
-.studentrow:last-child{border:0}
-.attbtn{border:1px solid #456a80;border-radius:9px;padding:7px 9px;background:#17354a;color:white;font-size:11px;font-weight:800}
-.attbtn.present{background:#0b674f;border-color:#20c58a}.attbtn.absent{background:#712f3e;border-color:#ef6977}.attbtn.justified{background:#66501f;border-color:#f2bd52}
-.progress{height:7px;border-radius:8px;background:#25465c;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,#20c58a,#54d7e8)}
-dialog{border:1px solid #47718a;border-radius:18px;background:#102b40;color:var(--text);width:min(560px,calc(100% - 24px));padding:18px;box-shadow:0 25px 90px #000b}
-dialog::backdrop{background:#0009}
-.dialoghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.close{background:#294b62;border:0;color:white;border-radius:9px;padding:6px 10px}
-footer{text-align:center;color:#7897aa;font-size:11px;padding:20px}
-@media(min-width:760px){nav{justify-content:center}main{padding-top:24px}.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:420px){.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}.formgrid{grid-template-columns:1fr}.topline{display:none}h2{font-size:19px}}
-
-/* ===== DISEÑO ADAPTABLE PARA OPPO RENO 7 ===== */
-@media (max-width: 600px) {
-  * {
-    box-sizing: border-box;
-  }
-
-  html, body {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  body {
-    font-size: 15px;
-  }
-
-  header {
-    padding: 13px 12px;
-  }
-
-  .brand {
-    gap: 9px;
-  }
-
-  .mark {
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-  }
-
-  h1 {
-    font-size: 16px;
-  }
-
-  .subtitle {
-    font-size: 11px;
-  }
-
-  nav {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    padding: 12px;
-    position: relative;
-    top: auto;
-    overflow: visible;
-  }
-
-  nav button {
-    width: 100%;
-    min-width: 0;
-    min-height: 62px;
-    padding: 9px 5px;
-    border-radius: 15px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    font-size: 11px;
-    line-height: 1.25;
-    text-align: center;
-  }
-
-  main {
-    width: 100%;
-    max-width: 100%;
-    padding: 15px 12px 35px;
-  }
-
-  .heading {
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .heading > .btn {
-    width: 100%;
-  }
-
-  h2 {
-    font-size: 20px;
-  }
-
-  h3 {
-    font-size: 16px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .grid3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .card {
-    min-width: 0;
-    padding: 13px;
-    border-radius: 17px;
-  }
-
-  .stat {
-    font-size: 23px;
-  }
-
-  .toolbar {
-    width: 100%;
-    gap: 8px;
-  }
-
-  .toolbar .btn {
-    flex: 1 1 135px;
-    min-height: 46px;
-    white-space: normal;
-  }
-
-  .btn {
-    min-height: 44px;
-    padding: 11px 13px;
-    border-radius: 13px;
-    font-size: 13px;
-  }
-
-  .btn.small {
-    min-height: 40px;
-    padding: 9px 10px;
-  }
-
-  .formgrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  input, select, textarea {
-    min-height: 45px;
-    font-size: 16px;
-  }
-
-  textarea {
-    min-height: 85px;
-  }
-
-  .studentrow {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    padding: 12px 5px;
-  }
-
-  .studentrow .actions {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .attbtn {
-    min-height: 42px;
-    font-size: 12px;
-  }
-
-  .actions {
-    gap: 7px;
-  }
-
-  .tablewrap {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  table {
-    min-width: 540px;
-  }
-
-  dialog {
-    width: calc(100% - 20px);
-    max-width: 480px;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 15px;
-  }
-
-  .dialoghead {
-    gap: 10px;
-  }
-
-  footer {
-    padding: 20px 12px;
-    text-align: center;
-  }
+header{
+padding:17px 15px;
+background:linear-gradient(110deg,#071a30,#103b61);
+border-bottom:2px solid var(--cyan);
+position:relative;
 }
-
-@media (max-width: 360px) {
-  nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .grid, .grid3 {
-    grid-template-columns: 1fr;
-  }
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+width:53px;height:53px;border-radius:16px;
+display:grid;place-items:center;
+background:linear-gradient(145deg,#10b7ef,#0752a5);
+font-size:29px;
+box-shadow:0 0 18px #18baff55;
 }
-/* ===== FIN DEL AJUSTE PARA CELULARES ===== */
+.brand h1{font-size:19px;margin:0;font-weight:900}
+.brand p{margin:5px 0 0;color:var(--muted);font-size:12px}
+nav{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:9px;padding:12px;
+background:#081d32;
+border-bottom:1px solid var(--line);
+}
+nav button{
+min-width:0;min-height:65px;
+border:1px solid #416a8c;
+border-radius:15px;
+background:linear-gradient(145deg,#173b5a,#0b2944);
+color:white;font-size:12px;font-weight:800;
+padding:8px 4px;
+}
+nav button.active{
+background:linear-gradient(145deg,#10a9ee,#0861b4);
+border:2px solid #66ddff;
+box-shadow:0 0 15px #16b9ff66;
+}
+main{max-width:850px;margin:auto;padding:16px 13px 45px}
+.page{display:none}
+.page.active{display:block}
+h2{font-size:23px;margin:8px 0 17px}
+h3{font-size:17px;margin:0 0 13px}
+.card{
+background:linear-gradient(145deg,#143451,#0c2540);
+border:1px solid #416987;
+border-radius:20px;
+padding:16px;
+margin-bottom:13px;
+box-shadow:var(--shadow);
+}
+.grid{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:10px;
+}
+.statbox{
+background:linear-gradient(145deg,#17466a,#0b2944);
+border:1px solid #477b9e;
+border-radius:17px;
+padding:14px;
+}
+.statbox small{color:var(--muted)}
+.statbox strong{display:block;font-size:25px;margin-top:7px}
+.btn{
+border:0;border-radius:14px;
+padding:13px 16px;
+min-height:48px;
+font-weight:900;color:white;
+background:linear-gradient(145deg,#159de7,#075eae);
+box-shadow:0 5px 13px #0003;
+}
+.btn.green{background:linear-gradient(145deg,#12c98b,#087d58)}
+.btn.red{background:linear-gradient(145deg,#f04460,#a91535)}
+.btn.gold{background:linear-gradient(145deg,#efb52b,#a96708)}
+.btn.purple{background:linear-gradient(145deg,#a17aff,#6340bd)}
+.btn.gray{background:#294762;border:1px solid #52718d}
+.btn.full{width:100%;margin-top:9px}
+.button-grid{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:10px;
+}
+.choice{
+min-height:91px;
+border:2px solid #397da4;
+border-radius:18px;
+padding:12px 8px;
+color:white;font-weight:900;
+font-size:15px;
+background:linear-gradient(145deg,#087fc8,#07549a);
+}
+.choice.green{background:linear-gradient(145deg,#14c783,#08774e);border-color:#39e5a7}
+.choice.red{background:linear-gradient(145deg,#ed3c5b,#a81636);border-color:#ff8295}
+.choice.gold{background:linear-gradient(145deg,#edb329,#a96608);border-color:#ffd66a}
+.choice.selected{
+outline:4px solid #e5faff;
+box-shadow:0 0 20px #36d4ff;
+transform:scale(.98);
+}
+.field{margin:12px 0}
+.field label{display:block;color:var(--muted);margin-bottom:7px}
+input,select,textarea{
+width:100%;min-height:49px;
+border-radius:13px;
+border:1px solid #52718d;
+background:#081f36;color:white;
+padding:12px;font-size:16px;
+}
+textarea{min-height:85px;resize:vertical}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.muted{color:var(--muted)}
+.pill{
+display:inline-block;padding:6px 11px;
+border-radius:30px;background:#254d6a;
+font-size:12px;font-weight:bold;
+}
+.pill.green{background:#087b56}
+.pill.red{background:#a91d3a}
+.pill.gold{background:#805a18}
+.item{
+padding:13px;border:1px solid #315775;
+border-radius:15px;background:#0a223b;
+margin:9px 0;
+}
+.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.actions button{flex:1}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+.divider{height:1px;background:var(--line);margin:14px 0}
+footer{text-align:center;color:#829db6;padding:22px 10px;font-size:12px}
+.hidden{display:none!important}
+@media(max-width:370px){
+nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="mark">🦈</div><div><h1>CONTROL TIBURONES</h1><div class="subtitle">Academia Tiburones Ensenada · Panel de control</div></div><div class="topline">DISCIPLINA · ESFUERZO · EQUIPO</div></div></header>
-<nav id="nav">
-<button class="active" data-page="inicio">⌂ Inicio</button><button data-page="familias">♙ Familias</button><button data-page="jugadores">🏀 Jugadores</button><button data-page="asistencia">✓ Asistencia</button><button data-page="evaluaciones">★ Evaluaciones</button><button data-page="mvp">🏆 MVP</button><button data-page="finanzas">＄ Finanzas</button><button data-page="reportes">▤ Reportes</button><button data-page="respaldo">⇧ Respaldo</button>
-</nav>
-<main>
-<section id="inicio" class="page active">
-<div class="heading"><div><h2>Resumen de academia</h2><div class="muted" id="todayLabel"></div></div><button class="btn" onclick="openStudent()">＋ Nuevo jugador</button></div>
-<div class="grid" id="stats"></div>
-<div class="grid" style="margin-top:12px">
-<div class="card"><h3>Actividad rápida</h3><div class="toolbar"><button class="btn small" onclick="go('asistencia')">Registrar asistencia</button><button class="btn small secondary" onclick="go('evaluaciones')">Evaluar jugadores</button><button class="btn small gold" onclick="go('finanzas')">Registrar pago</button></div></div>
-<div class="card"><h3>Horarios de entrenamiento</h3><p class="muted">Lunes · Miércoles · Viernes</p><div>4:30–5:30 pm <span class="pill blue">Inicial</span></div><div>5:30–6:30 pm <span class="pill green">Infantil</span></div><div>6:30–7:30 pm <span class="pill gold">Juvenil</span></div><div class="muted" style="margin-top:7px">Grupo matutino configurable · 8:30–9:45 am</div></div>
+
+<header>
+<div class="brand">
+<div class="logo">🦈</div>
+<div>
+<h1>CONTROL TIBURONES</h1>
+<p>ACADEMIA TIBURONES ENSENADA</p>
 </div>
-<div class="card" style="margin-top:12px"><h3>Últimos movimientos</h3><div id="recent"></div></div>
+</div>
+</header>
+
+<nav id="menu">
+<button class="active" onclick="go('inicio',this)">🏠<br>INICIO</button>
+<button onclick="go('familias',this)">👨‍👩‍👧<br>FAMILIAS</button>
+<button onclick="go('jugadores',this)">🏀<br>JUGADORES</button>
+<button onclick="go('asistencia',this)">📋<br>ASISTENCIA</button>
+<button onclick="go('evaluaciones',this)">⭐<br>EVALUACIONES</button>
+<button onclick="go('mvp',this)">🏆<br>MVP DEL MES</button>
+<button onclick="go('pagos',this)">💰<br>PAGOS</button>
+<button onclick="go('reportes',this)">📊<br>REPORTES</button>
+<button onclick="go('respaldo',this)">💾<br>RESPALDO</button>
+</nav>
+
+<main>
+
+<section id="inicio" class="page active">
+<h2>Panel del Coach</h2>
+<div class="grid" id="dashboardStats"></div>
+<div class="card">
+<h3>Accesos rápidos</h3>
+<div class="button-grid">
+<button class="btn green" onclick="go('asistencia')">📋 Registrar asistencia</button>
+<button class="btn" onclick="go('evaluaciones')">⭐ Evaluar jugadores</button>
+<button class="btn gold" onclick="go('jugadores')">➕ Agregar jugador</button>
+<button class="btn purple" onclick="go('pagos')">💰 Registrar pago</button>
+</div>
+</div>
+<div class="card">
+<h3>Resumen de horarios</h3>
+<div id="groupSummary"></div>
+</div>
+<div class="card">
+<h3>Actividad reciente</h3>
+<div id="recentActivity"></div>
+</div>
 </section>
+
 <section id="familias" class="page">
-<div class="heading"><div><h2>Familias</h2><div class="muted">Responsables, jugadores y configuración de cuotas</div></div><button class="btn" onclick="openFamily()">＋ Nueva familia</button></div>
-<div class="field"><input id="familySearch" placeholder="Buscar familia o responsable…" oninput="renderFamilies()"></div><div id="familyList"></div>
+<h2>👨‍👩‍👧 Familias</h2>
+<button class="btn green full" onclick="openFamily()">➕ AGREGAR FAMILIA</button>
+<div class="field"><input id="familySearch" placeholder="🔎 Buscar familia..." oninput="renderFamilies()"></div>
+<div id="familyList"></div>
 </section>
+
 <section id="jugadores" class="page">
-<div class="heading"><div><h2>Jugadores</h2><div class="muted">Directorio editable de la academia</div></div><button class="btn" onclick="openStudent()">＋ Nuevo jugador</button></div>
-<div class="toolbar"><input id="playerSearch" placeholder="Buscar jugador…" oninput="renderPlayers()" style="flex:1"><select id="playerGroup" onchange="renderPlayers()" style="max-width:170px"><option value="">Todos los horarios</option><option>4:30</option><option>5:30</option><option>6:30</option><option>Matutino</option></select></div>
-<div id="playerList" style="margin-top:12px"></div>
+<h2>🏀 Jugadores</h2>
+<button class="btn green full" onclick="openPlayer()">➕ AGREGAR JUGADOR</button>
+<div class="field"><input id="playerSearch" placeholder="🔎 Buscar jugador..." oninput="renderPlayers()"></div>
+<div class="field">
+<select id="playerFilter" onchange="renderPlayers()">
+<option value="">Todos los horarios</option>
+<option value="4:30">4:30 · Inicial</option>
+<option value="5:30">5:30 · Infantil</option>
+<option value="6:30">6:30 · Juvenil</option>
+</select>
+</div>
+<div id="playerList"></div>
 </section>
 <section id="asistencia" class="page">
-<div class="heading"><div><h2>Asistencia</h2><div class="muted">Registro por fecha y horario</div></div></div>
-<div class="card"><div class="formgrid"><div class="field"><label>Fecha de entrenamiento</label><input type="date" id="attDate"></div><div class="field"><label>Horario</label><select id="attGroup"><option>4:30</option><option>5:30</option><option>6:30</option><option>Matutino</option></select></div></div><div class="toolbar"><button class="btn small" onclick="setAllAttendance('presente')">Marcar todos presentes</button><button class="btn small secondary" onclick="clearAttendance()">Limpiar fecha</button></div><p class="hint">Verde: asistió · Rojo: falta · Dorado: justificada. Toca el estado para cambiarlo.</p></div>
-<div id="attendanceList" class="card" style="margin-top:12px;padding:0"></div>
+<h2>📋 Asistencia del entrenamiento</h2>
+<div class="card">
+<p class="muted">Entrenamientos lunes, miércoles y viernes. Marca a cada jugador con un botón.</p>
+
+<div class="field">
+<label>Fecha del entrenamiento</label>
+<input type="date" id="attDate">
+</div>
+
+<div class="field">
+<label>Horario</label>
+<select id="attGroup" onchange="renderAttendance()">
+<option value="4:30">4:30 a 5:30 PM · Inicial</option>
+<option value="5:30">5:30 a 6:30 PM · Infantil</option>
+<option value="6:30">6:30 a 7:30 PM · Juvenil</option>
+</select>
+</div>
+
+<button class="btn red full" id="noTrainingBtn" onclick="toggleNoTraining()">🚫 NO HUBO ENTRENAMIENTO</button>
+
+<div class="divider"></div>
+<div id="attendanceList"></div>
+
+<button class="btn full" onclick="saveAttendance()">💾 GUARDAR ASISTENCIA</button>
+</div>
+
+<div class="card">
+<h3>Registro reciente</h3>
+<div id="attendanceHistory"></div>
+</div>
 </section>
+
 <section id="evaluaciones" class="page">
-<div class="heading"><div><h2>Evaluaciones</h2><div class="muted">Registro por entrenamiento · escala de 5 a 10</div></div></div>
-<div class="card"><div class="formgrid"><div class="field"><label>Fecha</label><input type="date" id="evalDate"></div><div class="field"><label>Horario</label><select id="evalGroup"><option>4:30</option><option>5:30</option><option>6:30</option><option>Matutino</option></select></div></div><div class="field"><label>Jugador</label><select id="evalPlayer"></select></div><div class="formgrid"><div class="field"><label>Desempeño (5–10)</label><input type="number" id="evSkill" min="5" max="10" value="10"></div><div class="field"><label>Actitud (5–10)</label><input type="number" id="evAttitude" min="5" max="10" value="10"></div><div class="field"><label>Esfuerzo (5–10)</label><input type="number" id="evEffort" min="5" max="10" value="10"></div><div class="field"><label>Conducta (5–10)</label><input type="number" id="evBehavior" min="5" max="10" value="10"></div></div><div class="field"><label>Observaciones</label><textarea id="evNotes" placeholder="Anota avances, aspectos a reforzar o situaciones especiales…"></textarea></div><button class="btn green" onclick="saveEvaluation()">Guardar evaluación</button><div class="hint" style="margin-top:8px">Una evaluación por jugador y fecha. El sistema evita duplicados.</div></div>
-<div class="card" style="margin-top:12px"><h3>Historial reciente</h3><div id="evalHistory"></div></div>
+<h2>⭐ Evaluación del jugador</h2>
+
+<div class="card">
+<div class="field">
+<label>Fecha del entrenamiento</label>
+<input type="date" id="evalDate">
+</div>
+
+<div class="field">
+<label>Horario</label>
+<select id="evalGroup" onchange="updateEvalPlayers()">
+<option value="4:30">4:30 a 5:30 PM · Inicial</option>
+<option value="5:30">5:30 a 6:30 PM · Infantil</option>
+<option value="6:30">6:30 a 7:30 PM · Juvenil</option>
+</select>
+</div>
+
+<div class="field">
+<label>Jugador</label>
+<select id="evalPlayer">
+<option value="">Selecciona jugador</option>
+</select>
+</div>
+
+<div class="card">
+<h3>1. Desempeño de hoy · elige uno</h3>
+<div class="button-grid" id="performanceChoices">
+<button class="choice" onclick="chooseEval('performance','Buen trabajo',2,this)">BUEN TRABAJO<br>+2 puntos</button>
+<button class="choice green" onclick="chooseEval('performance','Excelente trabajo',3,this)">EXCELENTE TRABAJO<br>+3 puntos</button>
+<button class="choice" onclick="chooseEval('performance','Mejorando',1,this)">MEJORANDO<br>+1 punto</button>
+</div>
+</div>
+
+<div class="card">
+<h3>2. Actitud y atención · elige uno</h3>
+<div class="button-grid" id="attitudeChoices">
+<button class="choice green" onclick="chooseEval('attitude','Buena actitud',2,this)">BUENA ACTITUD<br>+2 puntos</button>
+<button class="choice green" onclick="chooseEval('attitude','Prestó atención',2,this)">PRESTÓ ATENCIÓN<br>+2 puntos</button>
+<button class="choice gold" onclick="chooseEval('attitude','Estuvo platicador',-1,this)">ESTUVO PLATICADOR<br>−1 punto</button>
+<button class="choice red" onclick="chooseEval('attitude','No prestó atención',-3,this)">NO PRESTÓ ATENCIÓN<br>−3 puntos</button>
+<button class="choice red" onclick="chooseEval('attitude','Estuvo jugando',-3,this)">ESTUVO JUGANDO<br>−3 puntos</button>
+<button class="choice gold" onclick="chooseEval('attitude','No siguió indicaciones',-2,this)">NO SIGUIÓ INDICACIONES<br>−2 puntos</button>
+</div>
+</div>
+
+<div class="card">
+<h3>3. Esfuerzo y mejora · elige uno</h3>
+<div class="button-grid" id="effortChoices">
+<button class="choice green" onclick="chooseEval('effort','Se esforzó mucho',3,this)">SE ESFORZÓ MUCHO<br>+3 puntos</button>
+<button class="choice" onclick="chooseEval('effort','Va mejorando',2,this)">VA MEJORANDO<br>+2 puntos</button>
+<button class="choice gold" onclick="chooseEval('effort','Reforzar la práctica',0,this)">REFORZAR LA PRÁCTICA<br>0 puntos</button>
+</div>
+</div>
+
+<div class="card">
+<h3>4. Uniforme de entrenamiento</h3>
+<p class="muted">Evalúa el uniforme completo en una sola opción.</p>
+<div class="button-grid" id="uniformChoices">
+<button class="choice green" onclick="chooseEval('uniform','Cumple',1,this)">CUMPLE<br>+1 punto</button>
+<button class="choice gold" onclick="chooseEval('uniform','Justificado',0,this)">JUSTIFICADO<br>0 puntos</button>
+<button class="choice red" onclick="chooseEval('uniform','No cumple',-1,this)">NO CUMPLE<br>−1 punto</button>
+</div>
+</div>
+
+<div class="field">
+<label>Observaciones del coach</label>
+<textarea id="evalNotes" placeholder="Escribe alguna observación del jugador..."></textarea>
+</div>
+
+<div class="statbox">
+<small>Puntos de esta evaluación</small>
+<strong id="evalTotal">0 puntos</strong>
+</div>
+
+<button class="btn full" onclick="saveEvaluation()">💾 GUARDAR EVALUACIÓN</button>
+<button class="btn gold full" onclick="showPlayerHistory()">📖 VER HISTORIAL DEL JUGADOR</button>
+</div>
+
+<div class="card">
+<h3>Evaluaciones recientes</h3>
+<div id="evalHistory"></div>
+</div>
 </section>
+
 <section id="mvp" class="page">
-<div class="heading"><div><h2>🏆 MVP mensual</h2><div class="muted">Reconocimiento por horario · máximo dos jugadores por grupo</div></div></div>
-<div class="card"><div class="formgrid"><div class="field"><label>Mes</label><input type="month" id="mvpMonth"></div><div class="field"><label>Horario</label><select id="mvpGroup"><option value="">Todos</option><option>4:30</option><option>5:30</option><option>6:30</option><option>Matutino</option></select></div></div><button class="btn" onclick="renderMVP()">Calcular clasificación</button><p class="hint">El cálculo considera asistencia, evaluaciones y mejora. El resultado es una sugerencia; el coach decide el reconocimiento final.</p></div><div id="mvpResults" style="margin-top:12px"></div>
+<h2>🏆 MVP DEL MES</h2>
+<div class="card">
+<div class="field">
+<label>Mes de evaluación</label>
+<input type="month" id="mvpMonth">
+</div>
+<button class="btn full" onclick="renderMVP()">🏆 CALCULAR TABULADOR MVP</button>
+<p class="muted">Se mostrarán los dos primeros lugares de cada horario, de acuerdo con los registros del mes.</p>
+</div>
+<div id="mvpResults"></div>
 </section>
-<section id="finanzas" class="page">
-<div class="heading"><div><h2>Finanzas</h2><div class="muted">Mensualidades, abonos, pagos y movimientos</div></div><button class="btn gold" onclick="openPayment()">＋ Registrar pago</button></div>
+
+<section id="pagos" class="page">
+<h2>💰 Control de pagos</h2>
 <div class="grid" id="financeStats"></div>
-<div class="card" style="margin-top:12px"><div class="formgrid"><div class="field"><label>Mes de consulta</label><input type="month" id="finMonth" onchange="renderFinance()"></div><div class="field"><label>Buscar familia</label><input id="finSearch" placeholder="Nombre…" oninput="renderFinance()"></div></div><div id="duesList"></div></div>
-<div class="card" style="margin-top:12px"><h3>Movimientos registrados</h3><div id="paymentHistory"></div></div>
+
+<div class="card">
+<h3>Registrar pago</h3>
+<div class="field">
+<label>Familia</label>
+<select id="payFamily">
+<option value="">Selecciona familia</option>
+</select>
+</div>
+<div class="field">
+<label>Mes que paga</label>
+<input type="month" id="payMonth">
+</div>
+<div class="field">
+<label>Concepto</label>
+<select id="payConcept">
+<option value="Mensualidad">Mensualidad</option>
+<option value="Reingreso">Reingreso</option>
+<option value="Otro">Otro concepto</option>
+</select>
+</div>
+<div class="field">
+<label>Cantidad recibida (MXN)</label>
+<input type="number" id="payAmount" min="1" step="1" placeholder="Ej. 500">
+</div>
+<div class="field">
+<label>Forma de pago</label>
+<select id="payMethod">
+<option value="Efectivo">Efectivo</option>
+<option value="Transferencia">Transferencia</option>
+</select>
+</div>
+<div class="field">
+<label>Observaciones</label>
+<textarea id="payNotes" placeholder="Opcional"></textarea>
+</div>
+<button class="btn green full" onclick="savePayment()">💾 REGISTRAR PAGO</button>
+</div>
+
+<div class="card">
+<h3>Estado de mensualidades</h3>
+<div class="field">
+<label>Mes</label>
+<input type="month" id="finMonth" onchange="renderFinance()">
+</div>
+<div id="familyBalances"></div>
+</div>
+
+<div class="card">
+<h3>Movimientos registrados</h3>
+<div id="paymentHistory"></div>
+</div>
 </section>
+
 <section id="reportes" class="page">
-<div class="heading"><div><h2>Reportes</h2><div class="muted">Resumen de actividad y resultados</div></div></div>
-<div class="grid" id="reportStats"></div>
-<div class="card" style="margin-top:12px"><h3>Rendimiento por jugador</h3><div id="playerReport"></div></div>
+<h2>📊 Reportes de la academia</h2>
+<div class="card">
+<h3>Resumen general</h3>
+<div id="reportsContent"></div>
+</div>
 </section>
 
 <section id="respaldo" class="page">
-<div class="heading"><div><h2>Respaldo y datos</h2><div class="muted">Guarda una copia o restaura tu información</div></div></div>
-<div class="card"><h3>Exportar respaldo</h3><p class="muted">Descarga familias, jugadores, asistencias, evaluaciones y movimientos financieros en un archivo JSON.</p><button class="btn green" onclick="exportBackup()">Descargar respaldo JSON</button></div>
-<div class="card" style="margin-top:12px"><h3>Importar respaldo</h3><p class="muted">La importación reemplaza los datos actuales de esta aplicación. Primero descarga una copia de seguridad.</p><input type="file" id="backupFile" accept=".json,application/json"><button class="btn secondary" style="margin-top:9px" onclick="importBackup()">Restaurar archivo</button></div>
-<div class="notice">Los datos de esta versión se guardan en el almacenamiento local del navegador del dispositivo. Si borras los datos del navegador o cambias de teléfono, puedes perderlos. Descarga respaldos periódicamente.</div>
-<div class="card"><h3>Configuración de cuotas</h3><div class="formgrid"><div class="field"><label>Mensualidad regular ($)</label><input type="number" id="cfgRegular" value="500"></div><div class="field"><label>Mensualidad matutina ($)</label><input type="number" id="cfgMorning" value="600"></div><div class="field"><label>Recargo después del día 5 ($)</label><input type="number" id="cfgLate" value="100"></div><div class="field"><label>Reingreso ($)</label><input type="number" id="cfgReentry" value="350"></div></div><button class="btn" onclick="saveConfig()">Guardar cuotas</button></div>
+<h2>💾 Respaldo de información</h2>
+<div class="card">
+<h3>Protege tus registros</h3>
+<p class="muted">Guarda una copia de las familias, jugadores, asistencias, evaluaciones y pagos.</p>
+<button class="btn green full" onclick="exportBackup()">📥 DESCARGAR RESPALDO</button>
+<div class="divider"></div>
+<label>Restaurar respaldo JSON</label>
+<input type="file" id="backupFile" accept=".json,application/json">
+<button class="btn full" onclick="importBackup()">📤 RESTAURAR INFORMACIÓN</button>
+</div>
+<div class="card">
+<h3>Configuración de mensualidades</h3>
+<div class="field">
+<label>Mensualidad regular</label>
+<input type="number" id="regularFee" value="500">
+</div>
+<div class="field">
+<label>Recargo después del día 5</label>
+<input type="number" id="lateFee" value="100">
+</div>
+<div class="field">
+<label>Cuota de reingreso</label>
+<input type="number" id="reentryFee" value="350">
+</div>
+<button class="btn full" onclick="saveConfig()">💾 GUARDAR CONFIGURACIÓN</button>
+</div>
 </section>
+
+<div id="playerDialog" class="hidden">
+<div class="card">
+<div class="row">
+<h3>➕ Agregar jugador</h3>
+<button class="btn red" onclick="closeDialog('playerDialog')">✕</button>
+</div>
+<div class="field">
+<label>Nombre completo</label>
+<input id="newPlayerName" placeholder="Nombre del jugador">
+</div>
+<div class="field">
+<label>Familia</label>
+<select id="newPlayerFamily"></select>
+</div>
+<div class="field">
+<label>Horario</label>
+<select id="newPlayerGroup">
+<option value="4:30">4:30 · Inicial</option>
+<option value="5:30">5:30 · Infantil</option>
+<option value="6:30">6:30 · Juvenil</option>
+</select>
+</div>
+<div class="field">
+<label>Fecha de nacimiento (opcional)</label>
+<input type="date" id="newPlayerBirth">
+</div>
+<button class="btn green full" onclick="addPlayer()">GUARDAR JUGADOR</button>
+</div>
+</div>
+
+<div id="familyDialog" class="hidden">
+<div class="card">
+<div class="row">
+<h3>➕ Agregar familia</h3>
+<button class="btn red" onclick="closeDialog('familyDialog')">✕</button>
+</div>
+<div class="field">
+<label>Nombre de la familia</label>
+<input id="newFamilyName" placeholder="Ej. Familia Pérez">
+</div>
+<div class="field">
+<label>Nombre del responsable</label>
+<input id="newFamilyContact" placeholder="Nombre del padre, madre o tutor">
+</div>
+<div class="field">
+<label>Teléfono de contacto (opcional)</label>
+<input id="newFamilyPhone" type="tel" placeholder="Teléfono">
+</div>
+<div class="field">
+<label>Descuento familiar (MXN)</label>
+<input id="newFamilyDiscount" type="number" min="0" value="0">
+</div>
+<button class="btn green full" onclick="addFamily()">GUARDAR FAMILIA</button>
+</div>
+</div>
+
+<div id="historyDialog" class="hidden">
+<div class="card">
+<div class="row">
+<h3>📖 Historial del jugador</h3>
+<button class="btn red" onclick="closeDialog('historyDialog')">✕</button>
+</div>
+<div id="playerHistoryContent"></div>
+</div>
+</div>
+
+<footer>CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA</footer>
 </main>
-<footer>CONTROL TIBURONES · Academia Tiburones Ensenada</footer>
-
-<dialog id="familyDialog"><div class="dialoghead"><h3 id="familyDialogTitle">Nueva familia</h3><button class="close" onclick="familyDialog.close()">✕</button></div><input type="hidden" id="familyId"><div class="field"><label>Nombre de familia</label><input id="familyName" placeholder="Familia Pérez"></div><div class="formgrid"><div class="field"><label>Responsable</label><input id="familyResponsible"></div><div class="field"><label>Teléfono</label><input id="familyPhone" inputmode="tel"></div></div><div class="field"><label>Notas</label><textarea id="familyNotes"></textarea></div><div class="toolbar"><button class="btn" onclick="saveFamily()">Guardar familia</button><button class="btn secondary" onclick="familyDialog.close()">Cancelar</button></div></dialog>
-
-<dialog id="studentDialog"><div class="dialoghead"><h3 id="studentDialogTitle">Nuevo jugador</h3><button class="close" onclick="studentDialog.close()">✕</button></div><input type="hidden" id="studentId"><div class="field"><label>Nombre completo</label><input id="studentName" autocomplete="name"></div><div class="formgrid"><div class="field"><label>Familia</label><select id="studentFamily"></select></div><div class="field"><label>Horario</label><select id="studentGroup"><option>4:30</option><option>5:30</option><option>6:30</option><option>Matutino</option></select></div><div class="field"><label>Fecha de ingreso</label><input type="date" id="studentJoin"></div><div class="field"><label>Cuota especial ($, opcional)</label><input type="number" id="studentFee" min="0" placeholder="Usar cuota general"></div></div><div class="field"><label>Observaciones</label><textarea id="studentNotes"></textarea></div><div class="toolbar"><button class="btn" onclick="saveStudent()">Guardar jugador</button><button class="btn secondary" onclick="studentDialog.close()">Cancelar</button></div></dialog>
-
-<dialog id="paymentDialog"><div class="dialoghead"><h3>Registrar pago</h3><button class="close" onclick="paymentDialog.close()">✕</button></div><div class="field"><label>Familia</label><select id="payFamily"></select></div><div class="formgrid"><div class="field"><label>Mes que paga</label><input type="month" id="payMonth"></div><div class="field"><label>Fecha de pago</label><input type="date" id="payDate"></div><div class="field"><label>Concepto</label><select id="payConcept"><option>Mensualidad</option><option>Reingreso</option><option>Uniforme</option><option>Otro</option></select></div><div class="field"><label>Monto recibido ($)</label><input type="number" id="payAmount" min="1"></div></div><div class="field"><label>Método</label><select id="payMethod"><option>Efectivo</option><option>Transferencia</option><option>Depósito</option><option>Otro</option></select></div><div class="field"><label>Nota / referencia</label><input id="payNote"></div><button class="btn green" onclick="savePayment()">Guardar pago</button></dialog>
 <script>
-'use strict';
-const KEY='controlTiburones_v1';
+"use strict";
+
+const DBKEY="TIBURONES_COMPLETO_V1";
+
 const $=id=>document.getElementById(id);
-const today=()=>new Date().toISOString().slice(0,10);
-const monthNow=()=>today().slice(0,7);
-const money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(Number(n)||0);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const defaults=()=>({families:[],players:[],attendance:[],evaluations:[],payments:[],config:{regular:500,morning:600,late:100,reentry:350},activity:[]});
-let db=load();
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY));return x&&Array.isArray(x.players)?{...defaults(),...x,config:{...defaults().config,...x.config}}:defaults()}catch{return defaults()}}
-function save(note){localStorage.setItem(KEY,JSON.stringify(db));if(note){db.activity.unshift({id:uid(),date:today(),note});db.activity=db.activity.slice(0,30);localStorage.setItem(KEY,JSON.stringify(db))}}
-function go(page){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===page));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));if(page==='inicio')renderHome();if(page==='familias')renderFamilies();if(page==='jugadores')renderPlayers();if(page==='asistencia')renderAttendance();if(page==='evaluaciones')renderEvaluations();if(page==='mvp')renderMVP();if(page==='finanzas')renderFinance();if(page==='reportes')renderReports()}
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
-function familyName(id){return db.families.find(f=>f.id===id)?.name||'Sin familia'}
-function feeFor(p){if(p.fee!==''&&p.fee!=null)return Number(p.fee)||0;return p.group==='Matutino'?db.config.morning:db.config.regular}
-function activePlayers(){return db.players.filter(p=>!p.archived)}
-function renderHome(){
- $('todayLabel').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
- const ps=activePlayers(),month=monthNow(),paid=db.payments.filter(p=>p.month===month).reduce((s,p)=>s+p.amount,0);
- $('stats').innerHTML=[['Jugadores activos',ps.length,'blue'],['Familias registradas',db.families.length,'purple'],['Asistencias registradas',db.attendance.filter(a=>a.date.startsWith(month)).length,'green'],['Ingresos del mes',money(paid),'gold']].map(a=>`<div class="card"><div class="statlabel">${a[0]}</div><div class="stat">${a[1]}</div></div>`).join('');
- $('recent').innerHTML=db.activity.length?db.activity.slice(0,7).map(a=>`<div class="studentrow"><span>${esc(a.note)}</span><span class="muted">${a.date}</span></div>`).join(''):'<div class="empty">Todavía no hay movimientos. Comienza registrando familias y jugadores.</div>';
+const today=()=>new Date().toLocaleDateString("en-CA");
+const currentMonth=()=>today().slice(0,7);
+const money=n=>"$"+(Number(n)||0).toLocaleString("es-MX")+" MXN";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const emptyDB=()=>({
+ families:[],players:[],attendance:[],evaluations:[],
+ payments:[],activity:[],
+ config:{fee:500,late:100,reentry:350}
+});
+
+function loadDB(){
+ try{
+  const d=JSON.parse(localStorage.getItem(DBKEY));
+  return d&&Array.isArray(d.players)?{...emptyDB(),...d}:emptyDB();
+ }catch(e){return emptyDB()}
 }
-function openFamily(id=''){const f=db.families.find(x=>x.id===id);$('familyDialogTitle').textContent=f?'Editar familia':'Nueva familia';$('familyId').value=f?.id||'';$('familyName').value=f?.name||'';$('familyResponsible').value=f?.responsible||'';$('familyPhone').value=f?.phone||'';$('familyNotes').value=f?.notes||'';$('familyDialog').showModal()}
-function saveFamily(){const name=$('familyName').value.trim();if(!name)return alert('Escribe el nombre de la familia.');const id=$('familyId').value;const obj={id:id||uid(),name,responsible:$('familyResponsible').value.trim(),phone:$('familyPhone').value.trim(),notes:$('familyNotes').value.trim()};if(id)db.families=db.families.map(x=>x.id===id?obj:x);else db.families.push(obj);save((id?'Se editó':'Se registró')+' la familia '+name);$('familyDialog').close();renderFamilies()}
-function renderFamilies(){const q=($('familySearch')?.value||'').toLowerCase();const fs=db.families.filter(f=>(f.name+' '+f.responsible).toLowerCase().includes(q));$('familyList').innerHTML=fs.length?fs.map(f=>{const kids=db.players.filter(p=>p.familyId===f.id&&!p.archived);return `<div class="card" style="margin-bottom:10px"><div class="heading"><div><b>${esc(f.name)}</b><div class="muted">${esc(f.responsible||'Sin responsable')} · ${esc(f.phone||'Sin teléfono')}</div></div><div class="actions"><button class="btn small secondary" onclick="openFamily('${f.id}')">Editar</button><button class="btn small red" onclick="deleteFamily('${f.id}')">Eliminar</button></div></div><div class="muted">${kids.length} jugador(es): ${kids.map(p=>esc(p.name)).join(', ')||'Sin jugadores'}</div></div>`}).join(''):'<div class="empty">No hay familias. Registra la primera familia.</div>'}
-function deleteFamily(id){if(!confirm('¿Eliminar esta familia? Los jugadores quedarán sin familia.'))return;db.families=db.families.filter(f=>f.id!==id);db.players.forEach(p=>{if(p.familyId===id)p.familyId='' });save('Se eliminó una familia');renderFamilies()}
-function fillFamilySelect(){const opts='<option value="">Sin familia asignada</option>'+db.families.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('');$('studentFamily').innerHTML=opts;$('payFamily').innerHTML=db.families.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')}
-function openStudent(id=''){fillFamilySelect();const p=db.players.find(x=>x.id===id);$('studentDialogTitle').textContent=p?'Editar jugador':'Nuevo jugador';$('studentId').value=p?.id||'';$('studentName').value=p?.name||'';$('studentFamily').value=p?.familyId||'';$('studentGroup').value=p?.group||'5:30';$('studentJoin').value=p?.join||today();$('studentFee').value=p?.fee??'';$('studentNotes').value=p?.notes||'';$('studentDialog').showModal()}
-function saveStudent(){const name=$('studentName').value.trim();if(!name)return alert('Escribe el nombre del jugador.');const id=$('studentId').value;const obj={id:id||uid(),name,familyId:$('studentFamily').value,group:$('studentGroup').value,join:$('studentJoin').value||today(),fee:$('studentFee').value,notes:$('studentNotes').value.trim(),archived:false};if(id)db.players=db.players.map(x=>x.id===id?obj:x);else db.players.push(obj);save((id?'Se actualizó':'Se agregó')+' al jugador '+name);$('studentDialog').close();renderPlayers()}
-function renderPlayers(){const q=($('playerSearch')?.value||'').toLowerCase(),g=$('playerGroup')?.value||'';const ps=db.players.filter(p=>!p.archived&&p.name.toLowerCase().includes(q)&&(!g||p.group===g)).sort((a,b)=>a.group.localeCompare(b.group)||a.name.localeCompare(b.name,'es'));$('playerList').innerHTML=ps.length?ps.map(p=>`<div class="card" style="margin-bottom:9px"><div class="heading"><div><b>${esc(p.name)}</b><div class="muted">${esc(familyName(p.familyId))} · ${esc(p.group)} · ${money(feeFor(p))}/mes</div></div><div class="actions"><button class="btn small secondary" onclick="openStudent('${p.id}')">Editar</button><button class="btn small red" onclick="archivePlayer('${p.id}')">Dar de baja</button></div></div>${p.notes?`<div class="muted">${esc(p.notes)}</div>`:''}</div>`).join(''):'<div class="empty">No hay jugadores en este filtro.</div>'}
-function archivePlayer(id){if(!confirm('¿Dar de baja/archivar a este jugador? Su historial se conservará.'))return;const p=db.players.find(x=>x.id===id);p.archived=true;save('Se archivó a '+p.name);renderPlayers()}
-function groupPlayers(group){return activePlayers().filter(p=>p.group===group).sort((a,b)=>a.name.localeCompare(b.name,'es'))}
-function renderAttendance(){if(!$('attDate').value)$('attDate').value=today();drawAttendance()}
-$('attDate').addEventListener('change',drawAttendance);$('attGroup').addEventListener('change',drawAttendance);
-function drawAttendance(){const date=$('attDate').value||today(),group=$('attGroup').value,ps=groupPlayers(group);$('attendanceList').innerHTML=ps.length?ps.map(p=>{const a=db.attendance.find(x=>x.date===date&&x.playerId===p.id);const status=a?.status||'';return `<div class="studentrow"><div><b>${esc(p.name)}</b><div class="muted">${esc(group)}</div></div><div class="actions"><button class="attbtn ${status==='presente'?'present':''}" onclick="setAttendance('${p.id}','presente')">✓</button><button class="attbtn ${status==='falta'?'absent':''}" onclick="setAttendance('${p.id}','falta')">Falta</button><button class="attbtn ${status==='justificada'?'justified':''}" onclick="setAttendance('${p.id}','justificada')">Just.</button></div></div>`}).join(''):'<div class="empty">No hay jugadores activos en este horario.</div>'}
-function setAttendance(playerId,status){const date=$('attDate').value||today();let a=db.attendance.find(x=>x.date===date&&x.playerId===playerId);if(a)a.status=status;else db.attendance.push({id:uid(),date,playerId,status});save('Asistencia actualizada: '+db.players.find(p=>p.id===playerId)?.name);drawAttendance()}
-function setAllAttendance(status){const date=$('attDate').value||today();groupPlayers($('attGroup').value).forEach(p=>{let a=db.attendance.find(x=>x.date===date&&x.playerId===p.id);if(a)a.status=status;else db.attendance.push({id:uid(),date,playerId:p.id,status})});save('Se marcó asistencia grupal del '+date);drawAttendance()}
-function clearAttendance(){const date=$('attDate').value||today();if(!confirm('¿Borrar los registros de asistencia de esta fecha y horario?'))return;const ids=groupPlayers($('attGroup').value).map(p=>p.id);db.attendance=db.attendance.filter(a=>!(a.date===date&&ids.includes(a.playerId)));save('Se limpió asistencia del '+date);drawAttendance()}
-  function renderEvaluations(){if(!$('evalDate').value)$('evalDate').value=today();updateEvalPlayers();renderEvalHistory()}
-$('evalGroup').addEventListener('change',updateEvalPlayers);
-function updateEvalPlayers(){const ps=groupPlayers($('evalGroup').value);$('evalPlayer').innerHTML=ps.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')||'<option value="">Sin jugadores</option>'}
-function saveEvaluation(){const playerId=$('evalPlayer').value,date=$('evalDate').value||today();if(!playerId)return alert('Primero registra un jugador en este horario.');if(db.evaluations.some(e=>e.playerId===playerId&&e.date===date))return alert('Este jugador ya tiene una evaluación registrada para esa fecha.');const vals=['evSkill','evAttitude','evEffort','evBehavior'].map(id=>Number($(id).value));if(vals.some(v=>!Number.isFinite(v)||v<5||v>10))return alert('Cada calificación debe estar entre 5 y 10.');db.evaluations.push({id:uid(),playerId,date,skill:vals[0],attitude:vals[1],effort:vals[2],behavior:vals[3],notes:$('evNotes').value.trim()});save('Evaluación registrada: '+db.players.find(p=>p.id===playerId)?.name);$('evNotes').value='';renderEvalHistory()}
-function renderEvalHistory(){const list=[...db.evaluations].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,25);$('evalHistory').innerHTML=list.length?`<div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Jugador</th><th>Promedio</th><th>Observaciones</th><th></th></tr></thead><tbody>${list.map(e=>{const p=db.players.find(x=>x.id===e.playerId);return `<tr><td>${e.date}</td><td>${esc(p?.name||'Jugador archivado')}</td><td><b>${((e.skill+e.attitude+e.effort+e.behavior)/4).toFixed(1)}</b></td><td>${esc(e.notes||'—')}</td><td><button class="btn small red" onclick="deleteEval('${e.id}')">Eliminar</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay evaluaciones.</div>'}
-function deleteEval(id){if(!confirm('¿Eliminar esta evaluación?'))return;db.evaluations=db.evaluations.filter(e=>e.id!==id);save('Se eliminó una evaluación');renderEvalHistory()}
-function renderMVP(){if(!$('mvpMonth').value)$('mvpMonth').value=monthNow();const month=$('mvpMonth').value,filter=$('mvpGroup').value;const groups=filter?[filter]:['4:30','5:30','6:30','Matutino'];$('mvpResults').innerHTML=groups.map(g=>{const ps=groupPlayers(g).map(p=>{const att=db.attendance.filter(a=>a.playerId===p.id&&a.date.startsWith(month)),present=att.filter(a=>a.status==='presente').length,ev=db.evaluations.filter(e=>e.playerId===p.id&&e.date.startsWith(month)),avg=ev.length?ev.reduce((s,e)=>s+(e.skill+e.attitude+e.effort+e.behavior)/4,0)/ev.length:0,attendance=att.length?present/att.length*10:0,score=ev.length?avg*.7+attendance*.3:attendance;return {p,score,present,att:att.length,ev:ev.length}}).sort((a,b)=>b.score-a.score);return `<div class="card" style="margin-bottom:11px"><div class="heading"><h3>Horario ${g}</h3><span class="pill gold">Top 2</span></div>${ps.length?ps.slice(0,2).map((x,i)=>`<div style="padding:9px 0;border-bottom:1px solid #294b62"><div class="heading"><b>${i===0?'🥇':'🥈'} ${esc(x.p.name)}</b><b>${x.score.toFixed(2)}/10</b></div><div class="progress"><span style="width:${Math.max(0,Math.min(100,x.score*10))}%"></span></div><div class="muted">${x.present}/${x.att} asistencias · ${x.ev} evaluaciones</div></div>`).join(''):'<div class="empty">Sin jugadores activos.</div>'}</div>`}).join('');}
-function openPayment(){fillFamilySelect();if(!db.families.length)return alert('Primero registra una familia.');$('payMonth').value=monthNow();$('payDate').value=today();$('payAmount').value='';$('payNote').value='';$('paymentDialog').showModal()}
-function savePayment(){const familyId=$('payFamily').value,amount=Number($('payAmount').value);if(!familyId)return alert('Selecciona una familia.');if(!amount||amount<=0)return alert('Escribe un monto válido.');db.payments.push({id:uid(),familyId,month:$('payMonth').value||monthNow(),date:$('payDate').value||today(),concept:$('payConcept').value,amount,method:$('payMethod').value,note:$('payNote').value.trim()});save('Pago registrado de '+money(amount)+' · '+familyName(familyId));$('paymentDialog').close();renderFinance()}
-function familyDue(f,month){const kids=db.players.filter(p=>p.familyId===f.id&&!p.archived);const due=kids.reduce((s,p)=>s+feeFor(p),0);const paid=db.payments.filter(p=>p.familyId===f.id&&p.month===month&&p.concept==='Mensualidad').reduce((s,p)=>s+p.amount,0);return {kids,due,paid,balance:Math.max(0,due-paid)}}
-function renderFinance(){if(!$('finMonth').value)$('finMonth').value=monthNow();const m=$('finMonth').value,search=($('finSearch')?.value||'').toLowerCase();const paid=db.payments.filter(p=>p.month===m).reduce((s,p)=>s+p.amount,0),dues=db.families.reduce((s,f)=>s+familyDue(f,m).due,0),balance=Math.max(0,dues-db.payments.filter(p=>p.month===m&&p.concept==='Mensualidad').reduce((s,p)=>s+p.amount,0));$('financeStats').innerHTML=[['Cuotas estimadas',money(dues)],['Ingresos registrados',money(paid)],['Saldo de mensualidades',money(balance)]].map(x=>`<div class="card"><div class="statlabel">${x[0]}</div><div class="stat">${x[1]}</div></div>`).join('');const fs=db.families.filter(f=>f.name.toLowerCase().includes(search));$('duesList').innerHTML=fs.length?`<div class="tablewrap"><table><thead><tr><th>Familia</th><th>Jugadores</th><th>Cuota</th><th>Pagado</th><th>Saldo</th><th>Estado</th></tr></thead><tbody>${fs.map(f=>{const d=familyDue(f,m);return `<tr><td>${esc(f.name)}</td><td>${d.kids.length}</td><td>${money(d.due)}</td><td>${money(d.paid)}</td><td>${money(d.balance)}</td><td><span class="pill ${d.balance===0?'green':d.paid?'gold':'red'}">${d.balance===0?'Liquidado':d.paid?'Abono':'Pendiente'}</span></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No hay familias registradas.</div>';const hist=[...db.payments].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);$('paymentHistory').innerHTML=hist.length?`<div class="tablewrap"><table><thead><tr><th>Fecha</th><th>Familia</th><th>Concepto</th><th>Monto</th><th>Método</th><th></th></tr></thead><tbody>${hist.map(p=>`<tr><td>${p.date}</td><td>${esc(familyName(p.familyId))}</td><td>${esc(p.concept)}</td><td>${money(p.amount)}</td><td>${esc(p.method)}</td><td><button class="btn small red" onclick="deletePayment('${p.id}')">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No hay pagos registrados.</div>'}
-function deletePayment(id){if(!confirm('¿Eliminar este movimiento?'))return;db.payments=db.payments.filter(p=>p.id!==id);save('Se eliminó un movimiento financiero');renderFinance()}
-function renderReports(){const ps=activePlayers(),attendance=db.attendance,evaluations=db.evaluations;const avg=evaluations.length?evaluations.reduce((s,e)=>s+(e.skill+e.attitude+e.effort+e.behavior)/4,0)/evaluations.length:0;$('reportStats').innerHTML=[['Jugadores activos',ps.length],['Registros de asistencia',attendance.length],['Evaluaciones',evaluations.length],['Promedio general',avg?avg.toFixed(2)+'/10':'—']].map(x=>`<div class="card"><div class="statlabel">${x[0]}</div><div class="stat">${x[1]}</div></div>`).join('');$('playerReport').innerHTML=ps.length?`<div class="tablewrap"><table><thead><tr><th>Jugador</th><th>Horario</th><th>Asistencias</th><th>Evaluaciones</th><th>Promedio</th></tr></thead><tbody>${ps.map(p=>{const a=attendance.filter(x=>x.playerId===p.id),present=a.filter(x=>x.status==='presente').length,e=evaluations.filter(x=>x.playerId===p.id),av=e.length?e.reduce((s,x)=>s+(x.skill+x.attitude+x.effort+x.behavior)/4,0)/e.length:0;return `<tr><td>${esc(p.name)}</td><td>${esc(p.group)}</td><td>${present}/${a.length}</td><td>${e.length}</td><td>${av?av.toFixed(1):'—'}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Agrega jugadores para generar reportes.</div>'}
-function exportBackup(){const data={app:'CONTROL TIBURONES',version:1,exportedAt:new Date().toISOString(),...db};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='respaldo-control-tiburones-'+today()+'.json';a.click();URL.revokeObjectURL(url)}
-function importBackup(){const file=$('backupFile').files[0];if(!file)return alert('Selecciona un archivo JSON.');if(!confirm('Esto reemplazará todos los datos actuales de esta aplicación. ¿Ya descargaste un respaldo?'))return;const reader=new FileReader();reader.onload=()=>{try{const x=JSON.parse(reader.result);if(!Array.isArray(x.players)||!Array.isArray(x.families)||!Array.isArray(x.attendance)||!Array.isArray(x.evaluations)||!Array.isArray(x.payments))throw Error('Estructura no válida');db={...defaults(),...x,config:{...defaults().config,...x.config}};save('Se restauró un respaldo');alert('Respaldo restaurado correctamente.');go('inicio')}catch(e){alert('No se pudo importar: '+e.message)}};reader.readAsText(file)}
-function saveConfig(){db.config={regular:Number($('cfgRegular').value)||500,morning:Number($('cfgMorning').value)||600,late:Number($('cfgLate').value)||100,reentry:Number($('cfgReentry').value)||350};save('Se actualizaron las cuotas de la academia');alert('Configuración guardada.')}
-function init(){ $('attDate').value=today();$('evalDate').value=today();$('mvpMonth').value=monthNow();$('finMonth').value=monthNow();$('cfgRegular').value=db.config.regular;$('cfgMorning').value=db.config.morning;$('cfgLate').value=db.config.late;$('cfgReentry').value=db.config.reentry;renderHome();fillFamilySelect();updateEvalPlayers();}
-init();
+let db=loadDB();
+
+function saveDB(message){
+ localStorage.setItem(DBKEY,JSON.stringify(db));
+ if(message){
+  db.activity.unshift({id:uid(),date:today(),message});
+  db.activity=db.activity.slice(0,40);
+  localStorage.setItem(DBKEY,JSON.stringify(db));
+ }
+}
+
+function log(message){saveDB(message)}
+
+function go(id,button){
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+ document.querySelectorAll("#menu button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ else{
+  const b=[...document.querySelectorAll("#menu button")].find(x=>x.getAttribute("onclick")?.includes("'"+id+"'"));
+  if(b)b.classList.add("active");
+ }
+ if(id==="inicio")renderDashboard();
+ if(id==="familias")renderFamilies();
+ if(id==="jugadores")renderPlayers();
+ if(id==="asistencia")renderAttendance();
+ if(id==="evaluaciones")updateEvalPlayers();
+ if(id==="mvp")renderMVP();
+ if(id==="pagos")renderFinance();
+ if(id==="reportes")renderReports();
+}
+
+function closeDialog(id){$(id).classList.add("hidden")}
+
+function openFamily(){
+ $("newFamilyName").value="";
+ $("newFamilyContact").value="";
+ $("newFamilyPhone").value="";
+ $("newFamilyDiscount").value=0;
+ $("familyDialog").classList.remove("hidden");
+}
+
+function addFamily(){
+ const name=$("newFamilyName").value.trim();
+ if(!name)return alert("Escribe el nombre de la familia.");
+ db.families.push({
+  id:uid(),name,
+  contact:$("newFamilyContact").value.trim(),
+  phone:$("newFamilyPhone").value.trim(),
+  discount:Number($("newFamilyDiscount").value)||0,
+  active:true
+ });
+ log("Se registró la familia "+name);
+ closeDialog("familyDialog");
+ renderFamilies();
+}
+
+function renderFamilies(){
+ const q=($("familySearch").value||"").toLowerCase();
+ const list=db.families.filter(f=>(f.name+" "+f.contact).toLowerCase().includes(q));
+ $("familyList").innerHTML=list.length?list.map(f=>{
+  const kids=db.players.filter(p=>p.familyId===f.id&&!p.archived);
+  return `<div class="item">
+   <div class="row"><b>👨‍👩‍👧 ${esc(f.name)}</b><span class="pill green">${kids.length} jugador(es)</span></div>
+   <p class="muted">${esc(f.contact||"Sin responsable")} · ${esc(f.phone||"Sin teléfono")}</p>
+   <div class="row"><b>Cuota familiar estimada</b><b>${money(Math.max(0,kids.length*db.config.fee-f.discount))}</b></div>
+   <div class="actions">
+    <button class="btn" onclick="openPlayerForFamily('${f.id}')">➕ Agregar hijo</button>
+    <button class="btn red" onclick="deleteFamily('${f.id}')">Eliminar</button>
+   </div>
+  </div>`;
+ }).join(""):'<div class="empty">Todavía no hay familias registradas.</div>';
+ fillFamilyOptions();
+}
+
+function deleteFamily(id){
+ if(db.players.some(p=>p.familyId===id&&!p.archived))
+  return alert("Esta familia tiene jugadores. Primero cambia su asignación.");
+ if(!confirm("¿Eliminar esta familia?"))return;
+ db.families=db.families.filter(f=>f.id!==id);
+ log("Se eliminó una familia");
+ renderFamilies();
+}
+
+function fillFamilyOptions(){
+ const opts='<option value="">Selecciona familia</option>'+db.families.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join("");
+ $("newPlayerFamily").innerHTML=opts;
+ $("payFamily").innerHTML=opts;
+}
+
+function openPlayer(){
+ fillFamilyOptions();
+ $("newPlayerName").value="";
+ $("newPlayerBirth").value="";
+ $("newPlayerGroup").value="4:30";
+ $("newPlayerFamily").value="";
+ $("playerDialog").classList.remove("hidden");
+}
+
+function openPlayerForFamily(id){
+ openPlayer();
+ $("newPlayerFamily").value=id;
+}
+
+function addPlayer(){
+ const name=$("newPlayerName").value.trim();
+ const familyId=$("newPlayerFamily").value;
+ if(!name)return alert("Escribe el nombre del jugador.");
+ if(!familyId)return alert("Selecciona o registra primero una familia.");
+ db.players.push({
+  id:uid(),name,familyId,
+  group:$("newPlayerGroup").value,
+  birth:$("newPlayerBirth").value,
+  archived:false
+ });
+ log("Se agregó al jugador "+name);
+ closeDialog("playerDialog");
+ renderPlayers();
+ renderFamilies();
+ renderDashboard();
+}
+
+function renderPlayers(){
+ const q=($("playerSearch").value||"").toLowerCase();
+ const g=$("playerFilter").value;
+ const ps=db.players.filter(p=>!p.archived&&p.name.toLowerCase().includes(q)&&(!g||p.group===g)).sort((a,b)=>a.group.localeCompare(b.group)||a.name.localeCompare(b.name,"es"));
+ $("playerList").innerHTML=ps.length?ps.map(p=>{
+  const f=db.families.find(x=>x.id===p.familyId);
+  return `<div class="item">
+   <div class="row"><b>🏀 ${esc(p.name)}</b><span class="pill green">${esc(p.group)}</span></div>
+   <p class="muted">${esc(f?.name||"Sin familia")}</p>
+   <div class="actions">
+    <button class="btn" onclick="playerDetails('${p.id}')">Ver ficha</button>
+    <button class="btn gold" onclick="archivePlayer('${p.id}')">Dar de baja</button>
+   </div>
+  </div>`;
+ }).join(""):'<div class="empty">No hay jugadores en este horario.</div>';
+}
+
+function playerDetails(id){
+ const p=db.players.find(x=>x.id===id);
+ if(!p)return;
+ alert("Jugador: "+p.name+"\nHorario: "+p.group+"\nFamilia: "+(db.families.find(f=>f.id===p.familyId)?.name||"Sin familia"));
+}
+
+function archivePlayer(id){
+ const p=db.players.find(x=>x.id===id);
+ if(!p||!confirm("¿Dar de baja a "+p.name+"? Su historial se conservará."))return;
+ p.archived=true;
+ log("Se dio de baja a "+p.name);
+ renderPlayers();
+ renderDashboard();
+}
+
+function groupPlayers(group){
+ return db.players.filter(p=>!p.archived&&p.group===group).sort((a,b)=>a.name.localeCompare(b.name,"es"));
+}
+
+let attendanceDraft={};
+
+function renderAttendance(){
+ if(!$("attDate").value)$("attDate").value=today();
+ attendanceDraft={};
+ drawAttendance();
+}
+
+function toggleNoTraining(){
+ const date=$("attDate").value||today();
+ const group=$("attGroup").value;
+ const old=db.attendance.find(a=>a.date===date&&a.group===group&&a.noTraining);
+ if(old){
+  db.attendance=db.attendance.filter(a=>a!==old);
+  $("noTrainingBtn").textContent="🚫 NO HUBO ENTRENAMIENTO";
+ }else{
+  db.attendance=db.attendance.filter(a=>!(a.date===date&&a.group===group));
+  db.attendance.push({id:uid(),date,group,noTraining:true});
+  $("noTrainingBtn").textContent="↩️ CANCELAR NO HUBO ENTRENAMIENTO";
+ }
+ log("Se actualizó el estado del entrenamiento "+group+" del "+date);
+ drawAttendance();
+}
+
+function drawAttendance(){
+ const date=$("attDate").value||today();
+ const group=$("attGroup").value;
+ const noTraining=db.attendance.some(a=>a.date===date&&a.group===group&&a.noTraining);
+ $("noTrainingBtn").textContent=noTraining?"↩️ CANCELAR NO HUBO ENTRENAMIENTO":"🚫 NO HUBO ENTRENAMIENTO";
+ const ps=groupPlayers(group);
+ $("attendanceList").innerHTML=noTraining?
+ '<div class="empty">No hubo entrenamiento. No se registran faltas.</div>':
+ ps.length?ps.map(p=>{
+  const old=db.attendance.find(a=>a.date===date&&a.playerId===p.id);
+  const status=attendanceDraft[p.id]||old?.status||"";
+  return `<div class="item">
+   <b>${esc(p.name)}</b>
+   <div class="button-grid" style="margin-top:10px">
+    <button class="choice green ${status==="presente"?"selected":""}" onclick="markAttendance('${p.id}','presente')">✓ ASISTIÓ</button>
+    <button class="choice red ${status==="falta"?"selected":""}" onclick="markAttendance('${p.id}','falta')">✕ NO ASISTIÓ</button>
+    <button class="choice gold ${status==="justificada"?"selected":""}" onclick="markAttendance('${p.id}','justificada')">JUSTIFICADA</button>
+   </div>
+  </div>`;
+ }).join(""):'<div class="empty">No hay jugadores activos en este horario.</div>';
+}
+
+function markAttendance(id,status){
+ attendanceDraft[id]=status;
+ drawAttendance();
+}
+
+function saveAttendance(){
+ const date=$("attDate").value||today();
+ const group=$("attGroup").value;
+ if(db.attendance.some(a=>a.date===date&&a.group===group&&a.noTraining))
+  return alert("Este día está marcado como sin entrenamiento.");
+ const ps=groupPlayers(group);
+ if(!ps.length)return alert("No hay jugadores en este horario.");
+ ps.forEach(p=>{
+  const status=attendanceDraft[p.id];
+  if(!status)return;
+  const old=db.attendance.find(a=>a.date===date&&a.playerId===p.id);
+  if(old)old.status=status;
+  else db.attendance.push({id:uid(),date,group,playerId:p.id,status});
+ });
+ attendanceDraft={};
+ log("Se guardó la asistencia del grupo "+group+" del "+date);
+ drawAttendance();
+ renderAttendanceHistory();
+ alert("Asistencia guardada correctamente.");
+}
+
+function renderAttendanceHistory(){
+ const list=[...db.attendance].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
+ $("attendanceHistory").innerHTML=list.length?list.map(a=>{
+  if(a.noTraining)return `<div class="item">${a.date} · ${a.group} · <span class="pill gold">Sin entrenamiento</span></div>`;
+  const p=db.players.find(x=>x.id===a.playerId);
+  const label={presente:"Asistió",falta:"No asistió",justificada:"Justificada"}[a.status]||"Sin estado";
+  return `<div class="item">${a.date} · ${esc(p?.name||"Jugador")} · ${esc(label)}</div>`;
+ }).join(""):'<div class="empty">Sin registros todavía.</div>';
+}
+
+function renderDashboard(){
+ const active=db.players.filter(p=>!p.archived);
+ const month=currentMonth();
+ const income=db.payments.filter(p=>p.month===month).reduce((s,p)=>s+p.amount,0);
+ $("dashboardStats").innerHTML=[
+ ["Jugadores activos",active.length],
+ ["Familias",db.families.length],
+ ["Asistencias del mes",db.attendance.filter(a=>a.date.startsWith(month)&&!a.noTraining).length],
+ ["Ingresos del mes",money(income)]
+ ].map(x=>`<div class="statbox"><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join("");
+ $("groupSummary").innerHTML=["4:30","5:30","6:30"].map(g=>`<div class="item"><div class="row"><b>${g}</b><span class="pill">${groupPlayers(g).length} jugadores</span></div></div>`).join("");
+ $("recentActivity").innerHTML=db.activity.length?db.activity.slice(0,8).map(a=>`<div class="item">${esc(a.message)}<div class="muted">${a.date}</div></div>`).join(""):'<div class="empty">Todavía no hay actividad.</div>';
+}
+
+   </script>
+   <script>
+let evalSelections = {};
+
+function chooseEval(category,label,points,button){
+  evalSelections[category]={label:label,points:Number(points)};
+  document.querySelectorAll('[data-category="'+category+'"]').forEach(b=>{
+    b.classList.remove("selected");
+  });
+  button.classList.add("selected");
+  updateEvalTotal();
+}
+
+function updateEvalTotal(){
+  let total=0;
+  Object.values(evalSelections).forEach(item=>total+=item.points);
+  $("evalTotal").textContent=total;
+}
+
+function updateEvalPlayers(){
+  const group=$("evalGroup").value;
+  const select=$("evalPlayer");
+  const players=db.players.filter(p=>!p.archived && p.group===group);
+  select.innerHTML='<option value="">Selecciona jugador</option>'+
+    players.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join("");
+}
+
+function resetEvalSelections(){
+  evalSelections={};
+  document.querySelectorAll(".choice").forEach(b=>b.classList.remove("selected"));
+  $("evalTotal").textContent="0";
+}
+
+function saveEvaluation(){
+  const date=$("evalDate").value;
+  const playerId=$("evalPlayer").value;
+  if(!date || !playerId){
+    alert("Selecciona la fecha y el jugador.");
+    return;
+  }
+
+  const categories=["performance","attitude","effort","uniform"];
+  if(categories.some(c=>!evalSelections[c])){
+    alert("Completa las cuatro categorías de evaluación.");
+    return;
+  }
+
+  const duplicate=db.evaluations.some(e=>e.date===date && e.playerId===playerId);
+  if(duplicate){
+    alert("Este jugador ya tiene una evaluación registrada para esa fecha.");
+    return;
+  }
+
+  const player=db.players.find(p=>p.id===playerId);
+  if(!player)return;
+
+  const record={
+    id:uid(),
+    date:date,
+    month:date.slice(0,7),
+    playerId:playerId,
+    playerName:player.name,
+    group:player.group,
+    performance:{...evalSelections.performance},
+    attitude:{...evalSelections.attitude},
+    effort:{...evalSelections.effort},
+    uniform:{...evalSelections.uniform},
+    total:Object.values(evalSelections).reduce((sum,item)=>sum+item.points,0),
+    notes:$("evalNotes").value.trim()
+  };
+
+  db.evaluations.push(record);
+  saveDB("Evaluación registrada: "+player.name);
+  $("evalNotes").value="";
+  resetEvalSelections();
+  renderEvalHistory();
+  renderMVP();
+  alert("Evaluación guardada correctamente.");
+}
+
+function renderEvalHistory(){
+  const date=$("evalDate").value;
+  const group=$("evalGroup").value;
+  const records=db.evaluations
+    .filter(e=>e.date===date && e.group===group)
+    .sort((a,b)=>a.playerName.localeCompare(b.playerName));
+
+  $("evalHistory").innerHTML=records.length
+    ?records.map(e=>`
+      <div class="item">
+        <strong>${esc(e.playerName)}</strong>
+        <span class="tag">${e.total} puntos</span>
+        <small>${esc(e.notes||"Sin observaciones")}</small>
+      </div>`).join("")
+    :'<p class="muted">Todavía no hay evaluaciones para esta fecha y horario.</p>';
+}
+
+function showPlayerHistory(){
+  const playerId=$("evalPlayer").value;
+  if(!playerId){
+    alert("Selecciona primero un jugador.");
+    return;
+  }
+  const player=db.players.find(p=>p.id===playerId);
+  if(!player)return;
+
+  const records=db.evaluations
+    .filter(e=>e.playerId===playerId)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+
+  $("playerHistoryContent").innerHTML=`
+    <h3>${esc(player.name)}</h3>
+    <p>Horario: ${esc(player.group)}</p>
+    ${records.length?records.map(e=>`
+      <div class="item">
+        <strong>${esc(e.date)} · ${e.total} puntos</strong>
+        <p>Desempeño: ${esc(e.performance.label)} (${e.performance.points})</p>
+        <p>Actitud: ${esc(e.attitude.label)} (${e.attitude.points})</p>
+        <p>Esfuerzo: ${esc(e.effort.label)} (${e.effort.points})</p>
+        <p>Uniforme: ${esc(e.uniform.label)} (${e.uniform.points})</p>
+        <small>${esc(e.notes||"Sin observaciones")}</small>
+      </div>`).join(""):'<p>No hay evaluaciones registradas.</p>'}
+  `;
+  $("historyDialog").classList.add("show");
+}
+
+function renderMVP(){
+  const month=$("mvpMonth").value||currentMonth();
+  const groups=["4:30","5:30","6:30"];
+  const container=$("mvpResults");
+
+  container.innerHTML=groups.map(group=>{
+    const players=db.players.filter(p=>!p.archived && p.group===group);
+    const ranking=players.map(player=>{
+      const evaluations=db.evaluations.filter(e=>
+        e.playerId===player.id && e.date.slice(0,7)===month
+      );
+      const points=evaluations.reduce((sum,e)=>sum+(Number(e.total)||0),0);
+      const attended=db.attendance.filter(a=>
+        a.playerId===player.id &&
+        a.date.slice(0,7)===month &&
+        a.status==="present"
+      ).length;
+
+      return {
+        name:player.name,
+        points:points,
+        evaluations:evaluations.length,
+        attendance:attended
+      };
+    }).sort((a,b)=>
+      b.points-a.points ||
+      b.attendance-a.attendance ||
+      a.name.localeCompare(b.name)
+    );
+
+    const eligible=ranking.filter(p=>p.evaluations>0 || p.attendance>0);
+    return `
+      <div class="card">
+        <h3>Horario ${group}</h3>
+        ${eligible.length?eligible.slice(0,2).map((p,index)=>`
+          <div class="item">
+            <strong>${index===0?"🥇":"🥈"} ${esc(p.name)}</strong>
+            <span class="tag">${p.points} puntos</span>
+            <small>${p.evaluations} evaluaciones · ${p.attendance} asistencias</small>
+          </div>`).join(""):'<p class="muted">Sin actividad registrada este mes.</p>'}
+      </div>
+    `;
+  }).join("");
+}
+     </script>
+     <script>
+function renderFinance(){
+  const month=$("finMonth").value||currentMonth();
+  const families=db.families;
+  const payments=db.payments.filter(p=>p.month===month);
+
+  let expected=0;
+  let collected=payments.reduce((sum,p)=>sum+(Number(p.amount)||0),0);
+
+  const balances=families.map(family=>{
+    const players=db.players.filter(p=>p.familyId===family.id&&!p.archived);
+    const fee=Number(db.config.fee)||500;
+    const discount=Number(family.discount)||0;
+    const due=Math.max(0,players.length*fee-discount);
+    const paid=payments
+      .filter(p=>p.familyId===family.id && p.concept==="Mensualidad")
+      .reduce((sum,p)=>sum+(Number(p.amount)||0),0);
+    const balance=Math.max(0,due-paid);
+    expected+=due;
+    return {family,players,due,paid,balance};
+  });
+
+  $("financeStats").innerHTML=`
+    <div class="stat"><strong>${money(expected)}</strong><small>Cuotas del mes</small></div>
+    <div class="stat"><strong>${money(collected)}</strong><small>Ingresos registrados</small></div>
+    <div class="stat"><strong>${money(Math.max(0,expected-balances.reduce((s,b)=>s+b.paid,0)))}</strong><small>Por cobrar</small></div>
+  `;
+
+  $("familyBalances").innerHTML=balances.map(b=>`
+    <div class="item">
+      <strong>${esc(b.family.name)}</strong>
+      <small>${b.players.length} jugador(es) · Cuota: ${money(b.due)}</small>
+      <small>Pagado: ${money(b.paid)} · Saldo: ${money(b.balance)}</small>
+      <span class="tag">${b.balance===0?"LIQUIDADO":"PENDIENTE"}</span>
+    </div>
+  `).join("")||'<p class="muted">No hay familias registradas.</p>';
+
+  $("paymentHistory").innerHTML=payments
+    .slice().sort((a,b)=>b.date.localeCompare(a.date))
+    .map(p=>`
+      <div class="item">
+        <strong>${esc(p.familyName)}</strong>
+        <span class="tag">${money(p.amount)}</span>
+        <small>${esc(p.date)} · ${esc(p.concept)} · ${esc(p.method)}</small>
+        <small>${esc(p.notes||"")}</small>
+      </div>
+    `).join("")||'<p class="muted">No hay pagos registrados este mes.</p>';
+}
+
+function fillPaymentFamilies(){
+  $("payFamily").innerHTML='<option value="">Selecciona familia</option>'+
+    db.families.map(f=>`<option value="${esc(f.id)}">${esc(f.name)}</option>`).join("");
+}
+
+function savePayment(){
+  const familyId=$("payFamily").value;
+  const family=db.families.find(f=>f.id===familyId);
+  const amount=Number($("payAmount").value);
+  const concept=$("payConcept").value;
+
+  if(!family){
+    alert("Selecciona una familia.");
+    return;
+  }
+  if(!Number.isFinite(amount)||amount<=0){
+    alert("Escribe un importe válido.");
+    return;
+  }
+
+  const date=today();
+  db.payments.push({
+    id:uid(),
+    familyId:family.id,
+    familyName:family.name,
+    date:date,
+    month:$("payMonth").value||currentMonth(),
+    concept:concept,
+    amount:amount,
+    method:$("payMethod").value,
+    notes:$("payNotes").value.trim()
+  });
+
+  saveDB("Pago registrado: "+family.name);
+  $("payAmount").value="";
+  $("payNotes").value="";
+  renderFinance();
+  alert("Pago registrado correctamente.");
+}
+
+function saveConfig(){
+  db.config.fee=Math.max(0,Number($("regularFee").value)||0);
+  db.config.late=Math.max(0,Number($("lateFee").value)||0);
+  db.config.reentry=Math.max(0,Number($("reentryFee").value)||0);
+  saveDB("Configuración financiera actualizada.");
+  renderFinance();
+  alert("Configuración guardada.");
+}
+
+function renderReports(){
+  const month=currentMonth();
+  const players=db.players.filter(p=>!p.archived);
+  const attendance=db.attendance.filter(a=>a.date.slice(0,7)===month);
+  const evaluations=db.evaluations.filter(e=>e.date.slice(0,7)===month);
+  const payments=db.payments.filter(p=>p.month===month);
+  const income=payments.reduce((sum,p)=>sum+(Number(p.amount)||0),0);
+
+  $("reportsContent").innerHTML=`
+    <div class="grid">
+      <div class="stat"><strong>${players.length}</strong><small>Jugadores activos</small></div>
+      <div class="stat"><strong>${db.families.length}</strong><small>Familias</small></div>
+      <div class="stat"><strong>${attendance.filter(a=>a.status==="present").length}</strong><small>Asistencias del mes</small></div>
+      <div class="stat"><strong>${evaluations.length}</strong><small>Evaluaciones del mes</small></div>
+      <div class="stat"><strong>${money(income)}</strong><small>Ingresos del mes</small></div>
+    </div>
+  `;
+}
+
+function exportBackup(){
+  const data=JSON.stringify(db,null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download="respaldo-control-tiburones-"+today()+".json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(){
+  const file=$("backupFile").files[0];
+  if(!file){
+    alert("Selecciona primero un archivo de respaldo.");
+    return;
+  }
+
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data||!Array.isArray(data.families)||!Array.isArray(data.players)||
+        !Array.isArray(data.attendance)||!Array.isArray(data.evaluations)||
+        !Array.isArray(data.payments)||!data.config){
+        throw new Error("Formato no válido");
+      }
+      if(!confirm("Esto reemplazará los datos actuales. ¿Deseas continuar?"))return;
+      db=data;
+      localStorage.setItem(DBKEY,JSON.stringify(db));
+      alert("Respaldo importado correctamente.");
+      location.reload();
+    }catch(error){
+      alert("No se pudo importar el respaldo. Verifica que sea un archivo válido de CONTROL TIBURONES.");
+    }
+  };
+  reader.readAsText(file);
+}
+     </script>
+     <script>
+function initializeApp(){
+  // Fechas iniciales
+  const date=today();
+  const month=date.slice(0,7);
+
+  $("attDate").value=date;
+  $("evalDate").value=date;
+  $("payMonth").value=month;
+  $("finMonth").value=month;
+  $("mvpMonth").value=month;
+
+  // Configuración financiera
+  $("regularFee").value=db.config.fee??500;
+  $("lateFee").value=db.config.late??100;
+  $("reentryFee").value=db.config.reentry??350;
+
+  // Listas y módulos
+  fillFamilyOptions();
+  fillPaymentFamilies();
+  updateEvalPlayers();
+
+  // Eventos de cambio
+  $("evalGroup").addEventListener("change",()=>{
+    resetEvalSelections();
+    updateEvalPlayers();
+    renderEvalHistory();
+  });
+
+  $("evalDate").addEventListener("change",()=>{
+    resetEvalSelections();
+    renderEvalHistory();
+  });
+
+  $("attDate").addEventListener("change",renderAttendance);
+  $("attGroup").addEventListener("change",renderAttendance);
+  $("mvpMonth").addEventListener("change",renderMVP);
+  $("finMonth").addEventListener("change",renderFinance);
+
+  $("playerSearch").addEventListener("input",renderPlayers);
+  $("playerFilter").addEventListener("change",renderPlayers);
+  $("familySearch").addEventListener("input",renderFamilies);
+
+  // Pantalla inicial
+  renderDashboard();
+  renderFamilies();
+  renderPlayers();
+  renderAttendance();
+  renderEvalHistory();
+  renderMVP();
+  renderFinance();
+  renderReports();
+
+  // Abrir Inicio
+  const firstButton=document.querySelector("#menu button");
+  go("inicio",firstButton);
+}
+
+// Iniciar cuando el documento esté preparado
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",initializeApp);
+}else{
+  initializeApp();
+}
 </script>
 </body>
 </html>
