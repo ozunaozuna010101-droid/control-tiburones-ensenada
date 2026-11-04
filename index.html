@@ -2322,4 +2322,65 @@ th,td{
   },1200);
 }
                        </script>
+  <!-- ==========================================
+     CONTROL TIBURONES
+     AJUSTE FINANCIERO: SIN RECARGOS AUTOMÁTICOS
+     ========================================== -->
+<script>
+(function () {
+  // 1. Eliminar la opción de registrar nuevos recargos.
+  const concepto = document.getElementById("payConcept");
+
+  if (concepto) {
+    const opcionRecargo = Array.from(concepto.options).find(
+      opcion => opcion.value === "Recargo"
+    );
+
+    if (opcionRecargo) {
+      opcionRecargo.remove();
+    }
+
+    concepto.value = "Mensualidad";
+  }
+
+  // 2. Mantener únicamente la mensualidad como cuota.
+  // No se agrega ningún recargo después del día 5.
+  window.getMonthlyCharge = function (player, month) {
+    const fee = Number(player.fee) || 0;
+
+    return {
+      fee: fee,
+      late: 0,
+      total: fee
+    };
+  };
+
+  // 3. Protección adicional: impedir registrar recargos nuevos.
+  const formularioPago = document.getElementById("payConcept");
+
+  if (formularioPago) {
+    formularioPago.addEventListener("change", function () {
+      if (this.value === "Recargo") {
+        this.value = "Mensualidad";
+        alert("Los recargos ya no están disponibles.");
+      }
+    });
+  }
+
+  // 4. Actualizar los módulos financieros y reportes.
+  if (typeof renderFinance === "function") {
+    renderFinance();
+  }
+
+  if (typeof renderDashboard === "function") {
+    renderDashboard();
+  }
+
+  if (typeof renderReports === "function") {
+    renderReports();
+  }
+
+  console.log("CONTROL TIBURONES: ajuste sin recargos activado.");
+})();
+</script>
 </body> </html>
