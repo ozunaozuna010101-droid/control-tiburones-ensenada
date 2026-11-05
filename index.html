@@ -4843,6 +4843,218 @@ textarea {
     }
 })();
 </script>
+<script>
+// ======================================================
+// CONTROL TIBURONES
+// CORRECCIONES COMPLEMENTARIAS
+// ======================================================
 
+(function corregirControlTiburones() {
+    "use strict";
+
+    // ==================================================
+    // 1. CORREGIR ACCESO A CONFIGURACIÓN
+    // ==================================================
+
+    const abrirModuloBase = abrirModuloOriginalConfiguracion;
+
+    window.abrirModulo = function(nombre) {
+
+        if (nombre === "configuracion") {
+
+            abrirModuloBase("configuracion");
+
+            const titulo = document.getElementById("moduleTitle");
+
+            if (titulo) {
+                titulo.textContent = "Configuración de la academia";
+            }
+
+            mostrarConfiguracion();
+
+            return;
+        }
+
+        return abrirModuloBase(nombre);
+    };
+
+
+    // ==================================================
+    // 2. CORREGIR ACTUALIZACIÓN DEL PANEL PRINCIPAL
+    // ==================================================
+
+    const actualizarPanelBase = actualizarPanel;
+
+    window.actualizarPanel = function() {
+
+        actualizarPanelBase();
+
+        if (!db) return;
+
+
+        // ==============================================
+        // 3. CORREGIR SALDOS PENDIENTES
+        // ==============================================
+
+        if (
+            Array.isArray(db.cargos) &&
+            typeof obtenerSaldoCargo === "function"
+        ) {
+
+            const saldoPendiente = db.cargos.reduce(
+                (suma, cargo) => suma + obtenerSaldoCargo(cargo),
+                0
+            );
+
+            const cantidad = db.cargos.filter(
+                cargo => obtenerSaldoCargo(cargo) > 0
+            ).length;
+
+            const dinero = document.getElementById("dineroPendiente");
+
+            const pendientes = document.getElementById("pagosPendientes");
+
+            if (dinero) {
+                dinero.textContent = formatoMoneda(saldoPendiente);
+            }
+
+            if (pendientes) {
+                pendientes.textContent = cantidad;
+            }
+        }
+
+
+        // ==============================================
+        // 4. CORREGIR RESUMEN MVP EN EL INICIO
+        // ==============================================
+
+        const resumen = document.getElementById("resumenMVP");
+
+        if (
+            resumen &&
+            typeof calcularResumenMVP === "function"
+        ) {
+
+            const grupos = calcularResumenMVP();
+
+            resumen.innerHTML = grupos.map(grupo => {
+
+                const lideres = Array.isArray(grupo.lideres)
+                    ? grupo.lideres
+                    : [];
+
+                const maximo = lideres.length
+                    ? Math.max(
+                        ...lideres.map(jugador =>
+                            Number(jugador.total) || 0
+                        )
+                    )
+                    : 0;
+
+                let contenido = "";
+
+                if (!lideres.length) {
+
+                    contenido =
+                        "Todavía no hay jugadores registrados.";
+
+                } else if (maximo <= 0) {
+
+                    contenido =
+                        "El ranking comenzará cuando se registren puntos.";
+
+                } else {
+
+                    contenido = lideres.map(jugador => `
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            gap:8px;
+                            margin-top:6px;
+                        ">
+
+                            <strong>
+                                🏆 ${textoSeguro(jugador.nombre)}
+                            </strong>
+
+                            <strong class="${clasePuntosMVP(jugador.total)}">
+                                ${formatoPuntosMVP(jugador.total)} pts
+                            </strong>
+
+                        </div>
+
+                    `).join("");
+                }
+
+                return `
+
+                    <div style="margin-bottom:12px;">
+
+                        <strong>
+                            ${textoSeguro(grupo.horario)}
+                        </strong>
+
+                        <div>
+                            ${contenido}
+                        </div>
+
+                    </div>
+
+                `;
+
+            }).join("");
+        }
+    };
+
+
+    // ==================================================
+    // 5. EVITAR CIERRES MVP SIN PUNTOS
+    // ==================================================
+
+    const cerrarPeriodoBase = cerrarPeriodoMVP;
+
+    window.cerrarPeriodoMVP = function(periodo, horarioId) {
+
+        const ranking = obtenerRankingMVP(
+            horarioId,
+            periodo
+        );
+
+        if (!ranking.length) {
+
+            alert(
+                "No hay jugadores para cerrar este horario."
+            );
+
+            return;
+        }
+
+        const maximo = Math.max(
+            ...ranking.map(jugador =>
+                Number(jugador.total) || 0
+            )
+        );
+
+        if (maximo <= 0) {
+
+            alert(
+                "Todavía no hay puntos registrados en este horario. " +
+                "No se cerrará el MVP para evitar declarar ganadores sin actividad."
+            );
+
+            return;
+        }
+
+        return cerrarPeriodoBase(periodo, horarioId);
+    };
+
+
+    console.log(
+        "CONTROL TIBURONES: correcciones complementarias activadas."
+    );
+
+})();
+</script>
 </body>
 </html>
