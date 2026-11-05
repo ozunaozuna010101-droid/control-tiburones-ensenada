@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#101827">
+<meta name="theme-color" content="#0b1220">
+<meta name="application-name" content="CONTROL TIBURONES">
 <title>CONTROL TIBURONES</title>
 
 <style>
@@ -22,9 +22,7 @@
   --borde: #304158;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -33,13 +31,8 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button, input, select, textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
 
 .app {
   width: 100%;
@@ -93,9 +86,7 @@ button {
   font-weight: bold;
 }
 
-.menu-btn:active {
-  transform: scale(.97);
-}
+.menu-btn:active { transform: scale(.97); }
 
 .menu-icon {
   display: block;
@@ -162,9 +153,7 @@ button {
   font-size: 12px;
 }
 
-.mvp-row {
-  margin: 12px 0;
-}
+.mvp-row { margin: 12px 0; }
 
 .mvp-info {
   display: flex;
@@ -217,9 +206,7 @@ button {
   margin-top: 12px;
 }
 
-.module-screen.visible {
-  display: block;
-}
+.module-screen.visible { display: block; }
 
 .module-header {
   display: flex;
@@ -250,9 +237,7 @@ button {
   min-height: 150px;
 }
 
-.module-content h3 {
-  margin-top: 0;
-}
+.module-content h3 { margin-top: 0; }
 
 .empty-state {
   color: var(--suave);
@@ -278,37 +263,191 @@ input, select, textarea {
   margin: 7px 0 12px;
 }
 
-textarea {
-  resize: vertical;
-}
+textarea { resize: vertical; }
 
 @media (min-width: 650px) {
-  .stats {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .menu-btn {
-    min-height: 78px;
-    font-size: 14px;
-  }
-
-  .app {
-    padding: 22px;
-  }
+  .stats { grid-template-columns: repeat(4, 1fr); }
+  .menu-btn { min-height: 78px; font-size: 14px; }
+  .app { padding: 22px; }
 }
 
 @media (max-width: 360px) {
-  .menu {
-    gap: 6px;
-  }
+  .menu { gap: 6px; }
+  .menu-btn { font-size: 11px; }
+  .header h1 { font-size: 23px; }
+}
 
-  .menu-btn {
-    font-size: 11px;
-  }
+/* ===== IDENTIDAD VISUAL FINAL TIBURONES ===== */
+:root {
+  --fondo:#0b1220;
+  --panel:#17263b;
+  --panel2:#203650;
+  --borde:#344b68;
+  --azul:#29a7ff;
+  --verde:#18d69a;
+  --naranja:#ffad32;
+  --rojo:#ff596b;
+  --morado:#b18cff;
+  --texto:#f7f9fd;
+  --suave:#b8c6d8;
+}
 
-  .header h1 {
-    font-size: 23px;
-  }
+body {
+  background: radial-gradient(ellipse at top,#172b45 0%,#0b1220 58%);
+}
+
+.app {
+  max-width:1080px;
+  padding:clamp(12px,3vw,26px);
+}
+
+.header { padding:22px 8px 26px; }
+
+.header h1 {
+  font-size:clamp(27px,5vw,40px);
+  letter-spacing:2.5px;
+  text-shadow:0 4px 22px #0008;
+}
+
+.academy {
+  font-size:clamp(12px,2.2vw,16px);
+  letter-spacing:1.8px;
+}
+
+.subtitle {
+  font-size:12px;
+  letter-spacing:3px;
+}
+
+.menu {
+  gap:12px;
+  margin:18px 0 24px;
+}
+
+.menu-btn {
+  min-height:96px;
+  border:1px solid #ffffff24;
+  border-radius:17px;
+  background:#1b2c43;
+  color:#fff;
+  font-size:clamp(13px,2.2vw,16px);
+  font-weight:800;
+  box-shadow:0 7px 18px #0003;
+  transition:transform .15s,filter .15s,border-color .15s;
+}
+
+.menu-btn .menu-icon {
+  font-size:29px;
+  margin-bottom:8px;
+}
+
+.menu-btn:nth-child(1) {
+  background:linear-gradient(145deg,#173e63,#176eaa);
+  border-color:#299eff88;
+}
+
+.menu-btn:nth-child(2) {
+  background:linear-gradient(145deg,#17483f,#13856d);
+  border-color:#20d4a188;
+}
+
+.menu-btn:nth-child(3) {
+  background:linear-gradient(145deg,#47316e,#7650b8);
+  border-color:#b18cff88;
+}
+
+.menu-btn:nth-child(4) {
+  background:linear-gradient(145deg,#62421b,#a96a16);
+  border-color:#ffb54788;
+}
+
+.menu-btn:nth-child(5) {
+  background:linear-gradient(145deg,#174b59,#147e91);
+  border-color:#28c5df88;
+}
+
+.menu-btn:nth-child(6) {
+  background:linear-gradient(145deg,#57304b,#9b416f);
+  border-color:#ef75b088;
+}
+
+.menu-btn:nth-child(7) {
+  background:linear-gradient(145deg,#344154,#52657e);
+  border-color:#aabbd188;
+}
+
+.menu-btn:active {
+  transform:scale(.975);
+  filter:brightness(1.15);
+}
+
+.menu-btn.activo {
+  outline:2px solid #fff8;
+  outline-offset:2px;
+  filter:brightness(1.13);
+}
+
+.panel, .stat, .module-content {
+  border-color:#3a506c;
+  background:linear-gradient(145deg,#1a2b42,#142238);
+  box-shadow:0 8px 22px #0002;
+}
+
+.panel { border-radius:16px; }
+.stat { border-radius:15px; }
+
+.number { font-size:clamp(23px,4vw,30px); }
+
+.back-btn {
+  background:#253b57;
+  border:1px solid #59718f;
+  color:#fff;
+  border-radius:12px;
+  min-height:46px;
+  padding:11px 16px;
+}
+
+.module-header { margin:18px 0 20px; }
+
+.module-header h2 {
+  font-size:clamp(21px,4vw,28px);
+}
+
+.module-content {
+  padding:clamp(13px,3vw,22px);
+  border-radius:18px;
+}
+
+input, select, textarea {
+  min-height:48px;
+  border-color:#435b79;
+  background:#0e1929;
+  border-radius:12px;
+  color:#fff;
+  font-size:16px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline:2px solid #29a7ff;
+  outline-offset:1px;
+}
+
+button:disabled {
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.progress { height:9px; }
+
+.progress-fill {
+  background:linear-gradient(90deg,#26a5ff,#b18cff);
+}
+
+@media(max-width:420px) {
+  .menu { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .menu-btn { min-height:88px; }
+  .stats { gap:8px; }
+  .stat { padding:11px; }
 }
 </style>
 </head>
@@ -364,7 +503,7 @@ textarea {
 
     <div class="stat">
       <div class="number green" id="asistieronHoy">0</div>
-      <div class="label">Asistencias</div>
+      <div class="label">Asistencias del último entrenamiento</div>
     </div>
 
     <div class="stat">
@@ -447,21 +586,23 @@ textarea {
 <script>
 
 /* ==========================================
+/* ==========================================
    BLOQUE 2 DE 8
    BASE DE DATOS Y FUNCIONES GENERALES
 ========================================== */
 
 "use strict";
 
-const DB_KEY = "control_tiburones_v2";
+const DB_KEY = "control_tiburones_v3";
 
 function crearBaseInicial() {
   return {
-    version: 2,
+    version: 3,
     jugadores: [],
     entrenamientos: [],
     asistencias: [],
     evaluaciones: [],
+    borradoresEvaluacion: [],
     pagos: [],
     reconocimientosMVP: [],
     cierresMVP: [],
@@ -474,6 +615,28 @@ function crearBaseInicial() {
   };
 }
 
+function validarEstructuraBase(datos) {
+  const colecciones = [
+    "jugadores",
+    "entrenamientos",
+    "asistencias",
+    "evaluaciones",
+    "borradoresEvaluacion",
+    "pagos",
+    "reconocimientosMVP",
+    "cierresMVP",
+    "actividad"
+  ];
+
+  return Boolean(
+    datos &&
+    datos.version === 3 &&
+    colecciones.every(c => Array.isArray(datos[c])) &&
+    datos.ajustes &&
+    typeof datos.ajustes === "object"
+  );
+}
+
 function cargarBase() {
   try {
     const contenido = localStorage.getItem(DB_KEY);
@@ -482,48 +645,46 @@ function cargarBase() {
 
     const datos = JSON.parse(contenido);
 
-    const colecciones = [
-      "jugadores",
-      "entrenamientos",
-      "asistencias",
-      "evaluaciones",
-      "pagos",
-      "reconocimientosMVP",
-      "cierresMVP",
-      "actividad"
-    ];
-
-    if (!datos || datos.version !== 2 ||
-        colecciones.some(c => !Array.isArray(datos[c]))) {
-      throw new Error("Estructura de datos incompatible.");
+    if (!validarEstructuraBase(datos)) {
+      throw new Error("La estructura guardada no es compatible.");
     }
 
-    const base = crearBaseInicial();
-
     return {
-      ...base,
+      ...crearBaseInicial(),
       ...datos,
       ajustes: {
-        ...base.ajustes,
-        ...(datos.ajustes || {})
+        ...crearBaseInicial().ajustes,
+        ...datos.ajustes
       }
     };
+
   } catch (error) {
-    console.error(error);
-    alert("No se pudieron leer los datos. No se sobrescribirá el contenido guardado.");
+    console.error("Error al cargar la base:", error);
+
+    alert(
+      "No se pudieron leer los datos guardados. " +
+      "No continúes registrando información hasta recuperar " +
+      "un respaldo válido."
+    );
+
     return crearBaseInicial();
   }
 }
 
 let db = cargarBase();
 
+let sistemaDisponible = true;
+
 function generarId() {
-  return Date.now().toString(36) +
-    Math.random().toString(36).slice(2, 10);
+  return (
+    Date.now().toString(36) +
+    Math.random().toString(36).slice(2, 10)
+  );
 }
 
 function fechaLocalISO() {
   const ahora = new Date();
+
   const anio = ahora.getFullYear();
   const mes = String(ahora.getMonth() + 1).padStart(2, "0");
   const dia = String(ahora.getDate()).padStart(2, "0");
@@ -531,14 +692,22 @@ function fechaLocalISO() {
   return `${anio}-${mes}-${dia}`;
 }
 
+function obtenerMes(fecha) {
+  return String(fecha || "").slice(0, 7);
+}
+
+function obtenerAnio(fecha) {
+  return String(fecha || "").slice(0, 4);
+}
+
 function escaparHTML(valor) {
-  return String(valor ?? "").replace(/[&<>"']/g, c => ({
+  return String(valor ?? "").replace(/[&<>"']/g, caracter => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
     "'": "&#39;"
-  })[c]);
+  })[caracter]);
 }
 
 function formatoDinero(valor) {
@@ -549,6 +718,16 @@ function formatoDinero(valor) {
   });
 }
 
+function formatoFecha(fecha) {
+  if (!fecha) return "Sin fecha";
+
+  const partes = String(fecha).split("-");
+
+  if (partes.length !== 3) return fecha;
+
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
 function registrarActividad(mensaje) {
   db.actividad.unshift({
     id: generarId(),
@@ -556,30 +735,52 @@ function registrarActividad(mensaje) {
     mensaje: String(mensaje)
   });
 
-  db.actividad = db.actividad.slice(0, 40);
+  db.actividad = db.actividad.slice(0, 50);
+}
+
+function actualizarIndicadorGuardado(mensaje, error = false) {
+  const indicador = document.getElementById("ultimoGuardado");
+
+  if (!indicador) return;
+
+  indicador.textContent = mensaje;
+  indicador.style.color = error
+    ? "var(--rojo)"
+    : "var(--verde)";
 }
 
 function guardarDB() {
+  if (!sistemaDisponible) {
+    alert("El sistema está bloqueado para proteger los datos.");
+    return false;
+  }
+
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
+    const contenido = JSON.stringify(db);
 
-    const indicador = document.getElementById("ultimoGuardado");
+    localStorage.setItem(DB_KEY, contenido);
 
-    if (indicador) {
-      indicador.textContent =
-        "Guardado en este dispositivo: " +
-        new Date().toLocaleString("es-MX");
-    }
+    actualizarIndicadorGuardado(
+      "Guardado automáticamente: " +
+      new Date().toLocaleString("es-MX")
+    );
 
     actualizarPanel();
+
     return true;
 
   } catch (error) {
     console.error("Error al guardar:", error);
 
+    actualizarIndicadorGuardado(
+      "ERROR: no se pudieron guardar los cambios.",
+      true
+    );
+
     alert(
-      "No fue posible guardar los cambios. " +
-      "Revisa el espacio disponible y descarga un respaldo."
+      "No fue posible guardar la información. " +
+      "No cierres la aplicación. Revisa el almacenamiento " +
+      "y descarga un respaldo si todavía tienes acceso a los datos."
     );
 
     return false;
@@ -599,7 +800,7 @@ function estiloCampo() {
 }
 
 /* ==========================================
-   NAVEGACION ENTRE MODULOS
+   NAVEGACIÓN ENTRE MÓDULOS
 ========================================== */
 
 const nombresModulos = {
@@ -617,6 +818,8 @@ function abrirModulo(nombre) {
   const contenedor = document.getElementById("moduleContainer");
   const titulo = document.getElementById("moduleTitle");
 
+  if (!dashboard || !contenedor || !titulo) return;
+
   dashboard.style.display = "none";
   contenedor.classList.add("visible");
 
@@ -625,8 +828,10 @@ function abrirModulo(nombre) {
   document.querySelectorAll(".menu-btn").forEach(boton => {
     boton.classList.remove("activo");
 
-    if (boton.getAttribute("onclick") ===
-        `abrirModulo('${nombre}')`) {
+    if (
+      boton.getAttribute("onclick") ===
+      `abrirModulo('${nombre}')`
+    ) {
       boton.classList.add("activo");
     }
   });
@@ -647,6 +852,8 @@ function abrirModulo(nombre) {
     document.getElementById("moduleContent").innerHTML =
       '<div class="empty-state">Módulo no disponible.</div>';
   }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function volverInicio() {
@@ -660,6 +867,8 @@ function volverInicio() {
   });
 
   actualizarPanel();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /* ==========================================
@@ -688,8 +897,17 @@ function obtenerAsistencia(entrenamientoId, jugadorId) {
   ) || null;
 }
 
-function obtenerMes(fecha) {
-  return String(fecha || "").slice(0, 7);
+function obtenerPago(jugadorId, periodo) {
+  return db.pagos.find(p =>
+    p.jugadorId === jugadorId &&
+    p.periodo === periodo
+  ) || null;
+}
+
+function obtenerCierreMVP(periodo) {
+  return db.cierresMVP.find(c =>
+    c.periodo === periodo
+  ) || null;
 }
 
 /* ==========================================
@@ -697,13 +915,17 @@ function obtenerMes(fecha) {
 ========================================== */
 
 function actualizarPanel() {
+  if (!db) return;
+
   const activos = db.jugadores.filter(j =>
     j.estado === "activo"
   );
 
-  const ultimo = [...db.entrenamientos].sort((a, b) =>
+  const entrenamientos = [...db.entrenamientos].sort((a, b) =>
     b.fecha.localeCompare(a.fecha)
-  )[0];
+  );
+
+  const ultimo = entrenamientos[0] || null;
 
   const asistencias = ultimo
     ? db.asistencias.filter(a =>
@@ -712,12 +934,16 @@ function actualizarPanel() {
       )
     : [];
 
-  const pendientes = asistencias.filter(a =>
-    !obtenerEvaluacion(ultimo.id, a.jugadorId)
-  );
+  const pendientes = ultimo
+    ? asistencias.filter(a =>
+        !obtenerEvaluacion(ultimo.id, a.jugadorId)
+      )
+    : [];
+
+  const periodoActual = obtenerMes(fechaLocalISO());
 
   const pagosMes = db.pagos.filter(p =>
-    p.periodo === obtenerMes(fechaLocalISO())
+    p.periodo === periodoActual
   );
 
   const recibido = pagosMes.reduce((total, p) =>
@@ -730,24 +956,31 @@ function actualizarPanel() {
 
   const asignar = (id, valor) => {
     const elemento = document.getElementById(id);
-    if (elemento) elemento.textContent = valor;
+
+    if (elemento) {
+      elemento.textContent = valor;
+    }
   };
 
   asignar("totalActivos", activos.length);
   asignar("asistieronHoy", asistencias.length);
   asignar("porEvaluar", pendientes.length);
-  asignar("pagosPendientes",
+
+  asignar(
+    "pagosPendientes",
     pagosMes.filter(p => Number(p.saldo || 0) > 0).length
   );
 
   asignar("dineroRecibido", formatoDinero(recibido));
   asignar("dineroPendiente", formatoDinero(pendiente));
 
-  asignar("pagosRealizados",
-    pagosMes.filter(p => Number(p.saldo || 0) === 0).length
+  asignar(
+    "pagosRealizados",
+    pagosMes.filter(p => Number(p.saldo || 0) <= 0).length
   );
 
-  asignar("cantidadPendientes",
+  asignar(
+    "cantidadPendientes",
     pagosMes.filter(p => Number(p.saldo || 0) > 0).length
   );
 
@@ -769,30 +1002,47 @@ function actualizarPanel() {
 }
 
 /* ==========================================
-   INICIALIZACION
+   INICIALIZACIÓN
 ========================================== */
 
-actualizarPanel();
+function actualizarSistema() {
+  actualizarPanel();
 
-const estadoGuardado = document.getElementById("ultimoGuardado");
+  const indicador = document.getElementById("ultimoGuardado");
 
-if (estadoGuardado) {
-  estadoGuardado.textContent = localStorage.getItem(DB_KEY)
-    ? "Datos guardados en este dispositivo."
-    : "Sistema preparado. Todavía no hay registros.";
+  if (!indicador) return;
+
+  if (localStorage.getItem(DB_KEY)) {
+    indicador.textContent =
+      "Datos guardados en este dispositivo.";
+  } else {
+    indicador.textContent =
+      "Sistema preparado. Todavía no hay registros.";
   }
+}
+
+actualizarSistema();
 
 /* ==========================================
+   FIN DEL BLOQUE 2
+   NO CERRAR TODAVÍA EL SCRIPT
+========================================== */
+/* ==========================================
    BLOQUE 3 DE 8
-   ADMINISTRACION DE JUGADORES
+   ADMINISTRACIÓN DE JUGADORES
 ========================================== */
 
 function mostrarJugadores() {
-  const activos = db.jugadores.filter(j => j.estado === "activo").length;
-  const temporales = db.jugadores.filter(j => j.estado === "temporal").length;
+  const activos = db.jugadores.filter(j =>
+    j.estado === "activo"
+  ).length;
+
+  const temporales = db.jugadores.filter(j =>
+    j.estado === "temporal"
+  ).length;
 
   document.getElementById("moduleContent").innerHTML = `
-    <h3>Jugadores de la academia</h3>
+    <h3>🏀 Jugadores de la academia</h3>
 
     <div class="stats">
       <div class="stat">
@@ -809,7 +1059,7 @@ function mostrarJugadores() {
     <button class="menu-btn activo"
       style="width:100%;margin:14px 0"
       onclick="formularioJugador()">
-      + Registrar jugador
+      ➕ REGISTRAR JUGADOR
     </button>
 
     <input id="buscarJugador"
@@ -824,7 +1074,7 @@ function mostrarJugadores() {
 }
 
 /* ==========================================
-   FORMULARIO DE REGISTRO
+   FORMULARIO DE REGISTRO Y EDICIÓN
 ========================================== */
 
 function formularioJugador(id = "") {
@@ -846,16 +1096,22 @@ function formularioJugador(id = "") {
 
     <label>Categoría</label>
     <select id="jugCategoria">
-      ${["Inicial", "Infantil", "Juvenil"].map(c =>
-        `<option value="${c}" ${jugador?.categoria === c ? "selected" : ""}>${c}</option>`
-      ).join("")}
+      ${["Inicial", "Infantil", "Juvenil"].map(c => `
+        <option value="${c}"
+          ${jugador?.categoria === c ? "selected" : ""}>
+          ${c}
+        </option>
+      `).join("")}
     </select>
 
-    <label>Horario</label>
+    <label>Horario de entrenamiento</label>
     <select id="jugHorario">
-      ${["4:30", "5:30", "6:30"].map(h =>
-        `<option value="${h}" ${jugador?.horario === h ? "selected" : ""}>${h} pm</option>`
-      ).join("")}
+      ${["4:30", "5:30", "6:30"].map(h => `
+        <option value="${h}"
+          ${jugador?.horario === h ? "selected" : ""}>
+          ${h} pm
+        </option>
+      `).join("")}
     </select>
 
     <label>Mensualidad personalizada (MXN)</label>
@@ -863,7 +1119,7 @@ function formularioJugador(id = "") {
       type="number"
       min="0"
       step="1"
-      value="${jugador ? jugador.cuota : 500}">
+      value="${jugador ? Number(jugador.cuota) : 500}">
 
     <label>Día límite de pago</label>
     <input id="jugVencimiento"
@@ -875,7 +1131,7 @@ function formularioJugador(id = "") {
     <button class="menu-btn activo"
       style="width:100%;margin-top:12px"
       onclick="guardarJugador('${id}')">
-      Guardar jugador
+      GUARDAR JUGADOR
     </button>
 
     <button class="back-btn"
@@ -891,7 +1147,9 @@ function formularioJugador(id = "") {
 ========================================== */
 
 function guardarJugador(id) {
-  const nombre = document.getElementById("jugNombre").value.trim();
+  const nombre = document.getElementById("jugNombre")
+    .value.trim();
+
   const categoria = document.getElementById("jugCategoria").value;
   const horario = document.getElementById("jugHorario").value;
   const cuota = Number(document.getElementById("jugCuota").value);
@@ -913,7 +1171,7 @@ function guardarJugador(id) {
   }
 
   const duplicado = db.jugadores.find(j =>
-    j.nombre.toLocaleLowerCase("es-MX") ===
+    j.nombre.trim().toLocaleLowerCase("es-MX") ===
     nombre.toLocaleLowerCase("es-MX") &&
     j.id !== id
   );
@@ -926,6 +1184,7 @@ function guardarJugador(id) {
 
   if (id) {
     const jugador = buscarJugador(id);
+
     if (!jugador) return;
 
     jugador.nombre = nombre;
@@ -961,18 +1220,24 @@ function guardarJugador(id) {
 }
 
 /* ==========================================
-   LISTADO Y BUSQUEDA
+   LISTADO Y BÚSQUEDA
 ========================================== */
 
 function listarJugadores(filtro = "") {
   const lista = document.getElementById("listaJugadores");
+
   if (!lista) return;
 
   const termino = filtro.trim().toLocaleLowerCase("es-MX");
 
   const jugadores = db.jugadores
-    .filter(j => j.estado === "activo" || j.estado === "temporal")
-    .filter(j => j.nombre.toLocaleLowerCase("es-MX").includes(termino))
+    .filter(j =>
+      j.estado === "activo" ||
+      j.estado === "temporal"
+    )
+    .filter(j =>
+      j.nombre.toLocaleLowerCase("es-MX").includes(termino)
+    )
     .sort((a, b) =>
       a.horario.localeCompare(b.horario, "es-MX") ||
       a.nombre.localeCompare(b.nombre, "es-MX")
@@ -992,7 +1257,8 @@ function listarJugadores(filtro = "") {
       <strong>${escaparHTML(j.nombre)}</strong>
 
       <div class="mini-text">
-        ${escaparHTML(j.categoria)} · ${escaparHTML(j.horario)} pm
+        ${escaparHTML(j.categoria)} ·
+        ${escaparHTML(j.horario)} pm
       </div>
 
       <div class="mini-text">
@@ -1025,30 +1291,39 @@ function listarJugadores(filtro = "") {
 }
 
 function filtrarJugadores() {
-  const valor = document.getElementById("buscarJugador")?.value || "";
+  const valor =
+    document.getElementById("buscarJugador")?.value || "";
+
   listarJugadores(valor);
 }
 
 /* ==========================================
-   BAJAS Y REINGRESOS
+   BAJAS TEMPORALES Y REINGRESOS
 ========================================== */
 
 function menuJugador(id) {
   const jugador = buscarJugador(id);
+
   if (!jugador) return;
 
   const opcion = prompt(
     "Opciones de " + jugador.nombre +
     "\n\n1. " +
-    (jugador.estado === "activo" ? "Baja temporal" : "Reingresar") +
+    (jugador.estado === "activo"
+      ? "Baja temporal"
+      : "Reingresar") +
     "\n2. Eliminar definitivamente"
   );
 
   if (opcion === "1") {
     if (jugador.estado === "activo") {
-      if (!confirm(
-        "¿Confirmas la baja temporal? Se conservarán sus registros e historial."
-      )) return;
+      const confirmar = confirm(
+        "¿Confirmas la baja temporal?\n\n" +
+        "Se conservará todo su historial y dejarán de generarse " +
+        "nuevos cargos mientras esté en baja."
+      );
+
+      if (!confirmar) return;
 
       jugador.estado = "temporal";
       jugador.fechaBaja = fechaLocalISO();
@@ -1056,23 +1331,59 @@ function menuJugador(id) {
       registrarActividad("Baja temporal: " + jugador.nombre);
 
     } else {
-      if (!confirm(
-        "¿Confirmas el reingreso? Se conservará su historial."
-      )) return;
+      const confirmar = confirm(
+        "¿Confirmas el reingreso?\n\n" +
+        "Se conservará su historial y se aplicará el cargo " +
+        "de reingreso de $300, además de la mensualidad vigente."
+      );
+
+      if (!confirmar) return;
+
+      const periodo = obtenerMes(fechaLocalISO());
+
+      const cargoExistente = db.pagos.find(p =>
+        p.jugadorId === jugador.id &&
+        p.periodo === periodo &&
+        p.tipo === "reingreso"
+      );
+
+      if (cargoExistente) {
+        alert("Ya existe un cargo de reingreso para este mes.");
+        return;
+      }
+
+      db.pagos.push({
+        id: generarId(),
+        jugadorId: jugador.id,
+        periodo,
+        tipo: "reingreso",
+        concepto: "Cuota de reingreso",
+        monto: Number(db.ajustes.cuotaReingreso || 300),
+        montoPagado: 0,
+        saldo: Number(db.ajustes.cuotaReingreso || 300),
+        abonos: [],
+        fechaCreacion: new Date().toISOString()
+      });
 
       jugador.estado = "activo";
       jugador.fechaReingreso = fechaLocalISO();
       jugador.fechaBaja = null;
 
-      registrarActividad("Reingreso: " + jugador.nombre);
+      registrarActividad(
+        "Reingreso y cargo registrado: " + jugador.nombre
+      );
     }
 
-    if (guardarDB()) mostrarJugadores();
+    if (guardarDB()) {
+      mostrarJugadores();
+    }
   }
 
   if (opcion === "2") {
     const confirmacion = prompt(
-      "Esta acción eliminará permanentemente al jugador y sus registros relacionados.\n\nEscribe ELIMINAR para confirmar."
+      "Esta acción eliminará permanentemente al jugador " +
+      "y sus registros relacionados.\n\n" +
+      "Escribe ELIMINAR para confirmar."
     );
 
     if (confirmacion !== "ELIMINAR") return;
@@ -1086,28 +1397,59 @@ function menuJugador(id) {
   }
 }
 
+/* ==========================================
+   ELIMINACIÓN DEFINITIVA
+========================================== */
+
 function eliminarJugadorDefinitivamente(id) {
   const jugador = buscarJugador(id);
+
   if (!jugador) return;
 
   const nombre = jugador.nombre;
 
   db.jugadores = db.jugadores.filter(j => j.id !== id);
-  db.asistencias = db.asistencias.filter(a => a.jugadorId !== id);
-  db.evaluaciones = db.evaluaciones.filter(e => e.jugadorId !== id);
-  db.pagos = db.pagos.filter(p => p.jugadorId !== id);
-  db.reconocimientosMVP = db.reconocimientosMVP.filter(
-    r => r.jugadorId !== id
+
+  db.asistencias = db.asistencias.filter(a =>
+    a.jugadorId !== id
   );
+
+  db.evaluaciones = db.evaluaciones.filter(e =>
+    e.jugadorId !== id
+  );
+
+  db.borradoresEvaluacion = db.borradoresEvaluacion.filter(e =>
+    e.jugadorId !== id
+  );
+
+  db.pagos = db.pagos.filter(p =>
+    p.jugadorId !== id
+  );
+
+  db.reconocimientosMVP = db.reconocimientosMVP.filter(r =>
+    r.jugadorId !== id
+  );
+
+  db.cierresMVP.forEach(cierre => {
+    cierre.ganadores = (cierre.ganadores || []).filter(g =>
+      g.jugadorId !== id
+    );
+  });
 
   registrarActividad("Eliminación definitiva: " + nombre);
 
-  if (guardarDB()) mostrarJugadores();
+  if (guardarDB()) {
+    mostrarJugadores();
+  }
 }
 
 /* ==========================================
+   FIN DEL BLOQUE 3
+   NO CERRAR TODAVÍA EL SCRIPT
+========================================== */  
+/* ==========================================
    BLOQUE 4 DE 8
-   ENTRENAMIENTOS Y ASISTENCIA
+   ENTRENAMIENTOS Y CONTROL DE ASISTENCIA
 ========================================== */
 
 function mostrarEntrenamientos() {
@@ -1116,44 +1458,54 @@ function mostrarEntrenamientos() {
   );
 
   document.getElementById("moduleContent").innerHTML = `
-    <h3>Control de entrenamientos</h3>
+    <h3>📋 Control de entrenamientos</h3>
 
     <p class="mini-text">
-      Registra únicamente los días en que realmente se realizó entrenamiento.
+      Registra únicamente los días y horarios en que realmente
+      se realizó entrenamiento.
     </p>
 
     <button class="menu-btn activo"
-      style="width:100%;margin:12px 0"
+      style="width:100%;margin:14px 0"
       onclick="formularioEntrenamiento()">
-      + Registrar entrenamiento
+      ➕ REGISTRAR ENTRENAMIENTO
     </button>
 
     <div id="listaEntrenamientos">
       ${lista.length ? lista.map(t => {
         const asistieron = db.asistencias.filter(a =>
-          a.entrenamientoId === t.id && a.estado === "asistio"
+          a.entrenamientoId === t.id &&
+          a.estado === "asistio"
         ).length;
 
         const faltas = db.asistencias.filter(a =>
-          a.entrenamientoId === t.id && a.estado === "falta"
+          a.entrenamientoId === t.id &&
+          a.estado === "falta"
+        ).length;
+
+        const justificadas = db.asistencias.filter(a =>
+          a.entrenamientoId === t.id &&
+          a.estado === "justificada"
         ).length;
 
         return `
           <div class="panel">
-            <strong>${escaparHTML(t.fecha)}</strong>
+            <strong>${formatoFecha(t.fecha)}</strong>
 
-            <div class="mini-text">
+            <div class="mini-text" style="margin-top:7px">
               Horarios: ${t.horarios.map(escaparHTML).join(", ")} pm
             </div>
 
-            <div class="mini-text">
-              Asistieron: ${asistieron} · Faltas injustificadas: ${faltas}
+            <div class="mini-text" style="margin-top:7px">
+              <span class="green">Asistieron: ${asistieron}</span>
+              · <span class="red">Faltas: ${faltas}</span>
+              · <span class="orange">Justificadas: ${justificadas}</span>
             </div>
 
             <button class="back-btn"
-              style="margin-top:10px"
+              style="margin-top:12px;width:100%"
               onclick="abrirEntrenamiento('${t.id}')">
-              Abrir entrenamiento
+              ABRIR ASISTENCIA
             </button>
           </div>
         `;
@@ -1167,7 +1519,7 @@ function mostrarEntrenamientos() {
 }
 
 /* ==========================================
-   NUEVO ENTRENAMIENTO
+   FORMULARIO DE ENTRENAMIENTO
 ========================================== */
 
 function formularioEntrenamiento() {
@@ -1185,13 +1537,13 @@ function formularioEntrenamiento() {
 
     <div class="panel">
       ${["4:30", "5:30", "6:30"].map(h => `
-        <label style="display:block;margin:12px 0">
+        <label style="display:flex;align-items:center;gap:10px;margin:13px 0">
           <input
             type="checkbox"
             name="entHorario"
             value="${h}"
-            style="width:auto;margin-right:8px">
-          ${h} pm
+            style="width:21px;height:21px;margin:0">
+          <strong>${h} pm</strong>
         </label>
       `).join("")}
     </div>
@@ -1199,7 +1551,7 @@ function formularioEntrenamiento() {
     <button class="menu-btn activo"
       style="width:100%;margin-top:12px"
       onclick="guardarEntrenamiento()">
-      Guardar entrenamiento
+      GUARDAR ENTRENAMIENTO
     </button>
 
     <button class="back-btn"
@@ -1210,15 +1562,21 @@ function formularioEntrenamiento() {
   `;
 }
 
+/* ==========================================
+   GUARDAR ENTRENAMIENTO
+========================================== */
+
 function guardarEntrenamiento() {
   const fecha = document.getElementById("entFecha").value;
 
   const horarios = Array.from(
-    document.querySelectorAll('input[name="entHorario"]:checked')
+    document.querySelectorAll(
+      'input[name="entHorario"]:checked'
+    )
   ).map(c => c.value);
 
   if (!fecha) {
-    alert("Selecciona la fecha.");
+    alert("Selecciona la fecha del entrenamiento.");
     return;
   }
 
@@ -1232,28 +1590,52 @@ function guardarEntrenamiento() {
     return;
   }
 
-  const duplicado = db.entrenamientos.find(t =>
-    t.fecha === fecha &&
-    horarios.some(h => t.horarios.includes(h))
+  const existentes = db.entrenamientos.filter(t =>
+    t.fecha === fecha
   );
 
-  if (duplicado) {
+  const horariosOcupados = existentes.flatMap(t => t.horarios);
+
+  const repetidos = horarios.filter(h =>
+    horariosOcupados.includes(h)
+  );
+
+  if (repetidos.length) {
     alert(
-      "Ya existe un entrenamiento en esa fecha con alguno de esos horarios. Abre el registro existente."
+      "Ya existe un entrenamiento para estos horarios: " +
+      repetidos.join(", ") +
+      ". Abre el registro existente para continuar."
     );
     return;
   }
 
-  const entrenamiento = {
-    id: generarId(),
-    fecha,
-    horarios,
-    fechaCreacion: new Date().toISOString()
-  };
+  let entrenamiento;
 
-  db.entrenamientos.push(entrenamiento);
+  if (existentes.length) {
+    entrenamiento = existentes[0];
 
-  registrarActividad("Entrenamiento registrado: " + fecha);
+    entrenamiento.horarios = [
+      ...new Set([...entrenamiento.horarios, ...horarios])
+    ];
+
+    registrarActividad(
+      "Horarios agregados al entrenamiento del " + fecha
+    );
+
+  } else {
+    entrenamiento = {
+      id: generarId(),
+      fecha,
+      horarios,
+      fechaCreacion: new Date().toISOString()
+    };
+
+    db.entrenamientos.push(entrenamiento);
+
+    registrarActividad(
+      "Entrenamiento registrado: " + fecha
+    );
+  }
 
   if (guardarDB()) {
     abrirEntrenamiento(entrenamiento.id);
@@ -1261,12 +1643,16 @@ function guardarEntrenamiento() {
 }
 
 /* ==========================================
-   ABRIR Y MOSTRAR ASISTENCIA
+   ABRIR ENTRENAMIENTO Y MOSTRAR ASISTENCIA
 ========================================== */
 
 function abrirEntrenamiento(id) {
   const t = buscarEntrenamiento(id);
-  if (!t) return;
+
+  if (!t) {
+    alert("No se encontró el entrenamiento.");
+    return;
+  }
 
   const jugadores = db.jugadores
     .filter(j =>
@@ -1279,12 +1665,19 @@ function abrirEntrenamiento(id) {
     );
 
   document.getElementById("moduleContent").innerHTML = `
-    <h3>Asistencia · ${escaparHTML(t.fecha)}</h3>
+    <h3>Asistencia · ${formatoFecha(t.fecha)}</h3>
 
     <p class="mini-text">
-      Selecciona el estado de cada jugador. Los que queden sin registrar
-      no serán considerados como falta.
+      Registra el estado de cada jugador. Si dejas un jugador
+      sin registrar, no se contará como falta.
     </p>
+
+    <div class="panel">
+      <strong>Horarios registrados</strong>
+      <div class="mini-text" style="margin-top:7px">
+        ${t.horarios.map(escaparHTML).join(" · ")} pm
+      </div>
+    </div>
 
     <div id="listaAsistencia">
       ${jugadores.length ? jugadores.map(j => {
@@ -1296,20 +1689,28 @@ function abrirEntrenamiento(id) {
             <strong>${escaparHTML(j.nombre)}</strong>
 
             <div class="mini-text">
-              ${escaparHTML(j.categoria)} · ${escaparHTML(j.horario)} pm
+              ${escaparHTML(j.categoria)} ·
+              ${escaparHTML(j.horario)} pm
             </div>
 
             <select id="asis_${j.id}">
-              <option value="" ${!estado ? "selected" : ""}>
+              <option value=""
+                ${!estado ? "selected" : ""}>
                 Sin registrar
               </option>
-              <option value="asistio" ${estado === "asistio" ? "selected" : ""}>
+
+              <option value="asistio"
+                ${estado === "asistio" ? "selected" : ""}>
                 Asistió
               </option>
-              <option value="falta" ${estado === "falta" ? "selected" : ""}>
+
+              <option value="falta"
+                ${estado === "falta" ? "selected" : ""}>
                 Falta injustificada
               </option>
-              <option value="justificada" ${estado === "justificada" ? "selected" : ""}>
+
+              <option value="justificada"
+                ${estado === "justificada" ? "selected" : ""}>
                 Falta justificada
               </option>
             </select>
@@ -1325,7 +1726,7 @@ function abrirEntrenamiento(id) {
     <button class="menu-btn activo"
       style="width:100%;margin-top:12px"
       onclick="guardarAsistencias('${t.id}')">
-      Guardar asistencia
+      GUARDAR ASISTENCIA
     </button>
 
     <button class="back-btn"
@@ -1342,6 +1743,7 @@ function abrirEntrenamiento(id) {
 
 function guardarAsistencias(id) {
   const t = buscarEntrenamiento(id);
+
   if (!t) return;
 
   const jugadores = db.jugadores.filter(j =>
@@ -1353,6 +1755,7 @@ function guardarAsistencias(id) {
 
   for (const j of jugadores) {
     const selector = document.getElementById("asis_" + j.id);
+
     if (!selector) continue;
 
     const estado = selector.value;
@@ -1360,21 +1763,34 @@ function guardarAsistencias(id) {
 
     if (!estado) {
       if (existente) {
-        db.asistencias = db.asistencias.filter(
-          a => a.id !== existente.id
+        db.asistencias = db.asistencias.filter(a =>
+          a.id !== existente.id
         );
+
         cambios++;
       }
+
       continue;
     }
 
     if (existente) {
       if (existente.estado !== estado) {
-        existente.estadoAnterior = existente.estado;
+        if (!Array.isArray(existente.historialCambios)) {
+          existente.historialCambios = [];
+        }
+
+        existente.historialCambios.push({
+          estadoAnterior: existente.estado,
+          estadoNuevo: estado,
+          fecha: new Date().toISOString()
+        });
+
         existente.estado = estado;
         existente.fechaActualizacion = new Date().toISOString();
+
         cambios++;
       }
+
     } else {
       db.asistencias.push({
         id: generarId(),
@@ -1382,7 +1798,8 @@ function guardarAsistencias(id) {
         jugadorId: j.id,
         estado,
         fechaRegistro: new Date().toISOString(),
-        fechaActualizacion: null
+        fechaActualizacion: null,
+        historialCambios: []
       });
 
       cambios++;
@@ -1402,12 +1819,17 @@ function guardarAsistencias(id) {
     alert("Asistencia guardada correctamente.");
     abrirEntrenamiento(id);
   }
-    }
-  
+}
+
 /* ==========================================
-   BLOQUE 5 DE 8
-   SISTEMA DE EVALUACIONES
-========================================== */
+   FIN DEL BLOQUE 4
+   NO CERRAR TODAVÍA EL SCRIPT
+========================================== */  
+  /* =====================================================
+   BLOQUE 5 DE 8 — EVALUACIONES
+===================================================== */
+
+let evaluacionTemporal = null;
 
 const criteriosEvaluacion = [
   { nombre: "Excelente trabajo", puntos: 3, tipo: "positivo" },
@@ -1423,174 +1845,222 @@ const criteriosEvaluacion = [
   { nombre: "Platica constantemente", puntos: -1, tipo: "negativo" }
 ];
 
-let evaluacionTemporal = null;
+function obtenerZonaEvaluaciones() {
+  return document.getElementById("contenido") ||
+         document.getElementById("app");
+}
 
-/* ==========================================
-   LISTA DE EVALUACIONES PENDIENTES
-========================================== */
+function textoSeguroEvaluacion(valor) {
+  return String(valor ?? "").replace(/[&<>"']/g, caracter => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[caracter]);
+}
+
+function obtenerAsistencia(entrenamientoId, jugadorId) {
+  return db.asistencias.find(a =>
+    a.entrenamientoId === entrenamientoId &&
+    a.jugadorId === jugadorId
+  );
+}
+
+function obtenerEvaluacion(entrenamientoId, jugadorId) {
+  return db.evaluaciones.find(e =>
+    e.entrenamientoId === entrenamientoId &&
+    e.jugadorId === jugadorId
+  );
+}
+
+function obtenerBorrador(entrenamientoId, jugadorId) {
+  return db.borradoresEvaluacion.find(b =>
+    b.entrenamientoId === entrenamientoId &&
+    b.jugadorId === jugadorId
+  );
+}
 
 function mostrarEvaluaciones() {
+  const zona = obtenerZonaEvaluaciones();
+  if (!zona) return;
+
   const entrenamientos = [...db.entrenamientos].sort((a, b) =>
     b.fecha.localeCompare(a.fecha)
   );
 
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Evaluaciones</h3>
+  zona.innerHTML = `
+    <section class="modulo">
+      <h2>Evaluaciones</h2>
+      <p>Selecciona un entrenamiento para evaluar a los jugadores que asistieron.</p>
 
-    <p class="mini-text">
-      Selecciona el entrenamiento para evaluar a los jugadores que asistieron.
-    </p>
+      ${entrenamientos.length ? entrenamientos.map(t => {
+        const asistieron = db.asistencias.filter(a =>
+          a.entrenamientoId === t.id && a.estado === "asistio"
+        ).length;
 
-    ${entrenamientos.length ? entrenamientos.map(t => {
-      const asistentes = db.asistencias.filter(a =>
-        a.entrenamientoId === t.id &&
-        a.estado === "asistio"
-      );
+        const evaluados = db.evaluaciones.filter(e =>
+          e.entrenamientoId === t.id
+        ).length;
 
-      const pendientes = asistentes.filter(a =>
-        !obtenerEvaluacion(t.id, a.jugadorId)
-      );
+        const pendientes = Math.max(0, asistieron - evaluados);
 
-      return `
-        <div class="panel">
-          <strong>${escaparHTML(t.fecha)}</strong>
-
-          <div class="mini-text">
-            ${asistentes.length} asistentes ·
-            ${pendientes.length} pendientes
-          </div>
-
-          <div class="progress" style="margin-top:9px">
-            <div class="progress-fill"
-              style="width:${asistentes.length
-                ? ((asistentes.length - pendientes.length) / asistentes.length * 100)
-                : 0}%">
-            </div>
-          </div>
-
-          <button class="back-btn"
-            style="margin-top:10px"
-            onclick="abrirColaEvaluaciones('${t.id}')">
-            Abrir evaluaciones
-          </button>
-        </div>
-      `;
-    }).join("") : `
-      <div class="empty-state">
-        Primero registra un entrenamiento y su asistencia.
-      </div>
-    `}
+        return `
+          <article class="tarjeta">
+            <h3>${textoSeguroEvaluacion(t.fecha)}</h3>
+            <p>Horarios: ${textoSeguroEvaluacion((t.horarios || []).join(", "))}</p>
+            <p>Asistieron: <strong>${asistieron}</strong></p>
+            <p>Evaluaciones completas: <strong>${evaluados}</strong></p>
+            <p>Pendientes: <strong>${pendientes}</strong></p>
+            <button class="btn btn-primary"
+              onclick="abrirColaEvaluaciones('${t.id}')">
+              Abrir evaluaciones
+            </button>
+          </article>
+        `;
+      }).join("") : `<p>Aún no hay entrenamientos registrados.</p>`}
+    </section>
   `;
 }
-
-/* ==========================================
-   COLA DE JUGADORES
-========================================== */
 
 function abrirColaEvaluaciones(entrenamientoId) {
-  const t = buscarEntrenamiento(entrenamientoId);
-  if (!t) return;
+  const zona = obtenerZonaEvaluaciones();
+  const entrenamiento = db.entrenamientos.find(t => t.id === entrenamientoId);
 
-  const asistentes = db.asistencias.filter(a =>
-    a.entrenamientoId === entrenamientoId &&
-    a.estado === "asistio"
+  if (!zona || !entrenamiento) return;
+
+  const jugadores = db.jugadores.filter(j =>
+    (entrenamiento.horarios || []).includes(j.horario) &&
+    obtenerAsistencia(entrenamientoId, j.id)?.estado === "asistio"
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  const pendientes = jugadores.filter(j =>
+    !obtenerEvaluacion(entrenamientoId, j.id)
   );
 
-  const pendientes = asistentes
-    .filter(a => !obtenerEvaluacion(entrenamientoId, a.jugadorId))
-    .map(a => buscarJugador(a.jugadorId))
-    .filter(Boolean)
-    .sort((a, b) =>
-      a.horario.localeCompare(b.horario, "es-MX") ||
-      a.nombre.localeCompare(b.nombre, "es-MX")
-    );
+  const completados = jugadores.filter(j =>
+    obtenerEvaluacion(entrenamientoId, j.id)
+  );
 
-  const completadas = asistentes.length - pendientes.length;
+  zona.innerHTML = `
+    <section class="modulo">
+      <button class="btn" onclick="mostrarEvaluaciones()">← Regresar</button>
+      <h2>Evaluaciones del ${textoSeguroEvaluacion(entrenamiento.fecha)}</h2>
 
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Evaluaciones · ${escaparHTML(t.fecha)}</h3>
+      <h3>Pendientes (${pendientes.length})</h3>
+      ${pendientes.length ? pendientes.map(j => `
+        <article class="tarjeta">
+          <strong>${textoSeguroEvaluacion(j.nombre)}</strong>
+          <p>${textoSeguroEvaluacion(j.horario)}</p>
+          <button class="btn btn-primary"
+            onclick="formularioEvaluacion('${entrenamientoId}','${j.id}',false)">
+            Evaluar jugador
+          </button>
+        </article>
+      `).join("") : `<p>No hay evaluaciones pendientes.</p>`}
 
-    <div class="panel">
-      <strong>${completadas} de ${asistentes.length} completadas</strong>
-
-      <div class="progress" style="margin-top:9px">
-        <div class="progress-fill"
-          style="width:${asistentes.length
-            ? completadas / asistentes.length * 100
-            : 0}%">
-        </div>
-      </div>
-    </div>
-
-    ${pendientes.length ? pendientes.map(j => `
-      <div class="panel">
-        <strong>${escaparHTML(j.nombre)}</strong>
-
-        <div class="mini-text">
-          ${escaparHTML(j.horario)} pm
-        </div>
-
-        <button class="menu-btn activo"
-          style="width:100%;margin-top:9px"
-          onclick="formularioEvaluacion('${entrenamientoId}','${j.id}')">
-          Evaluar jugador
-        </button>
-      </div>
-    `).join("") : `
-      <div class="empty-state">
-        Todas las evaluaciones de este entrenamiento están completas.
-      </div>
-    `}
-
-    <button class="back-btn"
-      style="width:100%;margin-top:10px"
-      onclick="mostrarEvaluaciones()">
-      Volver
-    </button>
+      <h3>Evaluaciones completas (${completados.length})</h3>
+      ${completados.map(j => `
+        <article class="tarjeta">
+          <strong>${textoSeguroEvaluacion(j.nombre)}</strong>
+          <p>Evaluación guardada</p>
+          <button class="btn"
+            onclick="formularioEvaluacion('${entrenamientoId}','${j.id}',true)">
+            Revisar / corregir
+          </button>
+        </article>
+      `).join("")}
+    </section>
   `;
 }
 
-/* ==========================================
-   FORMULARIO DE EVALUACION
-========================================== */
-
-function formularioEvaluacion(entrenamientoId, jugadorId) {
-  const j = buscarJugador(jugadorId);
-  const t = buscarEntrenamiento(entrenamientoId);
-
-  if (!j || !t) return;
-
+function formularioEvaluacion(entrenamientoId, jugadorId, editar = false) {
+  const jugador = db.jugadores.find(j => j.id === jugadorId);
+  const entrenamiento = db.entrenamientos.find(t => t.id === entrenamientoId);
   const asistencia = obtenerAsistencia(entrenamientoId, jugadorId);
+  const evaluacion = obtenerEvaluacion(entrenamientoId, jugadorId);
 
-  if (!asistencia || asistencia.estado !== "asistio") {
-    alert("Solo puedes evaluar a un jugador que asistió.");
+  if (!jugador || !entrenamiento || asistencia?.estado !== "asistio") {
+    alert("Este jugador no tiene asistencia marcada como Asistió. No se puede evaluar.");
     return;
   }
 
-  if (obtenerEvaluacion(entrenamientoId, jugadorId)) {
-    alert("Este jugador ya tiene una evaluación guardada.");
+  if (evaluacion && !editar) {
+    alert("Este jugador ya tiene una evaluación guardada en este entrenamiento.");
     return;
+  }
+
+  let borrador = obtenerBorrador(entrenamientoId, jugadorId);
+
+  if (editar && evaluacion) {
+    borrador = {
+      criterios: (evaluacion.criterios || []).map(nombre =>
+        criteriosEvaluacion.findIndex(c => c.nombre === nombre)
+      ).filter(i => i >= 0),
+      uniforme: evaluacion.uniforme ?? 0,
+      deducciones: structuredClone(evaluacion.deducciones || []),
+      observacion: evaluacion.observacion || ""
+    };
+  }
+
+  if (!borrador) {
+    borrador = {
+      criterios: [],
+      uniforme: 0,
+      deducciones: [],
+      observacion: ""
+    };
   }
 
   evaluacionTemporal = {
     entrenamientoId,
     jugadorId,
-    criterios: [],
-    uniforme: 0,
-    deducciones: [],
-    observacion: ""
+    editar,
+    evaluacionId: evaluacion?.id || null,
+    criterios: [...borrador.criterios],
+    uniforme: Number(borrador.uniforme || 0),
+    deducciones: structuredClone(borrador.deducciones || []),
+    observacion: borrador.observacion || ""
   };
 
   mostrarFormularioEvaluacion();
 }
 
-function mostrarFormularioEvaluacion() {
+function guardarBorradorEvaluacion() {
   if (!evaluacionTemporal) return;
 
-  const j = buscarJugador(evaluacionTemporal.jugadorId);
-  const t = buscarEntrenamiento(evaluacionTemporal.entrenamientoId);
+  const t = evaluacionTemporal;
+  let borrador = obtenerBorrador(t.entrenamientoId, t.jugadorId);
 
-  if (!j || !t) return;
+  const datos = {
+    id: borrador?.id || crypto.randomUUID(),
+    entrenamientoId: t.entrenamientoId,
+    jugadorId: t.jugadorId,
+    criterios: [...t.criterios],
+    uniforme: t.uniforme,
+    deducciones: structuredClone(t.deducciones),
+    observacion: t.observacion,
+    fechaActualizacion: new Date().toISOString()
+  };
+
+  if (borrador) {
+    Object.assign(borrador, datos);
+  } else {
+    db.borradoresEvaluacion.push(datos);
+  }
+
+  guardarDB();
+}
+
+function mostrarFormularioEvaluacion() {
+  const zona = obtenerZonaEvaluaciones();
+  if (!zona || !evaluacionTemporal) return;
+
+  const t = evaluacionTemporal;
+  const jugador = db.jugadores.find(j => j.id === t.jugadorId);
+  const entrenamiento = db.entrenamientos.find(x => x.id === t.entrenamientoId);
+
+  if (!jugador || !entrenamiento) return;
 
   const positivos = criteriosEvaluacion
     .map((c, i) => ({ ...c, indice: i }))
@@ -1600,1650 +2070,1263 @@ function mostrarFormularioEvaluacion() {
     .map((c, i) => ({ ...c, indice: i }))
     .filter(c => c.tipo === "negativo");
 
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Evaluación del jugador</h3>
+  zona.innerHTML = `
+    <section class="modulo">
+      <button class="btn" onclick="cancelarEvaluacion()">← Regresar</button>
 
-    <div class="panel">
-      <strong>${escaparHTML(j.nombre)}</strong>
-      <div class="mini-text">
-        ${escaparHTML(j.horario)} pm · ${escaparHTML(t.fecha)}
-      </div>
-    </div>
+      <h2>${t.editar ? "Corregir evaluación" : "Evaluar jugador"}</h2>
+      <article class="tarjeta">
+        <h3>${textoSeguroEvaluacion(jugador.nombre)}</h3>
+        <p>${textoSeguroEvaluacion(jugador.horario)} · ${textoSeguroEvaluacion(entrenamiento.fecha)}</p>
+      </article>
 
-    <div class="panel">
-      <h3 class="green">Aspectos positivos</h3>
-
+      <h3>Aspectos positivos</h3>
       ${positivos.map(c => `
-        <label style="display:flex;gap:9px;align-items:center;margin:12px 0">
-          <input
-            type="checkbox"
-            class="criterioEval"
-            value="${c.indice}"
-            style="width:auto;margin:0">
-
-          <span>
-            ${escaparHTML(c.nombre)}
-            <strong class="green">+${c.puntos}</strong>
-          </span>
+        <label class="opcion-evaluacion">
+          <input type="checkbox" ${t.criterios.includes(c.indice) ? "checked" : ""}
+            onchange="cambiarCriterio(${c.indice},this.checked)">
+          ${textoSeguroEvaluacion(c.nombre)}
+          <strong>+${c.puntos}</strong>
         </label>
       `).join("")}
-    </div>
 
-    <div class="panel">
-      <h3 class="red">Aspectos por mejorar</h3>
-
+      <h3>Aspectos por mejorar</h3>
       ${negativos.map(c => `
-        <label style="display:flex;gap:9px;align-items:center;margin:12px 0">
-          <input
-            type="checkbox"
-            class="criterioEval"
-            value="${c.indice}"
-            style="width:auto;margin:0">
-
-          <span>
-            ${escaparHTML(c.nombre)}
-            <strong class="red">${c.puntos}</strong>
-          </span>
+        <label class="opcion-evaluacion">
+          <input type="checkbox" ${t.criterios.includes(c.indice) ? "checked" : ""}
+            onchange="cambiarCriterio(${c.indice},this.checked)">
+          ${textoSeguroEvaluacion(c.nombre)}
+          <strong>${c.puntos}</strong>
         </label>
       `).join("")}
-    </div>
 
-    <div class="panel">
       <h3>Uniforme</h3>
-
-      <select id="uniformeEval">
-        <option value="0">Sin observación (0)</option>
-        <option value="1">Uniforme completo (+1)</option>
-        <option value="-1">Uniforme incompleto (-1)</option>
+      <select id="uniformeEvaluacion" onchange="cambiarUniforme(this.value)">
+        <option value="1" ${t.uniforme === 1 ? "selected" : ""}>Completo (+1)</option>
+        <option value="-1" ${t.uniforme === -1 ? "selected" : ""}>Incompleto (-1)</option>
+        <option value="0" ${t.uniforme === 0 ? "selected" : ""}>Justificado / sin puntos (0)</option>
       </select>
-    </div>
 
-    <div class="panel">
       <h3>Deducciones adicionales</h3>
-
-      <p class="mini-text">
-        Registra una deducción solamente cuando sea necesario y escribe su motivo.
-      </p>
-
-      <button class="back-btn"
-        style="width:100%"
-        onclick="agregarDeduccion()">
-        + Agregar deducción
-      </button>
-
+      <p>Agrega una deducción solamente cuando sea necesario.</p>
       <div id="listaDeducciones"></div>
-    </div>
+      <button class="btn" onclick="agregarDeduccion()">+ Agregar deducción</button>
 
-    <div class="panel">
-      <h3>Observaciones</h3>
+      <h3>Observaciones del entrenamiento</h3>
+      <textarea id="observacionEvaluacion"
+        placeholder="Escribe aquí alguna observación..."
+        oninput="cambiarObservacion(this.value)">${textoSeguroEvaluacion(t.observacion)}</textarea>
 
-      <textarea
-        id="observacionEval"
-        rows="3"
-        maxlength="1000"
-        placeholder="Observaciones del entrenamiento..."></textarea>
-    </div>
+      <div class="tarjeta">
+        <strong>Puntos de esta evaluación:</strong>
+        <h2 id="totalPuntosEvaluacion">${calcularPuntosEvaluacion()}</h2>
+        <small>El puntaje base mensual de cada jugador se calcula en el módulo MVP.</small>
+      </div>
 
-    <button class="menu-btn activo"
-      style="width:100%;margin-top:12px"
-      onclick="guardarEvaluacion()">
-      GUARDAR EVALUACIÓN
-    </button>
-
-    <button class="back-btn"
-      style="width:100%;margin-top:9px"
-      onclick="cancelarEvaluacion()">
-      Cancelar
-    </button>
+      <button class="btn btn-primary" onclick="guardarEvaluacion()">
+        ${t.editar ? "Guardar corrección" : "Guardar evaluación"}
+      </button>
+      <button class="btn" onclick="cancelarEvaluacion()">Salir sin finalizar</button>
+      <p><small>El borrador se guarda automáticamente. Puedes salir y continuar después.</small></p>
+    </section>
   `;
 
   mostrarDeducciones();
 }
 
-/* ==========================================
-   DEDUCCIONES ADICIONALES
-========================================== */
+function cambiarCriterio(indice, seleccionado) {
+  if (!evaluacionTemporal) return;
+
+  const lista = evaluacionTemporal.criterios;
+
+  if (seleccionado && !lista.includes(indice)) lista.push(indice);
+  if (!seleccionado) {
+    evaluacionTemporal.criterios = lista.filter(i => i !== indice);
+  }
+
+  guardarBorradorEvaluacion();
+  actualizarTotalEvaluacion();
+}
+
+function cambiarUniforme(valor) {
+  if (!evaluacionTemporal) return;
+  evaluacionTemporal.uniforme = Number(valor);
+  guardarBorradorEvaluacion();
+  actualizarTotalEvaluacion();
+}
+
+function cambiarObservacion(valor) {
+  if (!evaluacionTemporal) return;
+  evaluacionTemporal.observacion = valor;
+  guardarBorradorEvaluacion();
+}
 
 function agregarDeduccion() {
   if (!evaluacionTemporal) return;
 
-  const id = generarId();
-
   evaluacionTemporal.deducciones.push({
-    id,
+    id: crypto.randomUUID(),
     puntos: -1,
     motivo: ""
   });
 
+  guardarBorradorEvaluacion();
   mostrarDeducciones();
+  actualizarTotalEvaluacion();
 }
 
 function mostrarDeducciones() {
   const contenedor = document.getElementById("listaDeducciones");
   if (!contenedor || !evaluacionTemporal) return;
 
-  if (!evaluacionTemporal.deducciones.length) {
-    contenedor.innerHTML = `
-      <div class="mini-text" style="margin-top:10px">
-        No hay deducciones adicionales.
-      </div>
-    `;
-    return;
-  }
-
   contenedor.innerHTML = evaluacionTemporal.deducciones.map(d => `
-    <div class="panel">
-      <strong class="red">Deducción adicional</strong>
+    <article class="tarjeta">
+      <label>Motivo</label>
+      <input type="text" value="${textoSeguroEvaluacion(d.motivo)}"
+        placeholder="Describe el motivo"
+        oninput="cambiarMotivoDeduccion('${d.id}',this.value)">
 
-      <select
-        onchange="cambiarDeduccion('${d.id}',this.value)">
+      <label>Puntos</label>
+      <select onchange="cambiarPuntosDeduccion('${d.id}',this.value)">
         <option value="-1" ${d.puntos === -1 ? "selected" : ""}>-1 punto</option>
         <option value="-2" ${d.puntos === -2 ? "selected" : ""}>-2 puntos</option>
         <option value="-3" ${d.puntos === -3 ? "selected" : ""}>-3 puntos</option>
       </select>
 
-      <input
-        maxlength="250"
-        placeholder="Motivo de la deducción"
-        value="${escaparHTML(d.motivo)}"
-        oninput="cambiarMotivoDeduccion('${d.id}',this.value)">
-
-      <button class="back-btn"
-        onclick="eliminarDeduccion('${d.id}')">
-        Quitar
-      </button>
-    </div>
+      <button class="btn" onclick="eliminarDeduccion('${d.id}')">Eliminar</button>
+    </article>
   `).join("");
-}
-
-function cambiarDeduccion(id, puntos) {
-  const d = evaluacionTemporal?.deducciones.find(x => x.id === id);
-  if (d) d.puntos = Number(puntos);
 }
 
 function cambiarMotivoDeduccion(id, motivo) {
   const d = evaluacionTemporal?.deducciones.find(x => x.id === id);
-  if (d) d.motivo = motivo;
+  if (!d) return;
+  d.motivo = motivo;
+  guardarBorradorEvaluacion();
+}
+
+function cambiarPuntosDeduccion(id, puntos) {
+  const d = evaluacionTemporal?.deducciones.find(x => x.id === id);
+  if (!d) return;
+  d.puntos = Number(puntos);
+  guardarBorradorEvaluacion();
+  actualizarTotalEvaluacion();
 }
 
 function eliminarDeduccion(id) {
   if (!evaluacionTemporal) return;
-
   evaluacionTemporal.deducciones =
     evaluacionTemporal.deducciones.filter(d => d.id !== id);
 
+  guardarBorradorEvaluacion();
   mostrarDeducciones();
+  actualizarTotalEvaluacion();
 }
 
-/* ==========================================
-   GUARDAR EVALUACION
-========================================== */
+function calcularPuntosEvaluacion() {
+  if (!evaluacionTemporal) return 0;
+
+  const puntosCriterios = evaluacionTemporal.criterios.reduce(
+    (total, indice) => total + (criteriosEvaluacion[indice]?.puntos || 0),
+    0
+  );
+
+  const puntosDeducciones = evaluacionTemporal.deducciones.reduce(
+    (total, d) => total + Number(d.puntos || 0),
+    0
+  );
+
+  return puntosCriterios + Number(evaluacionTemporal.uniforme || 0) +
+    puntosDeducciones;
+}
+
+function actualizarTotalEvaluacion() {
+  const total = document.getElementById("totalPuntosEvaluacion");
+  if (total) total.textContent = calcularPuntosEvaluacion();
+}
 
 function guardarEvaluacion() {
   if (!evaluacionTemporal) return;
 
-  const { entrenamientoId, jugadorId } = evaluacionTemporal;
+  const t = evaluacionTemporal;
+  const jugador = db.jugadores.find(j => j.id === t.jugadorId);
+  const asistencia = obtenerAsistencia(t.entrenamientoId, t.jugadorId);
 
-  const j = buscarJugador(jugadorId);
-
-  const asistencia = obtenerAsistencia(entrenamientoId, jugadorId);
-
-  if (!j || !asistencia || asistencia.estado !== "asistio") {
-    alert("No se puede guardar esta evaluación.");
+  if (!jugador || asistencia?.estado !== "asistio") {
+    alert("No se puede guardar: el jugador no tiene asistencia como Asistió.");
     return;
   }
 
-  if (obtenerEvaluacion(entrenamientoId, jugadorId)) {
-    alert("Esta evaluación ya fue guardada.");
+  const existente = obtenerEvaluacion(t.entrenamientoId, t.jugadorId);
+
+  if (existente && !t.editar) {
+    alert("Ya existe una evaluación para este jugador en este entrenamiento.");
     return;
   }
 
-  const seleccionados = Array.from(
-    document.querySelectorAll(".criterioEval:checked")
-  ).map(c => Number(c.value));
-
-  const criterios = seleccionados.map(i => ({
-    nombre: criteriosEvaluacion[i].nombre,
-    puntos: criteriosEvaluacion[i].puntos
-  }));
-
-  const uniforme = Number(
-    document.getElementById("uniformeEval").value
-  );
-
-  const observacion = document.getElementById("observacionEval")
-    .value.trim();
-
-  const deducciones = evaluacionTemporal.deducciones.map(d => ({
-    puntos: Number(d.puntos),
-    motivo: d.motivo.trim()
-  }));
-
-  if (deducciones.some(d => !d.motivo)) {
-    alert("Escribe el motivo de cada deducción adicional.");
+  if (t.deducciones.some(d => !String(d.motivo || "").trim())) {
+    alert("Escribe el motivo de cada deducción adicional o elimínala.");
     return;
   }
 
-  const puntosCriterios = criterios.reduce(
-    (total, c) => total + c.puntos, 0
-  );
-
-  const puntosDeducciones = deducciones.reduce(
-    (total, d) => total + d.puntos, 0
-  );
-
-  const puntosTotales =
-    puntosCriterios + uniforme + puntosDeducciones;
-
-  const nuevaEvaluacion = {
-    id: generarId(),
-    entrenamientoId,
-    jugadorId,
-    criterios,
-    uniforme,
-    deducciones,
-    observacion,
-    puntos: puntosTotales,
-    fechaRegistro: new Date().toISOString(),
-    historialCambios: []
+  const datos = {
+    entrenamientoId: t.entrenamientoId,
+    jugadorId: t.jugadorId,
+    criterios: t.criterios.map(i => criteriosEvaluacion[i].nombre),
+    uniforme: t.uniforme,
+    deducciones: structuredClone(t.deducciones),
+    observacion: t.observacion.trim(),
+    puntos: calcularPuntosEvaluacion(),
+    fechaRegistro: existente?.fechaRegistro || new Date().toISOString(),
+    fechaActualizacion: new Date().toISOString()
   };
 
-  db.evaluaciones.push(nuevaEvaluacion);
+  if (existente && t.editar) {
+    existente.historialCambios = existente.historialCambios || [];
+    existente.historialCambios.push({
+      fecha: new Date().toISOString(),
+      datosAnteriores: {
+        criterios: [...(existente.criterios || [])],
+        uniforme: existente.uniforme,
+        deducciones: structuredClone(existente.deducciones || []),
+        observacion: existente.observacion || "",
+        puntos: existente.puntos || 0
+      }
+    });
 
-  registrarActividad("Evaluación registrada: " + j.nombre);
+    Object.assign(existente, datos);
+  } else {
+    db.evaluaciones.push({
+      id: crypto.randomUUID(),
+      ...datos,
+      historialCambios: []
+    });
+  }
+
+  db.borradoresEvaluacion = db.borradoresEvaluacion.filter(b =>
+    !(b.entrenamientoId === t.entrenamientoId && b.jugadorId === t.jugadorId)
+  );
+
+  registrarActividad(
+    t.editar ? "Evaluación corregida" : "Evaluación registrada",
+    jugador.nombre
+  );
 
   evaluacionTemporal = null;
+  guardarDB();
 
-  if (guardarDB()) {
-    alert("Evaluación guardada correctamente.");
-    abrirColaEvaluaciones(entrenamientoId);
+  const siguientes = db.jugadores
+    .filter(j =>
+      (db.entrenamientos.find(x => x.id === t.entrenamientoId)?.horarios || [])
+        .includes(j.horario) &&
+      obtenerAsistencia(t.entrenamientoId, j.id)?.estado === "asistio" &&
+      !obtenerEvaluacion(t.entrenamientoId, j.id)
+    )
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  if (siguientes.length) {
+    formularioEvaluacion(t.entrenamientoId, siguientes[0].id, false);
+  } else {
+    alert("Evaluación guardada correctamente. Ya no quedan evaluaciones pendientes.");
+    abrirColaEvaluaciones(t.entrenamientoId);
   }
 }
 
-/* ==========================================
-   CANCELAR EVALUACION
-========================================== */
-
 function cancelarEvaluacion() {
-  if (!confirm("¿Deseas cancelar esta evaluación sin guardar?")) {
+  if (!evaluacionTemporal) {
+    mostrarEvaluaciones();
     return;
   }
 
-  const entrenamientoId = evaluacionTemporal?.entrenamientoId;
-
+  const entrenamientoId = evaluacionTemporal.entrenamientoId;
   evaluacionTemporal = null;
+  abrirColaEvaluaciones(entrenamientoId);
+}
 
-  if (entrenamientoId) {
-    abrirColaEvaluaciones(entrenamientoId);
-  } else {
-    mostrarEvaluaciones();
-  }
-  }
- 
-/* ==========================================
-   BLOQUE 6 DE 8
-   SISTEMA MVP MENSUAL E HISTORICO
-========================================== */
+/* FIN DEL BLOQUE 5 — NO CERRAR TODAVÍA EL SCRIPT */
+  /* =====================================================
+   BLOQUE 6 DE 8 — MVP Y RECONOCIMIENTOS
+===================================================== */
 
-/* ==========================================
-   CALCULO DE PUNTOS DEL MES
-========================================== */
+function obtenerPeriodoMVP(fecha) {
+  return String(fecha || "").slice(0, 7);
+}
 
-function calcularPuntosJugador(jugadorId, periodo) {
-  const jugador = buscarJugador(jugadorId);
-  if (!jugador) return 0;
+function obtenerDatosMVP(periodo, horario) {
+  const jugadoresConActividad = new Set();
 
-  let puntos = 0;
-
-  const entrenamientosMes = db.entrenamientos.filter(t =>
-    obtenerMes(t.fecha) === periodo &&
-    t.horarios.includes(jugador.horario)
-  );
-
-  entrenamientosMes.forEach(t => {
-    const asistencia = obtenerAsistencia(t.id, jugadorId);
-
-    if (!asistencia) return;
-
-    if (asistencia.estado === "asistio") {
-      puntos += 0;
-    }
-
-    if (asistencia.estado === "falta") {
-      puntos -= 0.5;
-    }
-
-    const evaluacion = obtenerEvaluacion(t.id, jugadorId);
-
-    if (evaluacion) {
-      puntos += Number(evaluacion.puntos || 0);
+  db.asistencias.forEach(a => {
+    const entrenamiento = db.entrenamientos.find(t => t.id === a.entrenamientoId);
+    if (entrenamiento && obtenerPeriodoMVP(entrenamiento.fecha) === periodo) {
+      const jugador = db.jugadores.find(j => j.id === a.jugadorId);
+      if (jugador && jugador.horario === horario) {
+        jugadoresConActividad.add(jugador.id);
+      }
     }
   });
 
-  return Math.round(puntos * 10) / 10;
+  db.evaluaciones.forEach(e => {
+    const entrenamiento = db.entrenamientos.find(t => t.id === e.entrenamientoId);
+    if (entrenamiento && obtenerPeriodoMVP(entrenamiento.fecha) === periodo) {
+      const jugador = db.jugadores.find(j => j.id === e.jugadorId);
+      if (jugador && jugador.horario === horario) {
+        jugadoresConActividad.add(jugador.id);
+      }
+    }
+  });
+
+  return [...jugadoresConActividad].map(jugadorId => {
+    const jugador = db.jugadores.find(j => j.id === jugadorId);
+
+    const asistenciasDelMes = db.asistencias.filter(a => {
+      const entrenamiento = db.entrenamientos.find(t => t.id === a.entrenamientoId);
+      return a.jugadorId === jugadorId &&
+        entrenamiento &&
+        obtenerPeriodoMVP(entrenamiento.fecha) === periodo;
+    });
+
+    const evaluacionesDelMes = db.evaluaciones.filter(e => {
+      const entrenamiento = db.entrenamientos.find(t => t.id === e.entrenamientoId);
+      return e.jugadorId === jugadorId &&
+        entrenamiento &&
+        obtenerPeriodoMVP(entrenamiento.fecha) === periodo;
+    });
+
+    const asistencias = asistenciasDelMes.filter(a => a.estado === "asistio").length;
+    const faltasInjustificadas = asistenciasDelMes.filter(a => a.estado === "falta").length;
+    const faltasJustificadas = asistenciasDelMes.filter(a => a.estado === "justificada").length;
+
+    const puntosEvaluaciones = evaluacionesDelMes.reduce(
+      (total, e) => total + Number(e.puntos || 0), 0
+    );
+
+    const descuentoFaltas = faltasInjustificadas * 0.5;
+    const puntaje = 100 + puntosEvaluaciones - descuentoFaltas;
+
+    return {
+      jugador,
+      jugadorId,
+      horario: jugador?.horario || horario,
+      asistencias,
+      faltasInjustificadas,
+      faltasJustificadas,
+      evaluaciones: evaluacionesDelMes.length,
+      puntosEvaluaciones,
+      descuentoFaltas,
+      puntaje: Math.round(puntaje * 100) / 100
+    };
+  }).sort((a, b) =>
+    b.puntaje - a.puntaje ||
+    b.asistencias - a.asistencias ||
+    a.jugador.nombre.localeCompare(b.jugador.nombre)
+  );
 }
 
-/* ==========================================
-   OBTENER CLASIFICACION POR HORARIO
-========================================== */
+function mostrarMVP(periodoSeleccionado = null) {
+  const zona = obtenerZonaEvaluaciones();
+  if (!zona) return;
 
-function obtenerClasificacionMVP(horario, periodo) {
-  const jugadores = db.jugadores.filter(j =>
-    j.estado !== "eliminado" &&
-    j.horario === horario
-  );
-
-  return jugadores.map(j => ({
-    jugadorId: j.id,
-    nombre: j.nombre,
-    horario: j.horario,
-    puntos: calcularPuntosJugador(j.id, periodo)
-  })).sort((a, b) =>
-    b.puntos - a.puntos ||
-    a.nombre.localeCompare(b.nombre, "es-MX")
-  );
-}
-
-/* ==========================================
-   IDENTIFICAR GANADORES Y EMPATES
-========================================== */
-
-function obtenerGanadoresMVP(horario, periodo) {
-  const clasificacion = obtenerClasificacionMVP(
-    horario,
-    periodo
-  );
-
-  if (!clasificacion.length) return [];
-
-  const maximo = clasificacion[0].puntos;
-
-  if (maximo <= 0) return [];
-
-  return clasificacion.filter(j =>
-    j.puntos === maximo
-  );
-}
-
-/* ==========================================
-   RESUMEN DEL PANEL PRINCIPAL
-========================================== */
-
-function calcularResumenMVP() {
-  const periodo = obtenerMes(fechaLocalISO());
+  const hoy = new Date();
+  const periodoActual = periodoSeleccionado ||
+    `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
 
   const horarios = ["4:30", "5:30", "6:30"];
 
-  return horarios.map(horario => {
-    const ganadores = obtenerGanadoresMVP(horario, periodo);
+  const cerrado = db.cierresMVP.find(c => c.periodo === periodoActual);
 
-    return `
-      <div class="mvp-row">
-        <div class="mvp-info">
-          <strong>${horario} pm</strong>
-          <span>
-            ${ganadores.length
-              ? ganadores.map(g => escaparHTML(g.nombre)).join(", ") +
-                " · " + ganadores[0].puntos + " pts"
-              : "Sin líder todavía"}
-          </span>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
+  zona.innerHTML = `
+    <section class="modulo">
+      <h2>MVP del mes</h2>
+      <p>El puntaje comienza en 100 para todos. Las evaluaciones suman o restan puntos y cada falta injustificada descuenta 0.5.</p>
 
-/* ==========================================
-   PANTALLA PRINCIPAL MVP
-========================================== */
+      <label>Consultar mes</label>
+      <input type="month" id="periodoMVP" value="${periodoActual}"
+        onchange="mostrarMVP(this.value)">
 
-function mostrarMVP() {
-  const periodo = obtenerMes(fechaLocalISO());
-
-  const horarios = ["4:30", "5:30", "6:30"];
-
-  const contenido = horarios.map(horario => {
-    const clasificacion = obtenerClasificacionMVP(
-      horario,
-      periodo
-    );
-
-    const ganadores = obtenerGanadoresMVP(
-      horario,
-      periodo
-    );
-
-    return `
-      <div class="panel">
-        <h3>🏆 Horario ${horario} pm</h3>
-
-        ${ganadores.length ? `
-          <div class="green" style="font-weight:bold;margin-bottom:12px">
-            Líder${ganadores.length > 1 ? "es" : ""} provisional${ganadores.length > 1 ? "es" : ""}:
-            ${ganadores.map(g => escaparHTML(g.nombre)).join(", ")}
-            · ${ganadores[0].puntos} puntos
-          </div>
-        ` : `
-          <div class="mini-text">
-            Todavía no hay un líder con puntuación positiva.
-          </div>
-        `}
-
-        ${clasificacion.length ? clasificacion.map((j, i) => `
-          <div class="mvp-row">
-            <div class="mvp-info">
-              <span>${i + 1}. ${escaparHTML(j.nombre)}</span>
-              <strong>${j.puntos} pts</strong>
-            </div>
-
-            <div class="progress">
-              <div class="progress-fill"
-                style="width:${Math.max(0,
-                  clasificacion[0].puntos > 0
-                    ? j.puntos / clasificacion[0].puntos * 100
-                    : 0
-                )}%">
-              </div>
-            </div>
-          </div>
-        `).join("") : `
-          <div class="empty-state">
-            No hay jugadores registrados en este horario.
-          </div>
-        `}
-      </div>
-    `;
-  }).join("");
-
-  const cierre = db.cierresMVP.find(c =>
-    c.periodo === periodo
-  );
-
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>MVP mensual · ${escaparHTML(periodo)}</h3>
-
-    <p class="mini-text">
-      Los resultados son provisionales y se actualizan con las asistencias
-      y evaluaciones guardadas.
-    </p>
-
-    ${contenido}
-
-    <div class="panel">
-      <h3>Cierre del mes</h3>
-
-      ${cierre ? `
-        <div class="green">
-          Mes confirmado el ${escaparHTML(cierre.fechaCierre)}
-        </div>
+      ${cerrado ? `
+        <p><strong>Este mes ya tiene cierre registrado.</strong></p>
       ` : `
-        <div class="mini-text">
-          El cierre registra los ganadores oficiales para el ranking anual.
-        </div>
-
-        <button class="menu-btn activo"
-          style="width:100%;margin-top:10px"
-          onclick="cerrarMesMVP('${periodo}')">
-          Confirmar ganadores del mes
-        </button>
+        <p>Resultados provisionales. Puedes registrar los reconocimientos cuando decidas cerrar el mes.</p>
       `}
-    </div>
 
-    <div class="panel">
-      <h3>Reconocimiento histórico</h3>
+      ${horarios.map(horario => {
+        const resultados = obtenerDatosMVP(periodoActual, horario);
+        const maximo = resultados.length ? resultados[0].puntaje : null;
+        const lideres = resultados.filter(r => r.puntaje === maximo);
 
-      <p class="mini-text">
-        Registra premios entregados en meses anteriores sin modificar
-        las puntuaciones actuales.
-      </p>
+        return `
+          <article class="tarjeta">
+            <h3>Horario ${horario}</h3>
+            ${resultados.length ? `
+              ${resultados.map((r, i) => `
+                <div class="fila-mvp">
+                  <strong>${i + 1}. ${textoSeguroEvaluacion(r.jugador.nombre)}</strong>
+                  <strong>${r.puntaje.toFixed(2)} pts</strong>
+                  <p>Asistencias: ${r.asistencias} · Faltas injustificadas: ${r.faltasInjustificadas}</p>
+                  <p>Faltas justificadas: ${r.faltasJustificadas} · Evaluaciones: ${r.evaluaciones}</p>
+                  <div class="barra-mvp">
+                    <div style="width:${Math.max(0, Math.min(100, r.puntaje / Math.max(1, maximo) * 100))}%"></div>
+                  </div>
+                  ${i === 0 ? `<small>Posición más alta del horario</small>` : ""}
+                </div>
+              `).join("")}
 
-      <button class="back-btn"
-        style="width:100%"
-        onclick="formularioMVPHistorico()">
-        + Registrar MVP anterior
+              ${cerrado ? `
+                <p><strong>Reconocimientos registrados:</strong></p>
+                ${db.reconocimientosMVP.filter(x =>
+                  x.periodo === periodoActual && x.horario === horario
+                ).map(x => `<p>🏆 ${textoSeguroEvaluacion(
+                  db.jugadores.find(j => j.id === x.jugadorId)?.nombre || "Jugador"
+                )}</p>`).join("") || "<p>Sin reconocimientos.</p>"}
+              ` : `
+                <p><strong>Líder${lideres.length > 1 ? "es" : ""} provisional${lideres.length > 1 ? "es" : ""}:</strong>
+                ${lideres.map(r => textoSeguroEvaluacion(r.jugador.nombre)).join(", ")}</p>
+              `}
+            ` : `<p>No hay actividad registrada para este horario durante este mes.</p>`}
+          </article>
+        `;
+      }).join("")}
+
+      ${!cerrado ? `
+        <button class="btn btn-primary"
+          onclick="cerrarPeriodoMVP('${periodoActual}')">
+          Registrar cierre y reconocimientos del mes
+        </button>
+      ` : ""}
+
+      <h3>Registrar reconocimiento anterior</h3>
+      <p>Utiliza esta opción para agregar MVP de meses pasados. No modifica los puntajes actuales.</p>
+      <button class="btn" onclick="formularioReconocimientoMVP('${periodoActual}')">
+        + Registrar MVP histórico
       </button>
-    </div>
 
-    <div class="panel">
-      <h3>Ranking anual</h3>
-
-      <button class="back-btn"
-        style="width:100%"
-        onclick="mostrarRankingAnual()">
-        Consultar ranking
-      </button>
-    </div>
+      <h3>Ranking anual de reconocimientos</h3>
+      ${mostrarRankingAnualMVP(Number(periodoActual.slice(0, 4)))}
+    </section>
   `;
 }
 
-/* ==========================================
-   CERRAR MES Y CONFIRMAR GANADORES
-========================================== */
-
-function cerrarMesMVP(periodo) {
+function cerrarPeriodoMVP(periodo) {
   if (db.cierresMVP.some(c => c.periodo === periodo)) {
-    alert("Este mes ya fue confirmado.");
+    alert("Este mes ya tiene un cierre registrado.");
     return;
   }
 
-  if (!confirm(
-    "¿Confirmas los ganadores provisionales de los tres horarios para este mes? Esta acción registrará los reconocimientos oficiales."
-  )) return;
-
-  const horarios = ["4:30", "5:30", "6:30"];
-
-  const ganadores = horarios.flatMap(horario =>
-    obtenerGanadoresMVP(horario, periodo).map(j => ({
-      jugadorId: j.jugadorId,
-      nombre: j.nombre,
-      horario,
-      puntos: j.puntos
-    }))
+  const confirmacion = confirm(
+    "¿Deseas registrar los reconocimientos MVP de este mes? Se reconocerá a todos los jugadores empatados en el puntaje más alto de cada horario."
   );
 
-  if (!ganadores.length) {
-    alert("No hay ganadores con puntuación positiva para confirmar.");
-    return;
-  }
+  if (!confirmacion) return;
 
-  const cierre = {
-    id: generarId(),
-    periodo,
-    fechaCierre: fechaLocalISO(),
-    fechaRegistro: new Date().toISOString(),
-    ganadores
-  };
+  const horarios = ["4:30", "5:30", "6:30"];
+  const ganadores = [];
 
-  db.cierresMVP.push(cierre);
+  horarios.forEach(horario => {
+    const resultados = obtenerDatosMVP(periodo, horario);
+    if (!resultados.length) return;
 
-  ganadores.forEach(g => {
-    db.reconocimientosMVP.push({
-      id: generarId(),
-      jugadorId: g.jugadorId,
-      nombre: g.nombre,
-      horario: g.horario,
-      periodo,
-      origen: "cierre_mensual",
-      fechaRegistro: new Date().toISOString()
+    const puntajeMaximo = resultados[0].puntaje;
+    const empatados = resultados.filter(r => r.puntaje === puntajeMaximo);
+
+    empatados.forEach(r => {
+      const reconocimiento = {
+        id: crypto.randomUUID(),
+        jugadorId: r.jugadorId,
+        periodo,
+        horario,
+        puntaje: r.puntaje,
+        tipo: "cierre_mensual",
+        fechaRegistro: new Date().toISOString()
+      };
+
+      db.reconocimientosMVP.push(reconocimiento);
+      ganadores.push({
+        jugadorId: r.jugadorId,
+        horario,
+        puntaje: r.puntaje
+      });
     });
   });
 
-  registrarActividad("Cierre MVP confirmado: " + periodo);
+  db.cierresMVP.push({
+    id: crypto.randomUUID(),
+    periodo,
+    fechaCierre: new Date().toISOString(),
+    ganadores
+  });
 
-  if (guardarDB()) {
-    alert("Ganadores confirmados correctamente.");
-    mostrarMVP();
-  }
+  registrarActividad("Cierre mensual MVP", periodo);
+  guardarDB();
+
+  alert("Cierre del mes registrado correctamente.");
+  mostrarMVP(periodo);
 }
 
-/* ==========================================
-   REGISTRAR MVP DE MESES ANTERIORES
-========================================== */
+function formularioReconocimientoMVP(periodoInicial = "") {
+  const zona = obtenerZonaEvaluaciones();
+  if (!zona) return;
 
-function formularioMVPHistorico() {
-  const jugadores = db.jugadores.filter(j =>
-    j.estado !== "eliminado"
+  const jugadores = [...db.jugadores].sort((a, b) =>
+    a.nombre.localeCompare(b.nombre)
   );
 
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Registrar reconocimiento histórico</h3>
+  zona.innerHTML = `
+    <section class="modulo">
+      <button class="btn" onclick="mostrarMVP('${periodoInicial}')">← Regresar</button>
+      <h2>Registrar MVP histórico</h2>
 
-    <label>Jugador</label>
+      <label>Jugador</label>
+      <select id="jugadorReconocimiento">
+        <option value="">Selecciona un jugador</option>
+        ${jugadores.map(j => `
+          <option value="${j.id}">${textoSeguroEvaluacion(j.nombre)} — ${textoSeguroEvaluacion(j.horario)}</option>
+        `).join("")}
+      </select>
 
-    <select id="historicoJugador">
-      <option value="">Seleccionar jugador</option>
+      <label>Mes del reconocimiento</label>
+      <input type="month" id="periodoReconocimiento" value="${periodoInicial}">
 
-      ${jugadores.map(j => `
-        <option value="${j.id}">
-          ${escaparHTML(j.nombre)} · ${escaparHTML(j.horario)}
-        </option>
-      `).join("")}
-    </select>
+      <label>Horario del reconocimiento</label>
+      <select id="horarioReconocimiento">
+        <option value="4:30">4:30</option>
+        <option value="5:30">5:30</option>
+        <option value="6:30">6:30</option>
+      </select>
 
-    <label>Mes del reconocimiento</label>
-    <input id="historicoPeriodo"
-      type="month"
-      max="${obtenerMes(fechaLocalISO())}">
-
-    <button class="menu-btn activo"
-      style="width:100%;margin-top:12px"
-      onclick="guardarMVPHistorico()">
-      Guardar reconocimiento
-    </button>
-
-    <button class="back-btn"
-      style="width:100%;margin-top:9px"
-      onclick="mostrarMVP()">
-      Cancelar
-    </button>
+      <button class="btn btn-primary" onclick="guardarReconocimientoMVP()">
+        Guardar reconocimiento
+      </button>
+    </section>
   `;
 }
 
-function guardarMVPHistorico() {
-  const jugadorId = document.getElementById("historicoJugador").value;
-  const periodo = document.getElementById("historicoPeriodo").value;
+function guardarReconocimientoMVP() {
+  const jugadorId = document.getElementById("jugadorReconocimiento")?.value;
+  const periodo = document.getElementById("periodoReconocimiento")?.value;
+  const horario = document.getElementById("horarioReconocimiento")?.value;
 
-  const jugador = buscarJugador(jugadorId);
-
-  if (!jugador || !periodo) {
-    alert("Selecciona un jugador y el mes.");
+  if (!jugadorId || !periodo || !horario) {
+    alert("Selecciona jugador, mes y horario.");
     return;
   }
 
-  if (periodo >= obtenerMes(fechaLocalISO())) {
-    alert("Selecciona un mes anterior al actual.");
-    return;
-  }
-
-  const duplicado = db.reconocimientosMVP.some(r =>
-    r.jugadorId === jugadorId &&
-    r.periodo === periodo &&
-    r.horario === jugador.horario
-  );
-
-  if (duplicado) {
-    alert("Este jugador ya tiene un reconocimiento registrado para ese horario y mes.");
+  const jugador = db.jugadores.find(j => j.id === jugadorId);
+  if (!jugador) {
+    alert("No se encontró el jugador.");
     return;
   }
 
   db.reconocimientosMVP.push({
-    id: generarId(),
+    id: crypto.randomUUID(),
     jugadorId,
-    nombre: jugador.nombre,
-    horario: jugador.horario,
     periodo,
-    origen: "historico",
+    horario,
+    puntaje: null,
+    tipo: "historico",
     fechaRegistro: new Date().toISOString()
   });
 
-  registrarActividad(
-    "Reconocimiento histórico registrado: " + jugador.nombre
-  );
+  registrarActividad("Reconocimiento MVP histórico", jugador.nombre);
+  guardarDB();
 
-  if (guardarDB()) {
-    alert("Reconocimiento histórico guardado.");
-    mostrarMVP();
-  }
+  alert("Reconocimiento histórico registrado.");
+  mostrarMVP(periodo);
 }
 
-/* ==========================================
-   RANKING ANUAL DE RECONOCIMIENTOS
-========================================== */
-
-function mostrarRankingAnual() {
-  const anio = String(new Date().getFullYear());
-
-  const reconocimientos = db.reconocimientosMVP.filter(r =>
-    r.periodo.startsWith(anio)
-  );
-
+function mostrarRankingAnualMVP(anio) {
   const conteo = {};
 
-  reconocimientos.forEach(r => {
-    if (!conteo[r.jugadorId]) {
-      conteo[r.jugadorId] = {
-        nombre: r.nombre,
-        total: 0,
-        horarios: {}
-      };
-    }
-
-    conteo[r.jugadorId].total++;
-
-    conteo[r.jugadorId].horarios[r.horario] =
-      (conteo[r.jugadorId].horarios[r.horario] || 0) + 1;
-  });
-
-  const ranking = Object.values(conteo).sort((a, b) =>
-    b.total - a.total ||
-    a.nombre.localeCompare(b.nombre, "es-MX")
-  );
-
-  const maximo = ranking.length ? ranking[0].total : 0;
-
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Ranking anual MVP · ${anio}</h3>
-
-    <p class="mini-text">
-      Cada reconocimiento oficial cuenta individualmente.
-      Si un jugador gana en dos horarios, suma dos reconocimientos.
-    </p>
-
-    ${ranking.length ? ranking.map((j, i) => `
-      <div class="panel">
-        <strong>
-          ${i + 1}. ${escaparHTML(j.nombre)}
-        </strong>
-
-        <div class="mini-text">
-          ${j.total} reconocimiento${j.total === 1 ? "" : "s"}
-        </div>
-
-        <div class="mini-text">
-          4:30: ${j.horarios["4:30"] || 0} ·
-          5:30: ${j.horarios["5:30"] || 0} ·
-          6:30: ${j.horarios["6:30"] || 0}
-        </div>
-
-        ${j.total === maximo ? `
-          <div class="green" style="margin-top:7px">
-            Líder del ranking anual
-          </div>
-        ` : ""}
-      </div>
-    `).join("") : `
-      <div class="empty-state">
-        Todavía no hay reconocimientos registrados este año.
-      </div>
-    `}
-
-    <button class="back-btn"
-      style="width:100%;margin-top:10px"
-      onclick="mostrarMVP()">
-      Volver al MVP
-    </button>
-  `;
-  }
- 
-/* ==========================================
-   BLOQUE 7 DE 8
-   FINANZAS E INFORMES
-========================================== */
-
-/* ==========================================
-   FINANZAS: GENERAR CARGOS MENSUALES
-========================================== */
-
-function generarCargosMensuales(periodo = obtenerMes(fechaLocalISO())) {
-  const jugadores = db.jugadores.filter(j => j.estado === "activo");
-  let nuevos = 0;
-
-  jugadores.forEach(j => {
-    const existe = db.pagos.some(p =>
-      p.jugadorId === j.id &&
-      p.periodo === periodo &&
-      p.concepto === "Mensualidad"
-    );
-
-    if (existe) return;
-
-    const anio = Number(periodo.slice(0, 4));
-    const mes = Number(periodo.slice(5, 7));
-
-    const ultimoDia = new Date(anio, mes, 0).getDate();
-    const diaVencimiento = Math.min(j.diaVencimiento, ultimoDia);
-
-    const fechaVencimiento =
-      `${periodo}-${String(diaVencimiento).padStart(2, "0")}`;
-
-    db.pagos.push({
-      id: generarId(),
-      jugadorId: j.id,
-      nombreJugador: j.nombre,
-      periodo,
-      concepto: "Mensualidad",
-      montoBase: Number(j.cuota),
-      recargoAplicado: false,
-      recargo: 0,
-      montoTotal: Number(j.cuota),
-      montoPagado: 0,
-      saldo: Number(j.cuota),
-      fechaVencimiento,
-      abonos: [],
-      fechaCreacion: new Date().toISOString()
+  db.reconocimientosMVP
+    .filter(r => Number(String(r.periodo).slice(0, 4)) === anio)
+    .forEach(r => {
+      conteo[r.jugadorId] = (conteo[r.jugadorId] || 0) + 1;
     });
 
-    nuevos++;
-  });
-
-  if (nuevos) {
-    registrarActividad(
-      `Se generaron ${nuevos} mensualidades para ${periodo}`
+  const ranking = Object.entries(conteo)
+    .map(([jugadorId, reconocimientos]) => ({
+      jugador: db.jugadores.find(j => j.id === jugadorId),
+      reconocimientos
+    }))
+    .filter(x => x.jugador)
+    .sort((a, b) =>
+      b.reconocimientos - a.reconocimientos ||
+      a.jugador.nombre.localeCompare(b.jugador.nombre)
     );
+
+  if (!ranking.length) {
+    return "<p>Aún no hay reconocimientos registrados para este año.</p>";
   }
 
-  return nuevos;
+  return ranking.map((r, i) => `
+    <article class="fila-mvp">
+      <strong>${i + 1}. ${textoSeguroEvaluacion(r.jugador.nombre)}</strong>
+      <span>${r.reconocimientos} reconocimiento(s)</span>
+    </article>
+  `).join("");
 }
 
-/* ==========================================
-   APLICAR RECARGOS UNA SOLA VEZ
-========================================== */
+/* FIN DEL BLOQUE 6 — NO CERRAR TODAVÍA EL SCRIPT */
+  /* =====================================================
+   BLOQUE 7 DE 8 — FINANZAS Y MENSUALIDADES
+===================================================== */
 
-function aplicarRecargos() {
-  const hoy = fechaLocalISO();
+function obtenerPeriodoActual() {
+  const ahora = new Date();
+  return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function obtenerFechaLocal() {
+  const ahora = new Date();
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+  const dia = String(ahora.getDate()).padStart(2, "0");
+  return `${anio}-${mes}-${dia}`;
+}
+
+function recalcularSaldoCargo(cargo) {
+  cargo.abonos = Array.isArray(cargo.abonos) ? cargo.abonos : [];
+
+  const pagado = cargo.abonos.reduce(
+    (total, abono) => total + Number(abono.monto || 0), 0
+  );
+
+  cargo.montoPagado = Math.round(pagado * 100) / 100;
+  cargo.saldo = Math.max(0, Math.round(
+    (Number(cargo.monto || 0) - cargo.montoPagado) * 100
+  ) / 100);
+
+  return cargo.saldo;
+}
+
+function generarCargosMensuales(periodo) {
+  // Solo se generan cargos automáticamente para el mes actual.
+  if (periodo !== obtenerPeriodoActual()) return;
+
+  const fechaHoy = obtenerFechaLocal();
+  const diaHoy = Number(fechaHoy.slice(8, 10));
   let cambios = false;
 
-  db.pagos.forEach(p => {
-    if (
-      p.concepto !== "Mensualidad" ||
-      p.recargoAplicado ||
-      Number(p.saldo) <= 0 ||
-      hoy <= p.fechaVencimiento
-    ) {
-      return;
-    }
-
-    const recargo = Number(db.ajustes.recargo || 0);
-
-    p.recargo = recargo;
-    p.recargoAplicado = true;
-    p.montoTotal = Number(p.montoBase) + recargo;
-    p.saldo = Math.max(
-      0,
-      p.montoTotal - Number(p.montoPagado || 0)
+  db.jugadores.filter(j => j.estado === "activo").forEach(jugador => {
+    const mensualidadExiste = db.pagos.some(p =>
+      p.jugadorId === jugador.id &&
+      p.periodo === periodo &&
+      p.tipo === "mensualidad"
     );
 
-    cambios = true;
+    if (!mensualidadExiste) {
+      db.pagos.push({
+        id: crypto.randomUUID(),
+        jugadorId: jugador.id,
+        periodo,
+        tipo: "mensualidad",
+        concepto: "Mensualidad " + periodo,
+        monto: Number(jugador.cuota || 500),
+        montoPagado: 0,
+        saldo: Number(jugador.cuota || 500),
+        abonos: [],
+        fechaCreacion: new Date().toISOString()
+      });
+
+      cambios = true;
+    }
+
+    const diaRecargo = Number(db.ajustes.diaRecargo || 5);
+    const recargoExiste = db.pagos.some(p =>
+      p.jugadorId === jugador.id &&
+      p.periodo === periodo &&
+      p.tipo === "recargo"
+    );
+
+    const mensualidad = db.pagos.find(p =>
+      p.jugadorId === jugador.id &&
+      p.periodo === periodo &&
+      p.tipo === "mensualidad"
+    );
+
+    if (
+      diaHoy > diaRecargo &&
+      mensualidad &&
+      recalcularSaldoCargo(mensualidad) > 0 &&
+      !recargoExiste
+    ) {
+      const montoRecargo = Number(db.ajustes.recargo || 100);
+
+      db.pagos.push({
+        id: crypto.randomUUID(),
+        jugadorId: jugador.id,
+        periodo,
+        tipo: "recargo",
+        concepto: "Recargo por pago tardío",
+        monto: montoRecargo,
+        montoPagado: 0,
+        saldo: montoRecargo,
+        abonos: [],
+        fechaCreacion: new Date().toISOString()
+      });
+
+      cambios = true;
+    }
   });
 
   if (cambios) {
-    registrarActividad("Se aplicaron recargos por mensualidades vencidas.");
+    registrarActividad("Actualización de mensualidades", periodo);
+    guardarDB();
   }
-
-  return cambios;
 }
 
-/* ==========================================
-   MOSTRAR MODULO DE FINANZAS
-========================================== */
+function obtenerNombreJugadorPago(jugadorId) {
+  return db.jugadores.find(j => j.id === jugadorId)?.nombre || "Jugador eliminado";
+}
 
-function mostrarFinanzas() {
-  const periodo = obtenerMes(fechaLocalISO());
+function obtenerEstadoCargo(cargo) {
+  const saldo = recalcularSaldoCargo(cargo);
 
-  const nuevos = generarCargosMensuales(periodo);
-  const recargos = aplicarRecargos();
+  if (saldo <= 0) return "Liquidado";
+  if (cargo.montoPagado > 0) return "Pago parcial";
 
-  if (nuevos || recargos) {
-    if (!guardarDB()) return;
-  }
+  return "Pendiente";
+}
 
-  const pagos = db.pagos.filter(p => p.periodo === periodo);
+function mostrarFinanzas(periodoSeleccionado = null) {
+  const zona = obtenerZonaEvaluaciones();
+  if (!zona) return;
 
-  const recibido = pagos.reduce(
-    (s, p) => s + Number(p.montoPagado || 0), 0
-  );
+  const periodo = periodoSeleccionado || obtenerPeriodoActual();
 
-  const pendiente = pagos.reduce(
-    (s, p) => s + Number(p.saldo || 0), 0
-  );
+  generarCargosMensuales(periodo);
 
-  const liquidados = pagos.filter(p =>
-    Number(p.saldo || 0) === 0
-  ).length;
+  const cargos = db.pagos.filter(p => p.periodo === periodo);
+  const totalCargos = cargos.reduce((suma, p) => suma + Number(p.monto || 0), 0);
+  const totalPagado = cargos.reduce((suma, p) => {
+    recalcularSaldoCargo(p);
+    return suma + Number(p.montoPagado || 0);
+  }, 0);
+  const totalPendiente = cargos.reduce((suma, p) => {
+    recalcularSaldoCargo(p);
+    return suma + Number(p.saldo || 0);
+  }, 0);
 
-  const pendientes = pagos.filter(p =>
-    Number(p.saldo || 0) > 0
-  ).length;
+  const jugadoresActivos = db.jugadores.filter(j => j.estado === "activo");
 
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Control financiero</h3>
+  zona.innerHTML = `
+    <section class="modulo">
+      <h2>Finanzas</h2>
 
-    <div class="panel">
-      <label>Periodo mensual</label>
-      <input
-        type="month"
-        id="finPeriodo"
-        value="${periodo}"
-        onchange="cambiarPeriodoFinanzas(this.value)">
-    </div>
+      <label>Consultar mes</label>
+      <input type="month" id="periodoFinanzas" value="${periodo}"
+        onchange="mostrarFinanzas(this.value)">
 
-    <div class="stats">
-      <div class="stat">
-        <div class="number green">${formatoDinero(recibido)}</div>
-        <div class="label">Recibido</div>
+      <div class="grid-resumen">
+        <article class="tarjeta">
+          <small>Total de cargos</small>
+          <h2>$${totalCargos.toFixed(2)}</h2>
+        </article>
+        <article class="tarjeta">
+          <small>Total recibido</small>
+          <h2>$${totalPagado.toFixed(2)}</h2>
+        </article>
+        <article class="tarjeta">
+          <small>Saldo pendiente</small>
+          <h2>$${totalPendiente.toFixed(2)}</h2>
+        </article>
       </div>
 
-      <div class="stat">
-        <div class="number red">${formatoDinero(pendiente)}</div>
-        <div class="label">Pendiente</div>
-      </div>
+      <h3>Cargos del mes</h3>
+      ${cargos.length ? cargos.map(cargo => {
+        const jugador = obtenerNombreJugadorPago(cargo.jugadorId);
+        const saldo = recalcularSaldoCargo(cargo);
+        const estado = obtenerEstadoCargo(cargo);
 
-      <div class="stat">
-        <div class="number blue">${liquidados}</div>
-        <div class="label">Liquidados</div>
-      </div>
+        return `
+          <article class="tarjeta">
+            <strong>${textoSeguroEvaluacion(jugador)}</strong>
+            <p>${textoSeguroEvaluacion(cargo.concepto || cargo.tipo)}</p>
+            <p>Importe: $${Number(cargo.monto || 0).toFixed(2)}</p>
+            <p>Pagado: $${Number(cargo.montoPagado || 0).toFixed(2)}</p>
+            <p><strong>Saldo: $${saldo.toFixed(2)}</strong></p>
+            <p>Estado: <strong>${estado}</strong></p>
 
-      <div class="stat">
-        <div class="number orange">${pendientes}</div>
-        <div class="label">Con saldo pendiente</div>
-      </div>
-    </div>
+            ${saldo > 0 ? `
+              <button class="btn btn-primary"
+                onclick="formularioAbono('${cargo.id}','${periodo}')">
+                Registrar pago
+              </button>
+            ` : ""}
+          </article>
+        `;
+      }).join("") : `<p>No hay cargos registrados para este mes.</p>`}
 
-    <div class="panel">
+      <h3>Jugadores activos</h3>
+      <p>${jugadoresActivos.length} jugadores activos. Los cargos del mes se generan automáticamente al entrar a este módulo.</p>
+
       <h3>Configuración de recargos</h3>
+      <label>Recargo por pago tardío ($)</label>
+      <input type="number" id="montoRecargo"
+        min="0" step="1" value="${Number(db.ajustes.recargo || 100)}">
 
-      <label>Recargo por mensualidad vencida (MXN)</label>
-      <input id="finRecargo" type="number" min="0"
-        value="${Number(db.ajustes.recargo)}">
+      <label>Aplicar después del día</label>
+      <input type="number" id="diaRecargo"
+        min="1" max="28" value="${Number(db.ajustes.diaRecargo || 5)}">
 
-      <button class="back-btn"
-        style="width:100%"
-        onclick="guardarAjustesFinanzas()">
-        Guardar recargo
+      <button class="btn" onclick="guardarAjustesFinanzas()">
+        Guardar configuración
       </button>
-    </div>
 
-    <h3 style="margin-top:20px">Mensualidades y pagos</h3>
-
-    <input
-      id="buscarPago"
-      type="search"
-      placeholder="Buscar jugador..."
-      oninput="filtrarPagos()">
-
-    <div id="listaPagos"></div>
+      <h3>Historial de movimientos</h3>
+      ${cargos.some(c => c.abonos?.length) ? cargos.flatMap(c =>
+        (c.abonos || []).map(a => `
+          <article class="tarjeta">
+            <strong>${textoSeguroEvaluacion(obtenerNombreJugadorPago(c.jugadorId))}</strong>
+            <p>${textoSeguroEvaluacion(c.concepto)}</p>
+            <p>Abono: $${Number(a.monto || 0).toFixed(2)}</p>
+            <p>Fecha: ${textoSeguroEvaluacion(a.fecha || "")}</p>
+            ${a.nota ? `<p>Nota: ${textoSeguroEvaluacion(a.nota)}</p>` : ""}
+          </article>
+        `)
+      ).join("") : `<p>No hay pagos registrados en este periodo.</p>`}
+    </section>
   `;
-
-  mostrarListaPagos(periodo);
 }
 
-function cambiarPeriodoFinanzas(periodo) {
-  if (!periodo) return;
+function formularioAbono(cargoId, periodo) {
+  const zona = obtenerZonaEvaluaciones();
+  const cargo = db.pagos.find(p => p.id === cargoId);
 
-  const nuevos = generarCargosMensuales(periodo);
-  const recargos = aplicarRecargos();
+  if (!zona || !cargo) return;
 
-  if (nuevos || recargos) {
-    if (!guardarDB()) return;
+  const saldo = recalcularSaldoCargo(cargo);
+
+  if (saldo <= 0) {
+    alert("Este cargo ya está liquidado.");
+    mostrarFinanzas(periodo);
+    return;
   }
 
-  mostrarFinanzas();
+  zona.innerHTML = `
+    <section class="modulo">
+      <button class="btn" onclick="mostrarFinanzas('${periodo}')">← Regresar</button>
+      <h2>Registrar pago</h2>
+
+      <article class="tarjeta">
+        <strong>${textoSeguroEvaluacion(obtenerNombreJugadorPago(cargo.jugadorId))}</strong>
+        <p>${textoSeguroEvaluacion(cargo.concepto)}</p>
+        <p>Importe original: $${Number(cargo.monto).toFixed(2)}</p>
+        <p>Pagado anteriormente: $${Number(cargo.montoPagado).toFixed(2)}</p>
+        <h3>Saldo pendiente: $${saldo.toFixed(2)}</h3>
+      </article>
+
+      <label>Cantidad recibida ($)</label>
+      <input type="number" id="montoAbono" min="0.01"
+        max="${saldo}" step="0.01" placeholder="Escribe la cantidad">
+
+      <label>Fecha del pago</label>
+      <input type="date" id="fechaAbono" value="${obtenerFechaLocal()}">
+
+      <label>Nota (opcional)</label>
+      <textarea id="notaAbono" placeholder="Ej. Pago en efectivo"></textarea>
+
+      <button class="btn btn-primary"
+        onclick="guardarAbono('${cargoId}','${periodo}')">
+        Confirmar pago
+      </button>
+    </section>
+  `;
+}
+
+function guardarAbono(cargoId, periodo) {
+  const cargo = db.pagos.find(p => p.id === cargoId);
+  if (!cargo) return;
+
+  const monto = Number(document.getElementById("montoAbono")?.value);
+  const fecha = document.getElementById("fechaAbono")?.value;
+  const nota = document.getElementById("notaAbono")?.value?.trim() || "";
+
+  const saldo = recalcularSaldoCargo(cargo);
+
+  if (!Number.isFinite(monto) || monto <= 0) {
+    alert("Escribe una cantidad válida.");
+    return;
+  }
+
+  if (monto > saldo + 0.001) {
+    alert("El pago no puede ser mayor al saldo pendiente.");
+    return;
+  }
+
+  if (!fecha) {
+    alert("Selecciona la fecha del pago.");
+    return;
+  }
+
+  cargo.abonos = cargo.abonos || [];
+  cargo.abonos.push({
+    id: crypto.randomUUID(),
+    monto: Math.round(monto * 100) / 100,
+    fecha,
+    nota,
+    fechaRegistro: new Date().toISOString()
+  });
+
+  recalcularSaldoCargo(cargo);
+
+  registrarActividad(
+    "Pago registrado",
+    obtenerNombreJugadorPago(cargo.jugadorId) + " — $" + monto.toFixed(2)
+  );
+
+  guardarDB();
+
+  alert(
+    cargo.saldo <= 0
+      ? "Pago registrado. El cargo quedó liquidado."
+      : "Abono registrado. El saldo pendiente se actualizó."
+  );
+
+  mostrarFinanzas(periodo);
 }
 
 function guardarAjustesFinanzas() {
-  const recargo = Number(
-    document.getElementById("finRecargo").value
-  );
+  const recargo = Number(document.getElementById("montoRecargo")?.value);
+  const dia = Number(document.getElementById("diaRecargo")?.value);
 
   if (!Number.isFinite(recargo) || recargo < 0) {
-    alert("Escribe un recargo válido.");
+    alert("Escribe un monto de recargo válido.");
+    return;
+  }
+
+  if (!Number.isInteger(dia) || dia < 1 || dia > 28) {
+    alert("El día de recargo debe estar entre 1 y 28.");
     return;
   }
 
   db.ajustes.recargo = recargo;
+  db.ajustes.diaRecargo = dia;
 
-  registrarActividad("Configuración de recargos actualizada.");
+  registrarActividad("Configuración financiera actualizada", "");
+  guardarDB();
 
-  if (guardarDB()) {
-    alert("Configuración guardada.");
-    mostrarFinanzas();
-  }
+  alert("Configuración guardada.");
+  mostrarFinanzas();
 }
 
-/* ==========================================
-   LISTA DE MENSUALIDADES
-========================================== */
-
-function mostrarListaPagos(periodo, filtro = "") {
-  const lista = document.getElementById("listaPagos");
-  if (!lista) return;
-
-  const termino = filtro.toLocaleLowerCase("es-MX");
-
-  const pagos = db.pagos
-    .filter(p => p.periodo === periodo)
-    .filter(p =>
-      String(p.nombreJugador || "")
-        .toLocaleLowerCase("es-MX")
-        .includes(termino)
-    )
-    .sort((a, b) =>
-      a.nombreJugador.localeCompare(b.nombreJugador, "es-MX")
-    );
-
-  if (!pagos.length) {
-    lista.innerHTML = `
-      <div class="empty-state">
-        No hay cargos registrados en este periodo.
-      </div>
-    `;
-    return;
-  }
-
-  lista.innerHTML = pagos.map(p => `
-    <div class="panel">
-      <strong>${escaparHTML(p.nombreJugador)}</strong>
-
-      <div class="mini-text">
-        ${escaparHTML(p.concepto)} · ${escaparHTML(p.periodo)}
-      </div>
-
-      <div class="mini-text">
-        Total: ${formatoDinero(p.montoTotal)}
-      </div>
-
-      <div class="mini-text">
-        Pagado: ${formatoDinero(p.montoPagado)}
-      </div>
-
-      <div class="${Number(p.saldo) > 0 ? "red" : "green"}"
-        style="font-weight:bold;margin-top:5px">
-        ${Number(p.saldo) > 0
-          ? "Pendiente: " + formatoDinero(p.saldo)
-          : "LIQUIDADO"}
-      </div>
-
-      <button class="menu-btn activo"
-        style="width:100%;margin-top:10px"
-        onclick="registrarAbono('${p.id}')"
-        ${Number(p.saldo) <= 0 ? "disabled" : ""}>
-        Registrar pago o abono
-      </button>
-
-      <button class="back-btn"
-        style="width:100%;margin-top:8px"
-        onclick="verMovimientosPago('${p.id}')">
-        Ver movimientos
-      </button>
-    </div>
-  `).join("");
-}
-
-function filtrarPagos() {
-  const periodo = document.getElementById("finPeriodo")?.value;
-  const filtro = document.getElementById("buscarPago")?.value || "";
-
-  if (periodo) mostrarListaPagos(periodo, filtro);
-}
-
-/* ==========================================
-   REGISTRAR ABONOS Y PAGOS
-========================================== */
-
-function registrarAbono(pagoId) {
-  const pago = db.pagos.find(p => p.id === pagoId);
-  if (!pago) return;
-
-  if (Number(pago.saldo) <= 0) {
-    alert("Este cargo ya está liquidado.");
-    return;
-  }
-
-  const texto = prompt(
-    "Saldo pendiente: " + formatoDinero(pago.saldo) +
-    "\n\nEscribe el monto recibido:"
-  );
-
-  if (texto === null) return;
-
-  const monto = Number(texto);
-
-  if (!Number.isFinite(monto) || monto <= 0) {
-    alert("Escribe un monto válido.");
-    return;
-  }
-
-  if (monto > Number(pago.saldo)) {
-    alert("El abono no puede superar el saldo pendiente.");
-    return;
-  }
-
-  const forma = prompt(
-    "Forma de pago:\n1. Efectivo\n2. Transferencia\n3. Otro",
-    "1"
-  );
-
-  if (forma === null) return;
-
-  const formas = {
-    "1": "Efectivo",
-    "2": "Transferencia",
-    "3": "Otro"
-  };
-
-  if (!formas[forma]) {
-    alert("Selecciona una forma de pago válida.");
-    return;
-  }
-
-  const abono = {
-    id: generarId(),
-    monto,
-    forma: formas[forma],
-    fecha: fechaLocalISO(),
-    fechaRegistro: new Date().toISOString()
-  };
-
-  pago.abonos = pago.abonos || [];
-  pago.abonos.push(abono);
-
-  pago.montoPagado =
-    Number(pago.montoPagado || 0) + monto;
-
-  pago.saldo = Math.max(
-    0,
-    Number(pago.montoTotal) - pago.montoPagado
-  );
-
-  registrarActividad(
-    `Pago de ${formatoDinero(monto)} recibido: ${pago.nombreJugador}`
-  );
-
-  if (guardarDB()) {
-    alert(
-      pago.saldo === 0
-        ? "¡Mensualidad liquidada!"
-        : "Abono registrado. Saldo restante: " + formatoDinero(pago.saldo)
-    );
-
-    mostrarFinanzas();
-  }
-}
-
-/* ==========================================
-   MOVIMIENTOS DE UN CARGO
-========================================== */
-
-function verMovimientosPago(pagoId) {
-  const pago = db.pagos.find(p => p.id === pagoId);
-  if (!pago) return;
-
-  const abonos = pago.abonos || [];
-
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Movimientos de pago</h3>
-
-    <div class="panel">
-      <strong>${escaparHTML(pago.nombreJugador)}</strong>
-
-      <div class="mini-text">
-        ${escaparHTML(pago.concepto)} · ${escaparHTML(pago.periodo)}
-      </div>
-
-      <p>Total: ${formatoDinero(pago.montoTotal)}</p>
-      <p>Pagado: ${formatoDinero(pago.montoPagado)}</p>
-      <p>Pendiente: ${formatoDinero(pago.saldo)}</p>
-    </div>
-
-    <h3>Historial de abonos</h3>
-
-    ${abonos.length ? abonos.map(a => `
-      <div class="panel">
-        <strong>${formatoDinero(a.monto)}</strong>
-        <div class="mini-text">
-          ${escaparHTML(a.fecha)} · ${escaparHTML(a.forma)}
-        </div>
-      </div>
-    `).join("") : `
-      <div class="empty-state">
-        Todavía no hay abonos registrados.
-      </div>
-    `}
-
-    <button class="back-btn"
-      style="width:100%;margin-top:12px"
-      onclick="mostrarFinanzas()">
-      Volver a finanzas
-    </button>
-  `;
-}
-
-/* ==========================================
-   INFORMES INDIVIDUALES
-========================================== */
+/* FIN DEL BLOQUE 7 — NO CERRAR TODAVÍA EL SCRIPT */
+  /* =====================================================
+   BLOQUE 8 DE 8 — INFORMES, RESPALDOS Y CIERRE
+===================================================== */
 
 function mostrarInformes() {
-  const jugadores = db.jugadores.filter(j =>
-    j.estado !== "eliminado"
+  const zona = obtenerZonaEvaluaciones();
+  if (!zona) return;
+
+  const jugadores = [...db.jugadores].sort((a, b) =>
+    a.nombre.localeCompare(b.nombre)
   );
 
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Informes individuales</h3>
+  zona.innerHTML = `
+    <section class="modulo">
+      <h2>Informes de jugadores</h2>
+      <p>Consulta el desempeño, asistencia y observaciones de cada jugador en un periodo determinado.</p>
 
-    <p class="mini-text">
-      Consulta el progreso de cada jugador y genera un informe
-      para imprimir o guardar como PDF.
-    </p>
+      <label>Seleccionar jugador</label>
+      <select id="jugadorInforme">
+        <option value="">Selecciona un jugador</option>
+        ${jugadores.map(j => `
+          <option value="${j.id}">${textoSeguroEvaluacion(j.nombre)} — ${textoSeguroEvaluacion(j.horario)}</option>
+        `).join("")}
+      </select>
 
-    <label>Jugador</label>
+      <label>Desde</label>
+      <input type="date" id="fechaInicioInforme">
 
-    <select id="informeJugador">
-      <option value="">Seleccionar jugador</option>
+      <label>Hasta</label>
+      <input type="date" id="fechaFinInforme" value="${obtenerFechaLocal()}">
 
-      ${jugadores.map(j => `
-        <option value="${j.id}">
-          ${escaparHTML(j.nombre)} · ${escaparHTML(j.horario)} pm
-        </option>
-      `).join("")}
-    </select>
+      <button class="btn btn-primary" onclick="generarInformeJugador()">
+        Generar informe
+      </button>
 
-    <label>Desde</label>
-    <input id="informeDesde" type="date"
-      value="${obtenerMes(fechaLocalISO())}-01">
-
-    <label>Hasta</label>
-    <input id="informeHasta" type="date"
-      value="${fechaLocalISO()}">
-
-    <button class="menu-btn activo"
-      style="width:100%;margin-top:10px"
-      onclick="generarInformeIndividual()">
-      Generar informe
-    </button>
+      <div id="resultadoInforme"></div>
+    </section>
   `;
 }
 
-/* ==========================================
-   CREAR INFORME
-========================================== */
+function generarInformeJugador() {
+  const jugadorId = document.getElementById("jugadorInforme")?.value;
+  const inicio = document.getElementById("fechaInicioInforme")?.value || "0000-01-01";
+  const fin = document.getElementById("fechaFinInforme")?.value || "9999-12-31";
+  const resultado = document.getElementById("resultadoInforme");
 
-function generarInformeIndividual() {
-  const jugadorId = document.getElementById("informeJugador").value;
-  const desde = document.getElementById("informeDesde").value;
-  const hasta = document.getElementById("informeHasta").value;
-
-  const jugador = buscarJugador(jugadorId);
-
-  if (!jugador || !desde || !hasta) {
-    alert("Selecciona un jugador y el periodo.");
+  if (!jugadorId) {
+    alert("Selecciona un jugador.");
     return;
   }
 
-  if (desde > hasta) {
+  if (inicio > fin) {
     alert("La fecha inicial no puede ser posterior a la fecha final.");
     return;
   }
 
-  const entrenamientos = db.entrenamientos.filter(t =>
-    t.fecha >= desde &&
-    t.fecha <= hasta &&
-    t.horarios.includes(jugador.horario)
-  );
+  const jugador = db.jugadores.find(j => j.id === jugadorId);
+  if (!jugador || !resultado) return;
 
-  const idsEntrenamientos = new Set(
-    entrenamientos.map(t => t.id)
-  );
+  const entrenamientos = db.entrenamientos
+    .filter(t => t.fecha >= inicio && t.fecha <= fin)
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+  const idsEntrenamientos = new Set(entrenamientos.map(t => t.id));
 
   const asistencias = db.asistencias.filter(a =>
-    a.jugadorId === jugadorId &&
-    idsEntrenamientos.has(a.entrenamientoId)
+    a.jugadorId === jugadorId && idsEntrenamientos.has(a.entrenamientoId)
   );
 
   const evaluaciones = db.evaluaciones.filter(e =>
-    e.jugadorId === jugadorId &&
-    idsEntrenamientos.has(e.entrenamientoId)
+    e.jugadorId === jugadorId && idsEntrenamientos.has(e.entrenamientoId)
   );
 
-  const asistio = asistencias.filter(a =>
-    a.estado === "asistio"
-  ).length;
+  const asistio = asistencias.filter(a => a.estado === "asistio").length;
+  const faltas = asistencias.filter(a => a.estado === "falta").length;
+  const justificadas = asistencias.filter(a => a.estado === "justificada").length;
 
-  const faltas = asistencias.filter(a =>
-    a.estado === "falta"
-  ).length;
-
-  const justificadas = asistencias.filter(a =>
-    a.estado === "justificada"
-  ).length;
-
-  const sinRegistrar = entrenamientos.length - asistencias.length;
-
-  const positivos = {};
-  const negativos = {};
-  const observaciones = [];
-
-  evaluaciones.forEach(e => {
-    (e.criterios || []).forEach(c => {
-      const destino = c.puntos >= 0 ? positivos : negativos;
-      destino[c.nombre] = (destino[c.nombre] || 0) + 1;
-    });
-
-    (e.deducciones || []).forEach(d => {
-      if (d.motivo) {
-        negativos[d.motivo] = (negativos[d.motivo] || 0) + 1;
-      }
-    });
-
-    if (e.observacion) {
-      const entrenamiento = buscarEntrenamiento(e.entrenamientoId);
-
-      observaciones.push({
-        fecha: entrenamiento?.fecha || "",
-        texto: e.observacion
-      });
-    }
-  });
-
-  const fortalezas = Object.keys(positivos);
-  const areas = Object.keys(negativos);
+  const totalRegistradas = asistencias.length;
+  const porcentaje = totalRegistradas
+    ? Math.round((asistio / totalRegistradas) * 100)
+    : 0;
 
   const detalle = entrenamientos.map(t => {
-    const a = obtenerAsistencia(t.id, jugadorId);
-    const e = obtenerEvaluacion(t.id, jugadorId);
+    const asistencia = asistencias.find(a => a.entrenamientoId === t.id);
+    const evaluacion = evaluaciones.find(e => e.entrenamientoId === t.id);
 
-    const estado = !a
-      ? "Sin registro"
-      : a.estado === "asistio"
-        ? "Asistió"
-        : a.estado === "falta"
-          ? "Falta injustificada"
-          : "Falta justificada";
+    if (!asistencia && !evaluacion) return "";
+
+    const estadoAsistencia = asistencia
+      ? ({
+          asistio: "Asistió",
+          falta: "Falta injustificada",
+          justificada: "Falta justificada"
+        }[asistencia.estado] || "Sin clasificación")
+      : "Sin registro de asistencia";
 
     return `
-      <tr>
-        <td>${escaparHTML(t.fecha)}</td>
-        <td>${estado}</td>
-        <td>${e ? "Completada" : a?.estado === "asistio" ? "Pendiente" : "—"}</td>
-      </tr>
+      <article class="detalle-informe">
+        <h4>${textoSeguroEvaluacion(t.fecha)}</h4>
+        <p><strong>Asistencia:</strong> ${estadoAsistencia}</p>
+        ${evaluacion ? `
+          <p><strong>Aspectos positivos y avances:</strong></p>
+          <ul>
+            ${(evaluacion.criterios || [])
+              .filter(nombre => criteriosEvaluacion.some(c =>
+                c.nombre === nombre && c.tipo === "positivo"
+              ))
+              .map(nombre => `<li>${textoSeguroEvaluacion(nombre)}</li>`).join("")}
+          </ul>
+
+          <p><strong>Aspectos por mejorar:</strong></p>
+          <ul>
+            ${(evaluacion.criterios || [])
+              .filter(nombre => criteriosEvaluacion.some(c =>
+                c.nombre === nombre && c.tipo === "negativo"
+              ))
+              .map(nombre => `<li>${textoSeguroEvaluacion(nombre)}</li>`).join("")}
+            ${(evaluacion.deducciones || []).map(d =>
+              `<li>${textoSeguroEvaluacion(d.motivo)}</li>`
+            ).join("")}
+          </ul>
+
+          ${evaluacion.observacion ? `
+            <p><strong>Observaciones:</strong> ${textoSeguroEvaluacion(evaluacion.observacion)}</p>
+          ` : ""}
+        ` : `<p>Sin evaluación registrada.</p>`}
+      </article>
     `;
-  }).join("");
+  }).filter(Boolean).join("");
 
-  const textoLista = elementos => elementos.length
-    ? elementos.map(x => `<li>${escaparHTML(x)}</li>`).join("")
-    : "<li>Sin observaciones registradas.</li>";
+  const contenido = `
+    <div class="informe-jugador">
+      <h1>ACADEMIA TIBURONES ENSENADA</h1>
+      <h2>INFORME DE SEGUIMIENTO DEL JUGADOR</h2>
 
-  const html = `
+      <h3>${textoSeguroEvaluacion(jugador.nombre)}</h3>
+      <p><strong>Categoría:</strong> ${textoSeguroEvaluacion(jugador.categoria)}</p>
+      <p><strong>Horario:</strong> ${textoSeguroEvaluacion(jugador.horario)}</p>
+      <p><strong>Periodo:</strong> ${textoSeguroEvaluacion(inicio)} al ${textoSeguroEvaluacion(fin)}</p>
+
+      <hr>
+
+      <h3>Resumen de asistencia</h3>
+      <p>Asistencias: ${asistio}</p>
+      <p>Faltas injustificadas: ${faltas}</p>
+      <p>Faltas justificadas: ${justificadas}</p>
+      <p>Porcentaje de asistencia registrada: ${porcentaje}%</p>
+      <p>Evaluaciones realizadas: ${evaluaciones.length}</p>
+
+      <hr>
+
+      <h3>Historial de entrenamientos</h3>
+      ${detalle || "<p>No hay registros de asistencia o evaluación en este periodo.</p>"}
+
+      <hr>
+      <p class="pie-informe">Academia Tiburones Ensenada · Seguimiento deportivo</p>
+      <p class="nota-informe">Este informe refleja únicamente los registros capturados en el sistema durante el periodo seleccionado.</p>
+    </div>
+  `;
+
+  resultado.innerHTML = `
+    <div class="tarjeta">
+      <h3>Vista previa del informe</h3>
+      <button class="btn btn-primary" onclick="imprimirInformeJugador()">
+        Imprimir / Guardar como PDF
+      </button>
+    </div>
+    <div id="documentoInforme">${contenido}</div>
+  `;
+}
+
+function imprimirInformeJugador() {
+  const documento = document.getElementById("documentoInforme");
+  if (!documento) {
+    alert("Primero genera un informe.");
+    return;
+  }
+
+  const ventana = window.open("", "_blank");
+
+  if (!ventana) {
+    alert("El navegador bloqueó la ventana. Permite las ventanas emergentes para imprimir el informe.");
+    return;
+  }
+
+  ventana.document.open();
+  ventana.document.write(`
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Informe - ${escaparHTML(jugador.nombre)}</title>
-
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Informe Tiburones</title>
       <style>
         body {
           font-family: Arial, sans-serif;
           color: #222;
           padding: 25px;
-          max-width: 850px;
-          margin: auto;
+          line-height: 1.5;
         }
-
-        h1 { margin-bottom: 4px; }
-        h2 { margin-top: 25px; font-size: 18px; }
-        .sub { color: #555; font-size: 13px; }
-        .dato {
-          padding: 12px;
-          background: #f0f3f7;
-          border-radius: 8px;
-          margin: 5px 0;
+        h1, h2, h3 { text-align: center; }
+        h1 { font-size: 21px; }
+        h2 { font-size: 17px; }
+        h3 { font-size: 16px; }
+        hr { margin: 20px 0; }
+        .detalle-informe {
+          border-bottom: 1px solid #ccc;
+          padding: 10px 0;
+          page-break-inside: avoid;
         }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
+        .pie-informe {
+          text-align: center;
+          font-weight: bold;
+          margin-top: 30px;
         }
-        th, td {
-          border: 1px solid #ccc;
-          padding: 8px;
-          text-align: left;
-          font-size: 12px;
-        }
-        th { background: #edf1f5; }
-        .boton {
-          display: block;
-          margin: 20px auto;
-          padding: 12px 22px;
-          background: #15253b;
-          color: white;
-          border: 0;
-          border-radius: 7px;
-          font-size: 15px;
-        }
+        .nota-informe { font-size: 11px; text-align: center; }
         @media print {
-          .boton { display: none; }
           body { padding: 0; }
+          button { display: none; }
         }
       </style>
     </head>
-
     <body>
-      <button class="boton" onclick="window.print()">
-        Imprimir o guardar como PDF
-      </button>
-
-      <h1>ACADEMIA TIBURONES ENSENADA</h1>
-      <div class="sub">INFORME INDIVIDUAL DE DESEMPEÑO</div>
-
-      <h2>Datos del jugador</h2>
-
-      <div class="dato">
-        <strong>${escaparHTML(jugador.nombre)}</strong><br>
-        Categoría: ${escaparHTML(jugador.categoria)}<br>
-        Horario: ${escaparHTML(jugador.horario)} pm<br>
-        Periodo: ${escaparHTML(desde)} al ${escaparHTML(hasta)}
-      </div>
-
-      <h2>Resumen de asistencia</h2>
-
-      <div class="dato">
-        Entrenamientos registrados: ${entrenamientos.length}<br>
-        Asistencias: ${asistio}<br>
-        Faltas injustificadas: ${faltas}<br>
-        Faltas justificadas: ${justificadas}<br>
-        Sin registro de asistencia: ${sinRegistrar}
-      </div>
-
-      <h2>Fortalezas observadas</h2>
-      <ul>${textoLista(fortalezas)}</ul>
-
-      <h2>Áreas de mejora</h2>
-      <ul>${textoLista(areas)}</ul>
-
-      <h2>Observaciones del coach</h2>
-
-      ${observaciones.length ? observaciones.map(o => `
-        <div class="dato">
-          <strong>${escaparHTML(o.fecha)}</strong><br>
-          ${escaparHTML(o.texto)}
-        </div>
-      `).join("") : "<p>Sin observaciones adicionales.</p>"}
-
-      <h2>Detalle de entrenamientos</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Asistencia</th>
-            <th>Evaluación</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${detalle || "<tr><td colspan='3'>Sin registros</td></tr>"}
-        </tbody>
-      </table>
-
-      <p class="sub" style="margin-top:30px">
-        Informe generado por CONTROL TIBURONES.
-        Este documento presenta observaciones de desarrollo deportivo.
-      </p>
+      ${documento.innerHTML}
+      <script>
+        window.onload = function() {
+          window.print();
+        };
+      <\/script>
     </body>
     </html>
-  `;
-
-  const ventana = window.open("", "_blank");
-
-  if (!ventana) {
-    alert("El navegador bloqueó la ventana del informe. Permite las ventanas emergentes para esta página e inténtalo de nuevo.");
-    return;
-  }
-
-  ventana.document.open();
-  ventana.document.write(html);
+  `);
   ventana.document.close();
-  }
- 
-/* ==========================================
-   BLOQUE 8 DE 8
-   RESPALDOS, RESTAURACION Y CIERRE
-========================================== */
-
-/* ==========================================
-   MODULO DE RESPALDOS
-========================================== */
+}
 
 function mostrarRespaldos() {
-  const ultimo = localStorage.getItem(DB_KEY);
+  const zona = obtenerZonaEvaluaciones();
+  if (!zona) return;
 
-  document.getElementById("moduleContent").innerHTML = `
-    <h3>Seguridad y respaldos</h3>
+  zona.innerHTML = `
+    <section class="modulo">
+      <h2>Respaldos y seguridad</h2>
+      <p>Guarda una copia de seguridad de jugadores, asistencias, evaluaciones, MVP, pagos y configuraciones.</p>
 
-    <div class="panel">
-      <strong>Respaldo de información</strong>
+      <article class="tarjeta">
+        <h3>Descargar respaldo</h3>
+        <p>Genera un archivo JSON con toda la información actual de CONTROL TIBURONES.</p>
+        <button class="btn btn-primary" onclick="descargarRespaldo()">
+          Descargar respaldo completo
+        </button>
+      </article>
 
-      <p class="mini-text">
-        Descarga una copia de tus jugadores, entrenamientos,
-        asistencias, evaluaciones, MVP y pagos.
-      </p>
+      <article class="tarjeta">
+        <h3>Restaurar respaldo</h3>
+        <p>Selecciona un archivo JSON de respaldo generado por esta aplicación.</p>
+        <input type="file" id="archivoRespaldo" accept=".json,application/json">
+        <button class="btn" onclick="seleccionarRespaldo()">
+          Revisar archivo
+        </button>
+        <div id="estadoRespaldo"></div>
+      </article>
 
-      <button class="menu-btn activo"
-        style="width:100%;margin-top:10px"
-        onclick="descargarRespaldo()">
-        Descargar respaldo completo
-      </button>
-    </div>
+      <article class="tarjeta">
+        <h3>Información del sistema</h3>
+        <p>Jugadores: ${db.jugadores.length}</p>
+        <p>Entrenamientos: ${db.entrenamientos.length}</p>
+        <p>Asistencias: ${db.asistencias.length}</p>
+        <p>Evaluaciones: ${db.evaluaciones.length}</p>
+        <p>Pagos y cargos: ${db.pagos.length}</p>
+        <p>Reconocimientos MVP: ${db.reconocimientosMVP.length}</p>
+      </article>
 
-    <div class="panel">
-      <strong>Restaurar información</strong>
-
-      <p class="mini-text">
-        Selecciona un respaldo JSON generado por CONTROL TIBURONES.
-        La restauración sustituirá los datos actuales.
-      </p>
-
-      <input
-        type="file"
-        id="archivoRespaldo"
-        accept=".json,application/json">
-
-      <button class="back-btn"
-        style="width:100%"
-        onclick="restaurarRespaldo()">
-        Restaurar respaldo
-      </button>
-    </div>
-
-    <div class="panel">
-      <strong>Estado del almacenamiento</strong>
-
-      <p class="mini-text">
-        ${ultimo
-          ? "Hay información guardada en este dispositivo."
-          : "Todavía no existe un respaldo de información."}
-      </p>
-
-      <p class="mini-text">
-        Los datos se guardan en el almacenamiento local del navegador.
-        Si borras los datos del navegador o cambias de dispositivo,
-        necesitarás un respaldo para recuperarlos.
-      </p>
-    </div>
+      <p><strong>Recomendación:</strong> descarga un respaldo después de realizar cambios importantes y guárdalo también en otro lugar seguro.</p>
+    </section>
   `;
 }
 
-/* ==========================================
-   DESCARGAR RESPALDO
-========================================== */
-
 function descargarRespaldo() {
-  const respaldo = {
-    aplicacion: "CONTROL TIBURONES",
-    version: 2,
-    fechaRespaldo: new Date().toISOString(),
-    datos: db
-  };
+  try {
+    const paquete = {
+      aplicacion: "CONTROL TIBURONES",
+      versionRespaldo: 1,
+      fechaRespaldo: new Date().toISOString(),
+      datos: db
+    };
 
-  const contenido = JSON.stringify(respaldo, null, 2);
+    const contenido = JSON.stringify(paquete, null, 2);
+    const archivo = new Blob([contenido], {
+      type: "application/json;charset=utf-8"
+    });
 
-  const archivo = new Blob(
-    [contenido],
-    { type: "application/json;charset=utf-8" }
-  );
+    const url = URL.createObjectURL(archivo);
+    const enlace = document.createElement("a");
+    const fecha = obtenerFechaLocal();
 
-  const url = URL.createObjectURL(archivo);
+    enlace.href = url;
+    enlace.download = `respaldo-control-tiburones-${fecha}.json`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
 
-  const enlace = document.createElement("a");
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-  enlace.href = url;
-  enlace.download =
-    "respaldo-control-tiburones-" +
-    fechaLocalISO() + ".json";
+    registrarActividad("Respaldo descargado", fecha);
+    guardarDB();
 
-  document.body.appendChild(enlace);
-  enlace.click();
-  enlace.remove();
-
-  URL.revokeObjectURL(url);
-
-  registrarActividad("Respaldo descargado.");
-
-  guardarDB();
-
-  alert("Respaldo generado. Revisa la carpeta de descargas de tu teléfono.");
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo generar el respaldo. Intenta nuevamente.");
+  }
 }
 
-/* ==========================================
-   VALIDAR RESPALDO
-========================================== */
+function seleccionarRespaldo() {
+  const archivo = document.getElementById("archivoRespaldo")?.files?.[0];
+  const estado = document.getElementById("estadoRespaldo");
 
-function validarRespaldo(datos) {
-  const colecciones = [
-    "jugadores",
-    "entrenamientos",
-    "asistencias",
-    "evaluaciones",
-    "pagos",
-    "reconocimientosMVP",
-    "cierresMVP",
-    "actividad"
-  ];
-
-  if (!datos || typeof datos !== "object") {
-    throw new Error("El archivo no contiene información válida.");
-  }
-
-  const base = datos.datos || datos;
-
-  if (base.version !== 2) {
-    throw new Error(
-      "La versión del respaldo no es compatible."
-    );
-  }
-
-  colecciones.forEach(nombre => {
-    if (!Array.isArray(base[nombre])) {
-      throw new Error(
-        "Falta una colección válida: " + nombre
-      );
-    }
-  });
-
-  if (!base.ajustes || typeof base.ajustes !== "object") {
-    throw new Error("No se encontraron los ajustes del sistema.");
-  }
-
-  const idsJugadores = new Set();
-
-  base.jugadores.forEach(j => {
-    if (
-      !j.id ||
-      typeof j.nombre !== "string" ||
-      !["Inicial", "Infantil", "Juvenil"].includes(j.categoria) ||
-      !["4:30", "5:30", "6:30"].includes(j.horario)
-    ) {
-      throw new Error("Se encontró un jugador con datos inválidos.");
-    }
-
-    if (idsJugadores.has(j.id)) {
-      throw new Error("Hay jugadores duplicados en el respaldo.");
-    }
-
-    idsJugadores.add(j.id);
-  });
-
-  return base;
-}
-
-/* ==========================================
-   RESTAURAR RESPALDO
-========================================== */
-
-function restaurarRespaldo() {
-  const selector = document.getElementById("archivoRespaldo");
-  const archivo = selector?.files?.[0];
-
-  if (!archivo) {
+  if (!archivo || !estado) {
     alert("Selecciona primero un archivo de respaldo.");
     return;
   }
@@ -3252,89 +3335,98 @@ function restaurarRespaldo() {
 
   lector.onload = function(evento) {
     try {
-      const datos = JSON.parse(evento.target.result);
-      const baseRestaurada = validarRespaldo(datos);
+      const paquete = JSON.parse(evento.target.result);
+      const datos = paquete.datos || paquete;
 
-      const confirmar = confirm(
-        "ATENCIÓN\n\n" +
-        "La restauración sustituirá toda la información actual " +
-        "por la del archivo seleccionado.\n\n" +
-        "Se recomienda descargar primero un respaldo actual.\n\n" +
-        "¿Deseas continuar?"
-      );
-
-      if (!confirmar) return;
-
-      const copiaAnterior = JSON.stringify(db);
-
-      try {
-        db = {
-          ...crearBaseInicial(),
-          ...baseRestaurada,
-          ajustes: {
-            ...crearBaseInicial().ajustes,
-            ...baseRestaurada.ajustes
-          }
-        };
-
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-
-      } catch (error) {
-        db = JSON.parse(copiaAnterior);
-        throw error;
+      if (
+        typeof validarEstructuraBase !== "function" ||
+        !validarEstructuraBase(datos)
+      ) {
+        estado.innerHTML = `
+          <p style="color:#dc2626">
+            El archivo no tiene una estructura válida o no corresponde a esta versión.
+          </p>
+        `;
+        return;
       }
 
-      registrarActividad("Información restaurada desde respaldo.");
+      estado.innerHTML = `
+        <p style="color:#16a34a"><strong>Archivo válido.</strong></p>
+        <p>Jugadores: ${datos.jugadores.length}</p>
+        <p>Entrenamientos: ${datos.entrenamientos.length}</p>
+        <p>Evaluaciones: ${datos.evaluaciones.length}</p>
+        <p>Pagos: ${datos.pagos.length}</p>
+        <button class="btn btn-primary" onclick="confirmarRestauracionRespaldo()">
+          Confirmar restauración
+        </button>
+      `;
 
-      if (!guardarDB()) {
-        throw new Error("No se pudo guardar la información restaurada.");
-      }
-
-      alert("Respaldo restaurado correctamente.");
-
-      volverInicio();
+      window.respaldoPendiente = datos;
 
     } catch (error) {
       console.error(error);
-
-      alert(
-        "No se pudo restaurar el respaldo:\n" +
-        error.message +
-        "\n\nLa información anterior no se ha sustituido."
-      );
+      estado.innerHTML = `
+        <p style="color:#dc2626">No se pudo leer el archivo. Comprueba que sea un respaldo JSON válido.</p>
+      `;
     }
   };
 
   lector.onerror = function() {
-    alert("No fue posible leer el archivo seleccionado.");
+    estado.innerHTML = `<p style="color:#dc2626">No se pudo leer el archivo seleccionado.</p>`;
   };
 
   lector.readAsText(archivo);
 }
 
-/* ==========================================
-   ACTUALIZACION FINAL DEL PANEL
-========================================== */
+function confirmarRestauracionRespaldo() {
+  const datos = window.respaldoPendiente;
 
-function actualizarSistema() {
-  actualizarPanel();
+  if (
+    !datos ||
+    typeof validarEstructuraBase !== "function" ||
+    !validarEstructuraBase(datos)
+  ) {
+    alert("No hay un respaldo válido pendiente de restauración.");
+    return;
+  }
 
-  const indicador = document.getElementById("ultimoGuardado");
+  const confirmacion = confirm(
+    "ATENCIÓN: Restaurar este respaldo reemplazará toda la información actual de CONTROL TIBURONES en este dispositivo. Descarga primero una copia de seguridad de tus datos actuales. ¿Deseas continuar?"
+  );
 
-  if (indicador) {
-    indicador.textContent =
-      localStorage.getItem(DB_KEY)
-        ? "Información guardada en este dispositivo."
-        : "Aplicación preparada. Sin registros todavía.";
+  if (!confirmacion) return;
+
+  try {
+    const copiaAnterior = JSON.stringify(db);
+
+    // Se conserva una copia de emergencia en memoria durante la operación.
+    const datosAnteriores = JSON.parse(copiaAnterior);
+
+    db = datos;
+
+    if (!guardarDB()) {
+      db = datosAnteriores;
+      alert("No se pudo guardar el respaldo restaurado. Se conservaron los datos anteriores en memoria.");
+      return;
+    }
+
+    window.respaldoPendiente = null;
+
+    alert("Respaldo restaurado correctamente.");
+    actualizarSistema();
+    mostrarRespaldos();
+
+  } catch (error) {
+    console.error(error);
+    alert("Ocurrió un problema al restaurar el respaldo.");
   }
 }
 
-/* ==========================================
-   INICIO FINAL DE LA APLICACION
-========================================== */
-
-actualizarSistema();
+/* =====================================================
+   FIN DEL CÓDIGO — CIERRE DEL SCRIPT Y HTML
+===================================================== */
 
 </script>
 </body>
 </html>
+  
