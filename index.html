@@ -5056,5 +5056,1167 @@ textarea {
 
 })();
 </script>
+  <script>
+// ============================================================
+// CONTROL TIBURONES
+// BOTONES DE ASISTENCIA + BLOQUEO POR ENTRENAMIENTO
+// ============================================================
+
+(function () {
+    "use strict";
+
+    // ESTILOS DE LOS BOTONES
+    if (!document.getElementById("estilosAsistenciaTiburones")) {
+
+        const estilo = document.createElement("style");
+
+        estilo.id = "estilosAsistenciaTiburones";
+
+        estilo.textContent = `
+            .ct-asistencia-card {
+                margin: 12px 0;
+            }
+
+            .ct-asistencia-botones {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-top: 14px;
+            }
+
+            .ct-asistencia-btn {
+                flex: 1 1 130px;
+                min-height: 52px;
+                padding: 12px 10px;
+                border: 2px solid transparent;
+                border-radius: 12px;
+                color: #fff;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                opacity: .78;
+            }
+
+            .ct-asistencia-btn.seleccionado {
+                opacity: 1;
+                border-color: #fff;
+                transform: translateY(-1px);
+            }
+
+            .ct-asistio {
+                background: #16834a;
+            }
+
+            .ct-falta {
+                background: #c83232;
+            }
+
+            .ct-justificada {
+                background: #d97706;
+            }
+
+            .ct-asistencia-puntos {
+                margin-top: 10px;
+                font-size: 13px;
+                color: #cbd5e1;
+            }
+
+            .ct-asistencia-cerrada {
+                padding: 14px;
+                border-radius: 12px;
+                background: rgba(22,131,74,.14);
+                border: 1px solid #16834a;
+            }
+        `;
+
+        document.head.appendChild(estilo);
+    }
+
+
+    // ========================================================
+    // 1. MOSTRAR SOLAMENTE JUGADORES PENDIENTES
+    // ========================================================
+
+    window.abrirEntrenamiento = function (id) {
+
+        const entrenamiento = db.entrenamientos.find(
+            t => t.id === id
+        );
+
+        if (!entrenamiento) {
+            alert("No se encontró el entrenamiento.");
+            return;
+        }
+
+        const zona = obtenerZonaEvaluaciones();
+
+        const jugadores = db.jugadores
+            .filter(j =>
+                j.estado === "activo" &&
+                j.horario === entrenamiento.horario
+            )
+            .sort((a, b) =>
+                a.nombre.localeCompare(b.nombre, "es")
+            );
+
+        const registrados = db.asistencias.filter(
+            a => a.entrenamientoId === id
+        );
+
+        const idsRegistrados = new Set(
+            registrados.map(a => a.jugadorId)
+        );
+
+        const pendientes = jugadores.filter(
+            j => !idsRegistrados.has(j.id)
+        );
+
+        zona.innerHTML = `
+
+            <div class="modulo">
+
+                <h3>
+                    Asistencia del ${formatearFecha(entrenamiento.fecha)}
+                </h3>
+
+                <p class="mini-text">
+                    ${textoSeguro(
+                        obtenerHorario(entrenamiento.horario)?.nombre ||
+                        "Horario anterior"
+                    )}
+                </p>
+
+                <div class="tarjeta">
+
+                    <p>
+                        Selecciona un botón por jugador y guarda.
+                        Una vez guardada la asistencia, el jugador
+                        quedará bloqueado en este entrenamiento.
+                    </p>
+
+                    <p>
+                        <strong>Registrados:</strong>
+                        ${registrados.length}
+
+                        ·
+
+                        <strong>Pendientes:</strong>
+                        ${pendientes.length}
+                    </p>
+
+                    <p class="mini-text">
+                        Asistió: 0 puntos.
+                        Falta: −0.50 puntos.
+                        Justificada: 0 puntos.
+                    </p>
+
+                </div>
+
+                ${
+                    pendientes.length
+                    ? `
+
+                        <div id="listaAsistenciaTiburones">
+
+                            ${pendientes.map(j => `
+
+                                <div
+                                    class="tarjeta ct-asistencia-card"
+                                    data-jugador-id="${textoSeguro(j.id)}"
+                                >
+
+                                    <strong>
+                                        ${textoSeguro(j.nombre)}
+                                    </strong>
+
+                                    <p class="mini-text">
+                                        ${textoSeguro(
+                                            obtenerHorario(j.horario)?.nombre ||
+                                            "Sin horario"
+                                        )}
+                                    </p>
+
+                                    <div class="ct-asistencia-botones">
+
+                                        <button
+                                            type="button"
+                                            class="ct-asistencia-btn ct-asistio"
+                                            data-estado="asistio"
+                                        >
+                                            ✓ ASISTIÓ
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="ct-asistencia-btn ct-falta"
+                                            data-estado="falta"
+                                        >
+                                            ✕ FALTA
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="ct-asistencia-btn ct-justificada"
+                                            data-estado="justificada"
+                                        >
+                                            JUSTIFICADA
+                                        </button>
+
+                                    </div>
+
+                                    <div class="ct-asistencia-puntos">
+                                        Selecciona el estado de asistencia.
+                                    </div>
+
+                                </div>
+
+                            `).join("")}
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            id="guardarAsistenciaTiburones"
+                        >
+                            Guardar asistencias
+                        </button>
+
+                    `
+                    : `
+
+                        <div class="ct-asistencia-cerrada">
+
+                            <strong>
+                                ✓ Asistencia completada.
+                            </strong>
+
+                            <p>
+                                Todos los jugadores activos de este
+                                horario ya tienen un registro para
+                                este entrenamiento.
+                            </p>
+
+                            <p>
+                                No puedes volver a registrarlos
+                                desde esta pantalla.
+                            </p>
+
+                        </div>
+
+                    `
+                }
+
+                <button
+                    class="btn"
+                    type="button"
+                    onclick="mostrarEntrenamientos()"
+                >
+                    Volver
+                </button>
+
+                <button
+                    class="btn"
+                    type="button"
+                    onclick="verAsistenciaEntrenamiento('${textoSeguro(id)}')"
+                >
+                    Consultar asistencia guardada
+                </button>
+
+            </div>
+        `;
+
+
+        // ACTIVAR LOS TRES BOTONES
+
+        const lista = document.getElementById(
+            "listaAsistenciaTiburones"
+        );
+
+        if (lista) {
+
+            lista.querySelectorAll(
+                ".ct-asistencia-card"
+            ).forEach(card => {
+
+                card.querySelectorAll(
+                    ".ct-asistencia-btn"
+                ).forEach(btn => {
+
+                    btn.addEventListener("click", () => {
+
+                        const estado = btn.dataset.estado;
+
+                        card.dataset.estadoSeleccionado = estado;
+
+                        card.querySelectorAll(
+                            ".ct-asistencia-btn"
+                        ).forEach(b => {
+                            b.classList.remove("seleccionado");
+                        });
+
+                        btn.classList.add("seleccionado");
+
+                        const texto = card.querySelector(
+                            ".ct-asistencia-puntos"
+                        );
+
+                        if (estado === "falta") {
+
+                            texto.textContent =
+                                "Falta injustificada: −0.50 puntos MVP.";
+
+                        } else {
+
+                            texto.textContent =
+                                "0 puntos MVP.";
+
+                        }
+
+                    });
+
+                });
+
+            });
+
+        }
+
+
+        // BOTÓN GUARDAR
+
+        const guardarBtn = document.getElementById(
+            "guardarAsistenciaTiburones"
+        );
+
+        if (guardarBtn) {
+
+            guardarBtn.addEventListener("click", () => {
+                window.guardarAsistencias(id);
+            });
+
+        }
+
+    };
+
+
+    // ========================================================
+    // 2. GUARDAR SIN PERMITIR REGISTROS DUPLICADOS
+    // ========================================================
+
+    window.guardarAsistencias = function (id) {
+
+        const entrenamiento = db.entrenamientos.find(
+            t => t.id === id
+        );
+
+        if (!entrenamiento) {
+            alert("No se encontró el entrenamiento.");
+            return;
+        }
+
+        const cards = document.querySelectorAll(
+            "#listaAsistenciaTiburones .ct-asistencia-card"
+        );
+
+        const seleccionados = [];
+
+        cards.forEach(card => {
+
+            const jugadorId = card.dataset.jugadorId;
+
+            const estado =
+                card.dataset.estadoSeleccionado || "";
+
+            if (estado) {
+                seleccionados.push({
+                    jugadorId,
+                    estado
+                });
+            }
+
+        });
+
+
+        if (!seleccionados.length) {
+
+            alert(
+                "Selecciona ASISTIÓ, FALTA o JUSTIFICADA " +
+                "para al menos un jugador."
+            );
+
+            return;
+        }
+
+
+        // VERIFICAR QUE NO EXISTAN REGISTROS PREVIOS
+
+        const duplicados = seleccionados.filter(item =>
+            db.asistencias.some(a =>
+                a.entrenamientoId === id &&
+                a.jugadorId === item.jugadorId
+            )
+        );
+
+        if (duplicados.length) {
+
+            alert(
+                "Algunos jugadores ya tienen asistencia guardada. " +
+                "Se actualizará la lista sin duplicarlos."
+            );
+
+            abrirEntrenamiento(id);
+
+            return;
+        }
+
+
+        // CREAR REGISTROS NUEVOS
+
+        const nuevos = [];
+
+        for (const item of seleccionados) {
+
+            const jugador = obtenerJugador(item.jugadorId);
+
+            if (!jugador) continue;
+
+            nuevos.push({
+
+                id: generarId(),
+
+                entrenamientoId: id,
+
+                jugadorId: item.jugadorId,
+
+                estado: item.estado,
+
+                horarioEnEntrenamiento:
+                    entrenamiento.horario,
+
+                nombreEnEntrenamiento:
+                    jugador.nombre,
+
+                fechaRegistro:
+                    new Date().toISOString(),
+
+                fechaActualizacion: null,
+
+                historialCambios: []
+
+            });
+
+        }
+
+
+        if (!nuevos.length) {
+
+            alert(
+                "No se encontraron jugadores válidos para guardar."
+            );
+
+            return;
+        }
+
+
+        // GUARDAR EN LA BASE DE DATOS
+
+        db.asistencias.push(...nuevos);
+
+        registrarActividad(
+            "Se registraron " +
+            nuevos.length +
+            " asistencias del " +
+            formatearFecha(entrenamiento.fecha) +
+            "."
+        );
+
+
+        if (!guardarDB()) {
+
+            const idsNuevos = new Set(
+                nuevos.map(a => a.id)
+            );
+
+            db.asistencias = db.asistencias.filter(
+                a => !idsNuevos.has(a.id)
+            );
+
+            return;
+        }
+
+
+        alert(
+            "Asistencias guardadas correctamente. " +
+            "Los jugadores registrados quedaron bloqueados " +
+            "para este entrenamiento."
+        );
+
+        // VOLVER A ABRIR: LOS YA REGISTRADOS DESAPARECEN
+        abrirEntrenamiento(id);
+
+    };
+
+
+    console.log(
+        "CONTROL TIBURONES: botones de asistencia y bloqueo activados."
+    );
+
+})();
+              </script>
+<script>
+// ============================================================
+// CONTROL TIBURONES
+// EVALUACIÓN RÁPIDA CON BOTONES Y PUNTOS MVP
+// ============================================================
+
+(function () {
+  "use strict";
+
+  const OPCIONES = {
+    desempeno: [
+      { texto: "Excelente", puntos: 3, color: "verde" },
+      { texto: "Buen trabajo", puntos: 2, color: "verde" },
+      { texto: "Mejorando", puntos: 1, color: "verde" }
+    ],
+
+    actitud: [
+      { texto: "Buena actitud", puntos: 2, color: "verde" },
+      { texto: "Puso atención", puntos: 2, color: "verde" },
+      { texto: "Platicador", puntos: -1, color: "amarillo" },
+      { texto: "No siguió indicaciones", puntos: -2, color: "rojo" },
+      { texto: "No puso atención", puntos: -3, color: "rojo" },
+      { texto: "Estuvo jugando", puntos: -3, color: "rojo" }
+    ],
+
+    esfuerzo: [
+      { texto: "Mucho esfuerzo", puntos: 3, color: "verde" },
+      { texto: "Va mejorando", puntos: 2, color: "verde" },
+      { texto: "Reforzar práctica", puntos: 0, color: "amarillo" }
+    ],
+
+    uniforme: [
+      { texto: "Completo", puntos: 1, color: "verde" },
+      { texto: "Justificado", puntos: 0, color: "amarillo" },
+      { texto: "No cumple", puntos: -1, color: "rojo" }
+    ]
+  };
+
+  // ESTILOS
+  if (!document.getElementById("ct-estilos-evaluacion-botones")) {
+    const style = document.createElement("style");
+    style.id = "ct-estilos-evaluacion-botones";
+
+    style.textContent = `
+      .ct-eval-grupo {
+        margin: 16px 0;
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,.045);
+        border: 1px solid rgba(148,163,184,.22);
+      }
+
+      .ct-eval-titulo {
+        font-weight: 800;
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      .ct-eval-opciones {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 8px;
+      }
+
+      .ct-eval-btn {
+        min-height: 48px;
+        border: 2px solid transparent;
+        border-radius: 11px;
+        padding: 10px 8px;
+        font-weight: 750;
+        font-size: 14px;
+        color: white;
+        cursor: pointer;
+        opacity: .82;
+      }
+
+      .ct-eval-btn.ct-verde { background: #16834a; }
+      .ct-eval-btn.ct-amarillo { background: #b7791f; }
+      .ct-eval-btn.ct-rojo { background: #bd3030; }
+
+      .ct-eval-btn.ct-seleccionado {
+        opacity: 1;
+        border-color: white;
+        box-shadow: 0 0 0 2px rgba(255,255,255,.15);
+      }
+
+      .ct-eval-btn small {
+        display: block;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
+      .ct-eval-total {
+        font-size: 18px;
+        font-weight: 850;
+        margin: 12px 0;
+      }
+
+      .ct-eval-ajuste {
+        padding: 12px;
+        border: 1px solid rgba(148,163,184,.3);
+        border-radius: 12px;
+        margin: 14px 0;
+      }
+
+      .ct-eval-ajuste input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      @media(max-width:380px) {
+        .ct-eval-opciones {
+          grid-template-columns: 1fr;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  // CALCULAR PUNTOS DE LOS BOTONES
+  function puntosSeleccion(selecciones) {
+    return Object.entries(OPCIONES).reduce(
+      (suma, [grupo, opciones]) => {
+        const opcion = opciones.find(
+          o => o.texto === selecciones[grupo]
+        );
+
+        return suma + (opcion ? opcion.puntos : 0);
+      },
+      0
+    );
+  }
+
+  // CONSTRUIR CADA GRUPO DE BOTONES
+  function htmlGrupo(grupo, titulo, seleccion) {
+    return `
+      <div class="ct-eval-grupo">
+
+        <span class="ct-eval-titulo">${titulo}</span>
+
+        <div class="ct-eval-opciones">
+
+          ${OPCIONES[grupo].map(op => `
+            <button
+              type="button"
+              class="ct-eval-btn ct-${op.color}
+              ${seleccion === op.texto ? "ct-seleccionado" : ""}"
+              data-grupo="${grupo}"
+              data-texto="${textoSeguro(op.texto)}">
+
+              ${textoSeguro(op.texto)}
+
+              <small>
+                ${op.puntos > 0 ? "+" : ""}${op.puntos} puntos
+              </small>
+
+            </button>
+          `).join("")}
+
+        </div>
+      </div>
+    `;
+  }
+
+  // LEER LO QUE SELECCIONÓ EL COACH
+  function leerFormulario() {
+    const root = document.getElementById("ct-form-evaluacion");
+
+    if (!root) return null;
+
+    const selecciones = {};
+
+    Object.keys(OPCIONES).forEach(grupo => {
+      const activo = root.querySelector(
+        `.ct-eval-btn[data-grupo="${grupo}"].ct-seleccionado`
+      );
+
+      selecciones[grupo] = activo
+        ? activo.dataset.texto
+        : "";
+    });
+
+    const ajuste = Number(
+      root.querySelector("#ctAjusteExtra")?.value || 0
+    );
+
+    const motivo =
+      root.querySelector("#ctMotivoAjuste")?.value.trim() || "";
+
+    const observaciones =
+      root.querySelector("#ctObservaciones")?.value.trim() || "";
+
+    return {
+      selecciones,
+      ajuste,
+      motivo,
+      observaciones
+    };
+  }
+
+  // ACTUALIZAR TOTAL EN PANTALLA
+  function actualizarTotal() {
+    const datos = leerFormulario();
+
+    if (!datos) return;
+
+    const total =
+      puntosSeleccion(datos.selecciones) + datos.ajuste;
+
+    const salida = document.getElementById("ctTotalEvaluacion");
+
+    if (salida) {
+      salida.textContent =
+        `${total > 0 ? "+" : ""}${total.toFixed(2).replace(/\.00$/, "")} puntos MVP`;
+    }
+  }
+
+  // GUARDAR BORRADOR
+  function guardarBorrador(entrenamientoId, jugadorId) {
+    const datos = leerFormulario();
+
+    if (!datos) return;
+
+    if (!Array.isArray(db.borradoresEvaluacion)) {
+      db.borradoresEvaluacion = [];
+    }
+
+    const indice = db.borradoresEvaluacion.findIndex(b =>
+      b.entrenamientoId === entrenamientoId &&
+      b.jugadorId === jugadorId
+    );
+
+    const previo = indice >= 0
+      ? db.borradoresEvaluacion[indice]
+      : null;
+
+    const borrador = {
+      ...(previo || {}),
+      id: previo?.id || generarId(),
+      entrenamientoId,
+      jugadorId,
+      seleccionesMVP: datos.selecciones,
+      ajusteExtra: datos.ajuste,
+      motivoAjuste: datos.motivo,
+      observaciones: datos.observaciones,
+      fechaActualizacion: new Date().toISOString()
+    };
+
+    if (indice >= 0) {
+      db.borradoresEvaluacion[indice] = borrador;
+    } else {
+      db.borradoresEvaluacion.push(borrador);
+    }
+
+    guardarDB();
+  }
+
+  // ABRIR EVALUACIÓN
+  window.abrirFormularioEvaluacion = function (
+    entrenamientoId,
+    jugadorId
+  ) {
+
+    const entrenamiento = db.entrenamientos.find(
+      t => t.id === entrenamientoId
+    );
+
+    const jugador = obtenerJugador(jugadorId);
+
+    if (!entrenamiento || !jugador) return;
+
+    const asistencia = db.asistencias.find(a =>
+      a.entrenamientoId === entrenamientoId &&
+      a.jugadorId === jugadorId &&
+      a.estado === "asistio"
+    );
+
+    if (!asistencia) {
+      alert("Solamente se puede evaluar a un jugador que asistió.");
+      return;
+    }
+
+    const existente = db.evaluaciones.find(e =>
+      e.entrenamientoId === entrenamientoId &&
+      e.jugadorId === jugadorId
+    );
+
+    const borrador = db.borradoresEvaluacion.find(b =>
+      b.entrenamientoId === entrenamientoId &&
+      b.jugadorId === jugadorId
+    );
+
+    const datos = existente || borrador || {};
+
+    // Selecciones iniciales de desempeño excelente.
+    const selecciones = datos.seleccionesMVP || {
+      desempeno: "Excelente",
+      actitud: "Buena actitud",
+      esfuerzo: "Mucho esfuerzo",
+      uniforme: "Completo"
+    };
+
+    const zona = obtenerZonaEvaluaciones();
+
+    zona.innerHTML = `
+      <div class="modulo" id="ct-form-evaluacion">
+
+        <h3>Evaluación rápida del jugador</h3>
+
+        <div class="tarjeta">
+          <strong>${textoSeguro(jugador.nombre)}</strong>
+
+          <p class="mini-text">
+            ${formatearFecha(entrenamiento.fecha)}
+            · ${textoSeguro(
+              obtenerHorario(entrenamiento.horario)?.nombre || ""
+            )}
+          </p>
+        </div>
+
+        ${htmlGrupo("desempeno", "DESEMPEÑO", selecciones.desempeno)}
+
+        ${htmlGrupo("actitud", "ACTITUD Y ATENCIÓN", selecciones.actitud)}
+
+        ${htmlGrupo("esfuerzo", "ESFUERZO", selecciones.esfuerzo)}
+
+        ${htmlGrupo("uniforme", "UNIFORME", selecciones.uniforme)}
+
+        <div class="ct-eval-ajuste">
+
+          <strong>Descuento extra del Coach</strong>
+
+          <p class="mini-text">
+            Para restar puntos adicionales por alguna situación especial.
+          </p>
+
+          <label>Puntos a restar</label>
+
+          <input
+            id="ctAjusteExtra"
+            type="number"
+            min="-20"
+            max="0"
+            step="0.5"
+            value="${Number(datos.ajusteExtra || 0)}"
+            placeholder="Ejemplo: -1">
+
+          <label>Motivo del descuento</label>
+
+          <input
+            id="ctMotivoAjuste"
+            type="text"
+            maxlength="250"
+            value="${textoSeguro(datos.motivoAjuste || "")}"
+            placeholder="Ejemplo: no quiso poner atención">
+
+        </div>
+
+        <div class="ct-eval-grupo">
+
+          <label class="ct-eval-titulo" for="ctObservaciones">
+            Observación del Coach
+          </label>
+
+          <textarea
+            id="ctObservaciones"
+            rows="3"
+            maxlength="2000"
+            placeholder="Anota algo breve sobre su entrenamiento...">${textoSeguro(datos.observaciones || "")}</textarea>
+
+        </div>
+
+        <div class="ct-eval-total" id="ctTotalEvaluacion"></div>
+
+        <p class="mini-text">
+          Los puntos se suman al MVP mensual.
+          Cada mes comienza en cero. No se utilizan porcentajes.
+        </p>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="ctGuardarEvaluacion">
+          Guardar evaluación
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          onclick="cargarJugadoresEvaluacion()">
+          Volver
+        </button>
+
+      </div>
+    `;
+
+    const root = document.getElementById("ct-form-evaluacion");
+
+    root.querySelectorAll(".ct-eval-btn").forEach(btn => {
+
+      btn.addEventListener("click", () => {
+
+        root.querySelectorAll(
+          `.ct-eval-btn[data-grupo="${btn.dataset.grupo}"]`
+        ).forEach(b => b.classList.remove("ct-seleccionado"));
+
+        btn.classList.add("ct-seleccionado");
+
+        actualizarTotal();
+
+        guardarBorrador(entrenamientoId, jugadorId);
+      });
+
+    });
+
+    [
+      "ctAjusteExtra",
+      "ctMotivoAjuste",
+      "ctObservaciones"
+    ].forEach(id => {
+
+      root.querySelector("#" + id).addEventListener("input", () => {
+        actualizarTotal();
+        guardarBorrador(entrenamientoId, jugadorId);
+      });
+
+    });
+
+    root.querySelector("#ctGuardarEvaluacion").addEventListener(
+      "click",
+      () => window.guardarEvaluacion(entrenamientoId, jugadorId)
+    );
+
+    actualizarTotal();
+  };
+
+
+  // GUARDAR EVALUACIÓN Y PUNTOS MVP
+  window.guardarEvaluacion = function (
+    entrenamientoId,
+    jugadorId
+  ) {
+
+    const entrenamiento = db.entrenamientos.find(
+      t => t.id === entrenamientoId
+    );
+
+    const jugador = obtenerJugador(jugadorId);
+
+    if (!entrenamiento || !jugador) {
+      alert("No se encontró el entrenamiento o el jugador.");
+      return;
+    }
+
+    const asistencia = db.asistencias.find(a =>
+      a.entrenamientoId === entrenamientoId &&
+      a.jugadorId === jugadorId &&
+      a.estado === "asistio"
+    );
+
+    if (!asistencia) {
+      alert("No se puede evaluar a un jugador que no asistió.");
+      return;
+    }
+
+    const datos = leerFormulario();
+
+    if (!datos) return;
+
+    const faltantes = Object.entries(datos.selecciones)
+      .filter(([, valor]) => !valor);
+
+    if (faltantes.length) {
+      alert(
+        "Selecciona una opción en desempeño, actitud, esfuerzo y uniforme."
+      );
+      return;
+    }
+
+    if (
+      !Number.isFinite(datos.ajuste) ||
+      datos.ajuste > 0 ||
+      datos.ajuste < -20 ||
+      Math.round(datos.ajuste * 2) !== datos.ajuste * 2
+    ) {
+      alert(
+        "El descuento extra debe ser cero o negativo, " +
+        "en incrementos de medio punto."
+      );
+      return;
+    }
+
+    if (datos.ajuste < 0 && !datos.motivo) {
+      alert("Escribe el motivo del descuento extra.");
+      return;
+    }
+
+    const existente = db.evaluaciones.find(e =>
+      e.entrenamientoId === entrenamientoId &&
+      e.jugadorId === jugadorId
+    );
+
+    const copiaAnterior = existente
+      ? JSON.parse(JSON.stringify(existente))
+      : null;
+
+    const puntosBotones = puntosSeleccion(datos.selecciones);
+
+    const puntosMVP = puntosBotones + datos.ajuste;
+
+    const ahora = new Date().toISOString();
+
+    const evaluacion = {
+      ...(existente || {}),
+
+      id: existente?.id || generarId(),
+
+      entrenamientoId,
+      jugadorId,
+
+      horarioEnEntrenamiento: entrenamiento.horario,
+
+      // Conserva los campos antiguos para compatibilidad.
+      desempeno: existente?.desempeno ?? 10,
+      actitud: existente?.actitud ?? 10,
+      esfuerzo: existente?.esfuerzo ?? 10,
+      disciplina: existente?.disciplina ?? 10,
+      promedio: existente?.promedio ?? 10,
+
+      uniforme:
+        datos.selecciones.uniforme === "Completo"
+          ? "completo"
+          : datos.selecciones.uniforme === "No cumple"
+            ? "incompleto"
+            : "justificado",
+
+      observaciones: datos.observaciones,
+
+      seleccionesMVP: datos.selecciones,
+
+      puntosBotonesMVP: puntosBotones,
+
+      ajusteExtra: datos.ajuste,
+
+      motivoAjuste: datos.motivo,
+
+      puntosMVP,
+
+      fechaRegistro: existente?.fechaRegistro || ahora,
+
+      fechaActualizacion: ahora,
+
+      historialCambios: existente
+        ? [
+            ...(existente.historialCambios || []),
+            {
+              fecha: ahora,
+              anterior: copiaAnterior
+            }
+          ]
+        : []
+    };
+
+    if (existente) {
+      Object.assign(existente, evaluacion);
+    } else {
+      db.evaluaciones.push(evaluacion);
+    }
+
+    const borradoresPrevios = db.borradoresEvaluacion.filter(b =>
+      b.entrenamientoId === entrenamientoId &&
+      b.jugadorId === jugadorId
+    );
+
+    db.borradoresEvaluacion = db.borradoresEvaluacion.filter(b =>
+      !(
+        b.entrenamientoId === entrenamientoId &&
+        b.jugadorId === jugadorId
+      )
+    );
+
+    registrarActividad(
+      "Evaluación y puntos MVP registrados para " + jugador.nombre
+    );
+
+    if (!guardarDB()) {
+
+      if (existente) {
+        Object.assign(existente, copiaAnterior);
+      } else {
+        db.evaluaciones = db.evaluaciones.filter(
+          e => e.id !== evaluacion.id
+        );
+      }
+
+      db.borradoresEvaluacion.push(...borradoresPrevios);
+
+      return;
+    }
+
+    alert(
+      `Evaluación guardada. Puntos de esta evaluación: ` +
+      `${puntosMVP > 0 ? "+" : ""}${puntosMVP}.`
+    );
+
+    cargarJugadoresEvaluacion();
+  };
+
+
+  // INTEGRAR PUNTOS DE EVALUACIÓN AL MVP MENSUAL
+  const calcularTotalMVPBase = calcularTotalMVP;
+
+  window.calcularTotalMVP = function (jugadorId, periodo) {
+
+    const base = calcularTotalMVPBase(jugadorId, periodo);
+
+    const puntosEvaluaciones = (db.evaluaciones || []).reduce(
+      (suma, evaluacion) => {
+
+        if (evaluacion.jugadorId !== jugadorId) return suma;
+
+        const entrenamiento = db.entrenamientos.find(
+          t => t.id === evaluacion.entrenamientoId
+        );
+
+        if (
+          !entrenamiento ||
+          String(entrenamiento.fecha).slice(0, 7) !== periodo
+        ) {
+          return suma;
+        }
+
+        if (
+          String(entrenamiento.fecha) <
+          primerEntrenamientoDelMes(periodo)
+        ) {
+          return suma;
+        }
+
+        return suma + (Number(evaluacion.puntosMVP) || 0);
+
+      },
+      0
+    );
+
+    return base + puntosEvaluaciones;
+  };
+
+  console.log(
+    "CONTROL TIBURONES: evaluación rápida por botones activada."
+  );
+
+})();
+ </script>
 </body>
 </html>
