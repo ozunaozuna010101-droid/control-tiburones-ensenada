@@ -11139,5 +11139,179 @@ ctmmIniciar();
   }
 }
 </style>  
+
+<!-- ==========================================
+ CONTROL TIBURONES
+ OPCION CREAR TODOS LOS HORARIOS
+========================================== -->
+
+<script>
+(function(){
+
+"use strict";
+
+const crearEntrenamientoOriginal =
+  window.crearEntrenamiento;
+
+function agregarOpcionTodos(){
+
+  const selector =
+    document.getElementById("horarioEntrenamiento");
+
+  if(!selector) return;
+
+  if(selector.querySelector('option[value="TODOS"]')){
+    return;
+  }
+
+  const opcion=document.createElement("option");
+
+  opcion.value="TODOS";
+  opcion.textContent="📋 TODOS LOS HORARIOS";
+
+  selector.appendChild(opcion);
+}
+
+/* AGREGAR OPCION SIN MODIFICAR LAS EXISTENTES */
+
+const observador=new MutationObserver(()=>{
+  agregarOpcionTodos();
+});
+
+observador.observe(document.body,{
+  childList:true,
+  subtree:true
+});
+
+agregarOpcionTodos();
+
+/* CREAR TODOS LOS ENTRENAMIENTOS */
+
+window.crearEntrenamiento=function(){
+
+  const selector=
+    document.getElementById("horarioEntrenamiento");
+
+  if(!selector) return;
+
+  const horario=selector.value;
+
+  // CONSERVAR FUNCIONAMIENTO INDIVIDUAL ORIGINAL
+  if(horario!=="TODOS"){
+
+    return crearEntrenamientoOriginal.apply(
+      this,arguments
+    );
+
+  }
+
+  const fecha=
+    document.getElementById("fechaEntrenamiento").value;
+
+  if(!fecha || fecha>obtenerFechaLocal()){
+
+    alert("Selecciona una fecha válida.");
+    return;
+
+  }
+
+  if(!fechaEsDiaEntrenamiento(fecha)){
+
+    alert(
+      "Los entrenamientos regulares son lunes, miércoles y viernes."
+    );
+
+    return;
+
+  }
+
+  const horarios=db.ajustes.horarios.filter(
+    h=>h.activo
+  );
+
+  if(!horarios.length){
+
+    alert("No hay horarios activos.");
+    return;
+
+  }
+
+  const nuevos=horarios.filter(h=>
+    !db.entrenamientos.some(t=>
+      t.fecha===fecha &&
+      t.horario===h.id
+    )
+  );
+
+  if(!nuevos.length){
+
+    alert(
+      "Ya existen entrenamientos de todos los horarios para esta fecha."
+    );
+
+    return;
+
+  }
+
+  const confirmacion=confirm(
+    "¿Crear los entrenamientos de todos los horarios para el "+
+    formatearFecha(fecha)+"?\n\n"+
+    nuevos.map(h=>
+      "• "+h.nombre+" · "+h.categoria
+    ).join("\n")
+  );
+
+  if(!confirmacion) return;
+
+  const creados=nuevos.map(h=>({
+
+    id:generarId(),
+    fecha:fecha,
+    horario:h.id,
+    estado:"abierto",
+    fechaRegistro:new Date().toISOString()
+
+  }));
+
+  db.entrenamientos.push(...creados);
+
+  registrarActividad(
+    "Se crearon "+creados.length+
+    " entrenamientos para todos los horarios del "+
+    formatearFecha(fecha)
+  );
+
+  if(!guardarDB()){
+
+    const ids=new Set(
+      creados.map(t=>t.id)
+    );
+
+    db.entrenamientos=db.entrenamientos.filter(
+      t=>!ids.has(t.id)
+    );
+
+    return;
+
+  }
+
+  alert(
+    "¡Entrenamientos creados correctamente!\n\n"+
+    creados.map(t=>
+      "✓ "+obtenerHorario(t.horario).nombre
+    ).join("\n")+
+    "\n\nAhora puedes abrir cada horario desde el historial."
+  );
+
+  mostrarEntrenamientos();
+
+};
+
+console.log(
+  "CONTROL TIBURONES: opción todos los horarios activada."
+);
+
+})();
+</script> 
 </body>
 </html>
