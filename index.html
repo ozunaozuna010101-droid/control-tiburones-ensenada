@@ -5573,33 +5573,44 @@ textarea {
   "use strict";
 
   const OPCIONES = {
-    desempeno: [
-      { texto: "Excelente", puntos: 3, color: "verde" },
-      { texto: "Buen trabajo", puntos: 2, color: "verde" },
-      { texto: "Mejorando", puntos: 1, color: "verde" }
-    ],
+  desempeno: [
+    { texto: "Excelente trabajo", puntos: 3, color: "verde" },
+    { texto: "Buen desempeño", puntos: 2, color: "verde" },
+    { texto: "Cumplió con la actividad", puntos: 1.5, color: "verde" },
+    { texto: "Buena participación en la práctica", puntos: 0.5, color: "verde" },
+    { texto: "No completó la actividad", puntos: -1, color: "rojo" },
+    { texto: "No siguió el ejercicio", puntos: -2, color: "rojo" },
+    { texto: "Se negó a realizar la actividad", puntos: -3, color: "rojo" }
+  ],
 
-    actitud: [
-      { texto: "Buena actitud", puntos: 2, color: "verde" },
-      { texto: "Puso atención", puntos: 2, color: "verde" },
-      { texto: "Platicador", puntos: -1, color: "amarillo" },
-      { texto: "No siguió indicaciones", puntos: -2, color: "rojo" },
-      { texto: "No puso atención", puntos: -3, color: "rojo" },
-      { texto: "Estuvo jugando", puntos: -3, color: "rojo" }
-    ],
+  actitud: [
+    { texto: "Actitud ejemplar", puntos: 2.5, color: "verde" },
+    { texto: "Buena disposición", puntos: 1.5, color: "verde" },
+    { texto: "Colaboró con sus compañeros", puntos: 1, color: "verde" },
+    { texto: "Atendió las indicaciones", puntos: 0.5, color: "verde" },
+    { texto: "Platicó durante la práctica", puntos: -1, color: "rojo" },
+    { texto: "No prestó atención", puntos: -2, color: "rojo" },
+    { texto: "Jugó durante la práctica", puntos: -2, color: "rojo" },
+    { texto: "Persistió después de varias correcciones", puntos: -3, color: "rojo" }
+  ],
 
-    esfuerzo: [
-      { texto: "Mucho esfuerzo", puntos: 3, color: "verde" },
-      { texto: "Va mejorando", puntos: 2, color: "verde" },
-      { texto: "Reforzar práctica", puntos: 0, color: "amarillo" }
-    ],
+  esfuerzo: [
+    { texto: "Dio su máximo", puntos: 3, color: "verde" },
+    { texto: "Gran esfuerzo", puntos: 2.5, color: "verde" },
+    { texto: "Trabajó con constancia", puntos: 1.5, color: "verde" },
+    { texto: "Mostró disposición", puntos: 1, color: "verde" },
+    { texto: "En proceso de superación", puntos: 0.5, color: "verde" },
+    { texto: "No mostró buena actitud durante la práctica", puntos: -1, color: "rojo" },
+    { texto: "Abandonó los ejercicios sin justificación", puntos: -2, color: "rojo" },
+    { texto: "Se negó a trabajar", puntos: -3, color: "rojo" }
+  ],
 
-    uniforme: [
-      { texto: "Completo", puntos: 1, color: "verde" },
-      { texto: "Justificado", puntos: 0, color: "amarillo" },
-      { texto: "No cumple", puntos: -1, color: "rojo" }
-    ]
-  };
+  uniforme: [
+    { texto: "Completo", puntos: 1, color: "verde" },
+    { texto: "Justificado", puntos: 0, color: "amarillo" },
+    { texto: "No cumple", puntos: -1, color: "rojo" }
+  ]
+};
 
   // ESTILOS
   if (!document.getElementById("ct-estilos-evaluacion-botones")) {
