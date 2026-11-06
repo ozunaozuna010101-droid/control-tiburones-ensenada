@@ -6665,5 +6665,165 @@ textarea {
 
 })();
 </script>
+  <script>
+// ============================================================
+// CONTROL TIBURONES
+// HISTORIAL LIMPIO: SOLO EVALUACIÓN POR BOTONES MVP
+// ============================================================
+
+(function () {
+    "use strict";
+
+    window.verHistorialEvaluacionCT = function (jugadorId) {
+
+        const entrenamientoId = window.ctEntrenamientoActual;
+
+        const evaluacion = db.evaluaciones.find(e =>
+            e.entrenamientoId === entrenamientoId &&
+            e.jugadorId === jugadorId
+        );
+
+        const jugador = obtenerJugador(jugadorId);
+
+        if (!evaluacion || !jugador) {
+            alert("No se encontró la evaluación.");
+            return;
+        }
+
+        const entrenamiento = db.entrenamientos.find(
+            t => t.id === entrenamientoId
+        );
+
+        const selecciones = evaluacion.seleccionesMVP || {};
+
+        const nombres = {
+            desempeno: "Desempeño",
+            actitud: "Actitud y atención",
+            esfuerzo: "Esfuerzo",
+            uniforme: "Uniforme"
+        };
+
+        const puntos = Number(evaluacion.puntosMVP || 0);
+        const ajuste = Number(evaluacion.ajusteExtra || 0);
+        const zona = obtenerZonaEvaluaciones();
+
+        zona.innerHTML = `
+            <div class="modulo">
+
+                <h3>Historial de evaluación</h3>
+
+                <div class="tarjeta">
+
+                    <strong>${textoSeguro(jugador.nombre)}</strong>
+
+                    <p class="mini-text">
+                        ${entrenamiento
+                            ? formatearFecha(entrenamiento.fecha)
+                            : ""}
+                    </p>
+
+                    <span style="
+                        color:#22c55e;
+                        font-weight:800;
+                    ">
+                        ✓ EVALUACIÓN COMPLETADA
+                    </span>
+
+                </div>
+
+                <div class="tarjeta">
+
+                    <h3>Evaluación por botones</h3>
+
+                    ${Object.entries(nombres).map(([clave, nombre]) => `
+                        <div style="
+                            padding:10px 0;
+                            border-bottom:1px solid rgba(255,255,255,.10);
+                        ">
+                            <strong>${nombre}</strong>
+                            <p style="margin:5px 0 0;">
+                                ${textoSeguro(selecciones[clave] || "Sin selección")}
+                            </p>
+                        </div>
+                    `).join("")}
+
+                </div>
+
+                ${
+                    ajuste < 0
+                    ? `
+                        <div class="tarjeta">
+                            <h3>Descuento extra del Coach</h3>
+                            <p>
+                                <strong>
+                                    ${ajuste} puntos
+                                </strong>
+                            </p>
+                            <p>
+                                Motivo:
+                                ${textoSeguro(evaluacion.motivoAjuste || "Sin motivo registrado")}
+                            </p>
+                        </div>
+                    `
+                    : ""
+                }
+
+                <div class="tarjeta">
+
+                    <h3>Total de puntos MVP</h3>
+
+                    <div style="
+                        font-size:28px;
+                        font-weight:900;
+                        color:${puntos >= 0 ? "#22c55e" : "#f87171"};
+                    ">
+                        ${puntos > 0 ? "+" : ""}${puntos}
+                    </div>
+
+                </div>
+
+                <div class="tarjeta">
+
+                    <h3>Observaciones del Coach</h3>
+
+                    <p>
+                        ${textoSeguro(
+                            evaluacion.observaciones ||
+                            "Sin observaciones."
+                        )}
+                    </p>
+
+                </div>
+
+                <div class="tarjeta">
+
+                    <strong>
+                        Esta evaluación ya está guardada.
+                    </strong>
+
+                    <p class="mini-text">
+                        Esta pantalla es únicamente de consulta.
+                        No puedes modificar la evaluación.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    onclick="cargarJugadoresEvaluacion()">
+                    Volver a la lista de jugadores
+                </button>
+
+            </div>
+        `;
+    };
+
+    console.log(
+        "CONTROL TIBURONES: historial limpio de evaluación activado."
+    );
+
+})();
+  </script>
 </body>
 </html>
