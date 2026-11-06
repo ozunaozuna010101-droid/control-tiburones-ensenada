@@ -11313,5 +11313,502 @@ console.log(
 
 })();
 </script> 
+
+<!-- ==========================================
+ CONTROL TIBURONES
+ EDITAR MVP Y MEDALLAS ACUMULADAS
+========================================== -->
+
+<style>
+.ct-mvp-editar{
+  width:100%;
+  padding:15px;
+  margin:15px 0;
+  border:2px solid #d9a927;
+  border-radius:13px;
+  background:linear-gradient(135deg,#704d16,#a87920);
+  color:white;
+  font-size:17px;
+  font-weight:900;
+}
+.ct-mvp-medalla{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 9px;
+  margin-left:5px;
+  border:1px solid #e6bb43;
+  border-radius:20px;
+  background:#493817;
+  color:#ffdf78;
+  font-size:13px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.ct-mvp-registro{
+  background:#203650;
+  border:1px solid #455c78;
+  border-radius:13px;
+  padding:14px;
+  margin:12px 0;
+}
+.ct-mvp-registro label{
+  display:block;
+  margin:12px 0 6px;
+  color:#bdcce0;
+  font-weight:bold;
+}
+.ct-mvp-registro select{
+  width:100%;
+  padding:12px;
+  border-radius:9px;
+  background:#101e30;
+  color:white;
+  border:1px solid #536982;
+  font-size:15px;
+}
+.ct-mvp-guardar{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:0;
+  border-radius:9px;
+  background:#168b5b;
+  color:white;
+  font-weight:900;
+}
+.ct-mvp-eliminar{
+  width:100%;
+  padding:11px;
+  margin-top:8px;
+  border:1px solid #ef5965;
+  border-radius:9px;
+  background:#642e39;
+  color:white;
+  font-weight:bold;
+}
+</style>
+
+<script>
+(function CONTROL_TIBURONES_EDITAR_MVP(){
+
+"use strict";
+
+/* =====================================
+   MEDALLAS ACUMULADAS
+===================================== */
+
+window.mostrarCopasJugador=function(jugadorId){
+
+  const total=(db.reconocimientosMVP||[])
+    .filter(r=>r.jugadorId===jugadorId)
+    .length;
+
+  if(total===0) return "";
+
+  return `
+    <span class="ct-mvp-medalla"
+      title="${total} reconocimientos MVP acumulados">
+      🏅 x${total}
+    </span>
+  `;
+};
+
+/* =====================================
+   BOTON EDITAR EN MODULO MVP
+===================================== */
+
+function agregarBotonEditar(){
+
+  const zona=document.getElementById("moduleContent");
+
+  if(!zona) return;
+
+  const modulo=zona.querySelector(".modulo");
+
+  if(!modulo) return;
+
+  const titulo=modulo.querySelector("h2");
+
+  if(!titulo ||
+     !titulo.textContent.includes("MVP DEL MES")){
+    return;
+  }
+
+  if(modulo.querySelector("#ctEditarMVP")) return;
+
+  const boton=document.createElement("button");
+
+  boton.id="ctEditarMVP";
+  boton.className="ct-mvp-editar";
+  boton.textContent="🛠️ EDITAR RECONOCIMIENTOS MVP";
+
+  boton.onclick=window.ctMostrarEditorMVP;
+
+  titulo.insertAdjacentElement("afterend",boton);
+
+}
+
+/* =====================================
+   ABRIR EDITOR
+===================================== */
+
+window.ctMostrarEditorMVP=function(){
+
+  const registros=(db.reconocimientosMVP||[])
+    .slice()
+    .sort((a,b)=>
+      String(b.periodo||"").localeCompare(
+        String(a.periodo||"")
+      )
+    );
+
+  let html=`
+
+    <div class="modulo">
+
+      <h2>🛠️ Editar reconocimientos MVP</h2>
+
+      <p>
+        Aquí puedes corregir reconocimientos,
+        cambiar un ganador o eliminar un MVP
+        registrado por error.
+      </p>
+
+      <div class="tarjeta">
+        <strong>Importante:</strong>
+        Los cambios actualizarán automáticamente
+        las medallas acumuladas del jugador.
+      </div>
+
+  `;
+
+  if(!registros.length){
+
+    html+=`
+      <div class="tarjeta">
+        Todavía no hay reconocimientos registrados.
+      </div>
+    `;
+
+  }
+
+  registros.forEach((r,i)=>{
+
+    const jugador=(db.jugadores||[]).find(
+      j=>j.id===r.jugadorId
+    );
+
+    const nombre=jugador?.nombre||
+      r.nombreJugador||"Jugador";
+
+    const horario=obtenerHorario(r.horario);
+
+    const total=(db.reconocimientosMVP||[])
+      .filter(x=>x.jugadorId===r.jugadorId)
+      .length;
+
+    html+=`
+
+      <div class="ct-mvp-registro">
+
+        <strong>🏅 ${ctEscape(nombre)}</strong>
+
+        <p class="mini-text">
+          Mes: ${ctEscape(r.periodo||"Sin fecha")}
+        </p>
+
+        <p class="mini-text">
+          Horario: ${ctEscape(
+            horario?.nombre||r.horario||"Sin horario"
+          )}
+        </p>
+
+        <p class="mini-text">
+          Medallas actuales: 🏅 x${total}
+        </p>
+
+        <label>Cambiar reconocimiento a otro jugador</label>
+
+        <select id="ctMvpJugador${i}">
+          ${(db.jugadores||[]).map(j=>`
+            <option value="${ctEscape(j.id)}"
+              ${j.id===r.jugadorId?"selected":""}>
+              ${ctEscape(j.nombre)}
+            </option>
+          `).join("")}
+        </select>
+
+        <button class="ct-mvp-guardar"
+          onclick="ctGuardarEdicionMVP('${ctEscape(r.id)}','ctMvpJugador${i}')">
+          GUARDAR CORRECCIÓN
+        </button>
+
+        <button class="ct-mvp-eliminar"
+          onclick="ctEliminarReconocimientoMVP('${ctEscape(r.id)}')">
+          ELIMINAR MVP REGISTRADO POR ERROR
+        </button>
+
+      </div>
+
+    `;
+
+  });
+
+  html+=`
+
+      <button class="btn btn-primary"
+        onclick="mostrarMVP()">
+        ← Volver al MVP
+      </button>
+
+    </div>
+
+  `;
+
+  document.getElementById("moduleContent").innerHTML=html;
+
+};
+
+/* =====================================
+   ESCAPAR TEXTO
+===================================== */
+
+function ctEscape(valor){
+
+  return String(valor??"").replace(
+    /[&<>"']/g,
+    c=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    })[c]
+  );
+
+}
+
+/* =====================================
+   ACTUALIZAR CIERRE DEL HORARIO
+===================================== */
+
+function ctActualizarCierre(periodo,horario){
+
+  const cierre=(db.cierresMVP||[]).find(c=>
+    c.periodo===periodo &&
+    c.horario===horario
+  );
+
+  if(!cierre) return;
+
+  const ganadores=[...new Set(
+    (db.reconocimientosMVP||[])
+      .filter(r=>
+        r.periodo===periodo &&
+        r.horario===horario
+      )
+      .map(r=>r.jugadorId)
+  )];
+
+  if(!ganadores.length){
+
+    db.cierresMVP=db.cierresMVP.filter(
+      c=>c!==cierre
+    );
+
+  }else{
+
+    cierre.ganadores=ganadores;
+
+  }
+
+}
+
+/* =====================================
+   CAMBIAR GANADOR
+===================================== */
+
+window.ctGuardarEdicionMVP=function(
+  reconocimientoId,
+  selectorId
+){
+
+  const registro=db.reconocimientosMVP.find(
+    r=>r.id===reconocimientoId
+  );
+
+  if(!registro) return;
+
+  const selector=document.getElementById(selectorId);
+
+  if(!selector) return;
+
+  const nuevoId=selector.value;
+
+  const nuevoJugador=obtenerJugador(nuevoId);
+
+  if(!nuevoJugador){
+
+    alert("No se encontró al jugador seleccionado.");
+    return;
+
+  }
+
+  if(nuevoId===registro.jugadorId){
+
+    alert("No realizaste ningún cambio.");
+    return;
+
+  }
+
+  const duplicado=db.reconocimientosMVP.some(r=>
+    r.id!==registro.id &&
+    r.jugadorId===nuevoId &&
+    r.periodo===registro.periodo &&
+    r.horario===registro.horario
+  );
+
+  if(duplicado){
+
+    alert(
+      "Ese jugador ya tiene un MVP registrado para ese mes y horario."
+    );
+
+    return;
+
+  }
+
+  if(!confirm(
+    "¿Cambiar el MVP de "+
+    (registro.nombreJugador||"jugador anterior")+
+    " a "+nuevoJugador.nombre+"?"
+  )) return;
+
+  const anterior={...registro};
+
+  const cierresAntes=db.cierresMVP.map(c=>({
+    ...c,
+    ganadores:Array.isArray(c.ganadores)
+      ? [...c.ganadores]
+      : []
+  }));
+
+  registro.jugadorId=nuevoJugador.id;
+  registro.nombreJugador=nuevoJugador.nombre;
+
+  ctActualizarCierre(
+    registro.periodo,
+    registro.horario
+  );
+
+  if(!guardarDB()){
+
+    Object.assign(registro,anterior);
+    db.cierresMVP=cierresAntes;
+
+    return;
+
+  }
+
+  registrarActividad(
+    "Se corrigió un reconocimiento MVP: "+
+    nuevoJugador.nombre
+  );
+
+  guardarDB();
+
+  alert("Reconocimiento MVP corregido correctamente.");
+
+  ctMostrarEditorMVP();
+
+};
+
+/* =====================================
+   ELIMINAR MVP INCORRECTO
+===================================== */
+
+window.ctEliminarReconocimientoMVP=function(
+  reconocimientoId
+){
+
+  const indice=db.reconocimientosMVP.findIndex(
+    r=>r.id===reconocimientoId
+  );
+
+  if(indice===-1) return;
+
+  const registro=db.reconocimientosMVP[indice];
+
+  if(!confirm(
+    "¿Eliminar este reconocimiento MVP?\n\n"+
+    (registro.nombreJugador||"Jugador")+
+    "\nMes: "+registro.periodo+
+    "\n\nSu contador de medallas disminuirá en uno."
+  )) return;
+
+  const cierresAntes=db.cierresMVP.map(c=>({
+    ...c,
+    ganadores:Array.isArray(c.ganadores)
+      ? [...c.ganadores]
+      : []
+  }));
+
+  db.reconocimientosMVP.splice(indice,1);
+
+  ctActualizarCierre(
+    registro.periodo,
+    registro.horario
+  );
+
+  if(!guardarDB()){
+
+    db.reconocimientosMVP.splice(indice,0,registro);
+    db.cierresMVP=cierresAntes;
+
+    return;
+
+  }
+
+  registrarActividad(
+    "Se eliminó un reconocimiento MVP incorrecto: "+
+    (registro.nombreJugador||"Jugador")
+  );
+
+  guardarDB();
+
+  alert("Reconocimiento eliminado correctamente.");
+
+  ctMostrarEditorMVP();
+
+};
+
+/* =====================================
+   DETECTAR PANTALLA MVP
+===================================== */
+
+const zona=document.getElementById("moduleContent");
+
+if(zona){
+
+  const observador=new MutationObserver(()=>{
+    agregarBotonEditar();
+  });
+
+  observador.observe(zona,{
+    childList:true,
+    subtree:true
+  });
+
+  agregarBotonEditar();
+
+}
+
+console.log(
+  "CONTROL TIBURONES: edición y medallas MVP activadas."
+);
+
+})();
+</script>
 </body>
 </html>
