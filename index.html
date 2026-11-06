@@ -11810,5 +11810,649 @@ console.log(
 
 })();
 </script>
+ 
+<!-- =====================================================
+ CONTROL TIBURONES · CORRECCIÓN Y EDICIÓN DE MVP
+ Pegar antes de </body>
+===================================================== -->
+
+<script>
+(function () {
+  "use strict";
+
+  if (typeof db === "undefined" || !db) {
+    console.error("No se encontró la base de datos.");
+    return;
+  }
+
+  if (!Array.isArray(db.reconocimientosMVP)) {
+    db.reconocimientosMVP = [];
+  }
+
+  window.ctMvpGuardado = false;
+  window.ctMvpEditandoId = null;
+
+  function escapar(valor) {
+    return typeof textoSeguro === "function"
+      ? textoSeguro(String(valor ?? ""))
+      : String(valor ?? "").replace(/[&<>"']/g, c => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        })[c]);
+  }
+
+  function obtenerJugadorMVP(id) {
+    return db.jugadores.find(j => j.id === id);
+  }
+
+  function obtenerNombreHorario(id) {
+    const h = (db.ajustes.horarios || []).find(x => x.id === id);
+    return h ? h.nombre : id;
+  }
+
+  function guardarSeguro() {
+    try {
+      return guardarDB() !== false;
+    } catch (error) {
+      console.error(error);
+      alert("No se pudieron guardar los cambios.");
+      return false;
+    }
+  }
+
+  // ===================================================
+  // 1. FORMULARIO DE MVP HISTÓRICO
+  // ===================================================
+
+  window.mostrarRegistroHistoricoMVP = function () {
+
+    window.ctMvpGuardado = false;
+
+    const jugadores = db.jugadores
+      .filter(j => j.estado !== "baja")
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    const horarios = db.ajustes.horarios || [];
+
+    document.getElementById("moduleContent").innerHTML = `
+      <div class="modulo">
+
+        <h2>🏆 Registrar MVP histórico</h2>
+
+        <p>
+          Registra los reconocimientos que entregaste
+          antes de utilizar esta aplicación.
+        </p>
+
+        <div class="tarjeta">
+
+          <label>Jugador</label>
+
+          <select id="historicoJugador">
+            <option value="">Seleccionar jugador</option>
+            ${jugadores.map(j => `
+              <option value="${escapar(j.id)}">
+                ${escapar(j.nombre)}
+              </option>
+            `).join("")}
+          </select>
+
+          <label>Mes del reconocimiento</label>
+
+          <input type="month" id="historicoPeriodo">
+
+          <label>Horario</label>
+
+          <select id="historicoHorario">
+            <option value="">Seleccionar horario</option>
+            ${horarios.map(h => `
+              <option value="${escapar(h.id)}">
+                ${escapar(h.nombre)}
+              </option>
+            `).join("")}
+          </select>
+
+          <label>Observación (opcional)</label>
+
+          <textarea id="historicoObservacion"
+            placeholder="Ejemplo: MVP del mes de septiembre"></textarea>
+
+          <button
+            type="button"
+            id="ctMvpGuardar"
+            class="btn btn-primary"
+            onclick="guardarReconocimientoHistoricoMVP()">
+
+            🏆 Guardar reconocimiento
+
+          </button>
+
+          <p id="ctMvpEstado" class="mini-text"></p>
+
+        </div>
+
+        <div class="tarjeta">
+
+          <h3>🛠️ Corregir reconocimientos</h3>
+
+          <p>
+            Aquí puedes modificar un MVP registrado,
+            cambiar al jugador o eliminar uno que
+            hayas registrado por error.
+          </p>
+
+          <button class="btn btn-primary"
+            onclick="ctMvpMostrarEdicion()">
+
+            ✏️ Editar reconocimientos guardados
+
+          </button>
+
+        </div>
+
+        <button class="btn" onclick="mostrarMVP()">
+          ← Volver al MVP
+        </button>
+
+      </div>
+    `;
+  };
+
+
+  // ===================================================
+  // 2. EVITAR DOBLE REGISTRO
+  // ===================================================
+
+  window.ctMvpHabilitarNuevoGuardado = function () {
+
+    if (window.ctMvpGuardado) {
+      window.ctMvpGuardado = false;
+
+      const boton = document.getElementById("ctMvpGuardar");
+      const estado = document.getElementById("ctMvpEstado");
+
+      if (boton) {
+        boton.disabled = false;
+        boton.textContent = "🏆 Guardar reconocimiento";
+      }
+
+      if (estado) estado.textContent = "";
+    }
+  };
+
+
+  // ===================================================
+  // 3. GUARDAR RECONOCIMIENTO CON PROTECCIÓN
+  // ===================================================
+
+  window.guardarReconocimientoHistoricoMVP = function () {
+
+    if (window.ctMvpGuardado) {
+      alert("Este reconocimiento ya fue guardado.");
+      return;
+    }
+
+    const boton = document.getElementById("ctMvpGuardar");
+
+    const jugadorId =
+      document.getElementById("historicoJugador").value;
+
+    const periodo =
+      document.getElementById("historicoPeriodo").value;
+
+    const horario =
+      document.getElementById("historicoHorario").value;
+
+    const observacion =
+      document.getElementById("historicoObservacion").value.trim();
+
+    if (!jugadorId || !periodo || !horario) {
+      alert("Selecciona jugador, mes y horario.");
+      return;
+    }
+
+    const jugador = obtenerJugadorMVP(jugadorId);
+
+    if (!jugador) {
+      alert("No se encontró el jugador.");
+      return;
+    }
+
+    const duplicado = db.reconocimientosMVP.some(item =>
+      item.jugadorId === jugadorId &&
+      item.periodo === periodo &&
+      item.horario === horario
+    );
+
+    if (duplicado) {
+      alert(
+        "Este jugador ya tiene un MVP registrado " +
+        "para ese mes y horario. Puedes corregirlo " +
+        "desde Editar reconocimientos."
+      );
+      return;
+    }
+
+    // Bloquear inmediatamente para evitar doble clic.
+    window.ctMvpGuardado = true;
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "✓ Reconocimiento guardado";
+    }
+
+    const registro = {
+      id: generarId(),
+      jugadorId,
+      nombreJugador: jugador.nombre,
+      periodo,
+      horario,
+      observacion,
+      origen: "historico",
+      fechaRegistro: obtenerFechaLocal()
+    };
+
+    db.reconocimientosMVP.push(registro);
+
+    if (!guardarSeguro()) {
+      db.reconocimientosMVP =
+        db.reconocimientosMVP.filter(x => x.id !== registro.id);
+
+      window.ctMvpGuardado = false;
+
+      if (boton) {
+        boton.disabled = false;
+        boton.textContent = "🏆 Guardar reconocimiento";
+      }
+
+      return;
+    }
+
+    if (typeof registrarActividad === "function") {
+      registrarActividad(
+        "MVP histórico registrado: " + jugador.nombre
+      );
+      guardarDB();
+    }
+
+    const estado = document.getElementById("ctMvpEstado");
+
+    if (estado) {
+      estado.textContent =
+        "✓ Guardado correctamente. El botón quedó bloqueado " +
+        "para evitar duplicados.";
+    }
+
+    alert(
+      "¡Reconocimiento guardado correctamente!\n\n" +
+      jugador.nombre +
+      "\nMVP acumulados: " +
+      contarMVPJugador(jugadorId)
+    );
+  };
+
+
+  // ===================================================
+  // 4. MOSTRAR TODOS LOS RECONOCIMIENTOS
+  // ===================================================
+
+  window.ctMvpMostrarEdicion = function () {
+
+    const registros = db.reconocimientosMVP.slice().sort(
+      (a, b) =>
+        String(b.periodo).localeCompare(String(a.periodo))
+    );
+
+    let html = `
+      <div class="modulo">
+
+        <h2>🛠️ Editar reconocimientos MVP</h2>
+
+        <p>
+          Puedes corregir el jugador, el mes, el horario
+          o eliminar un reconocimiento equivocado.
+        </p>
+    `;
+
+    if (!registros.length) {
+
+      html += `
+        <div class="tarjeta">
+          Todavía no hay reconocimientos registrados.
+        </div>
+      `;
+
+    } else {
+
+      registros.forEach(item => {
+
+        const jugador = obtenerJugadorMVP(item.jugadorId);
+        const nombre = jugador
+          ? jugador.nombre
+          : item.nombreJugador || "Jugador no encontrado";
+
+        html += `
+          <div class="tarjeta"
+            style="padding:14px; margin-bottom:12px;">
+
+            <div style="
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              gap:10px;
+              flex-wrap:wrap;">
+
+              <strong>🏆 ${escapar(nombre)}</strong>
+
+              <span class="copas-mvp">
+                ${contarMVPJugador(item.jugadorId)} MVP
+              </span>
+
+            </div>
+
+            <p>Mes: <strong>${escapar(item.periodo)}</strong></p>
+
+            <p>Horario:
+              ${escapar(obtenerNombreHorario(item.horario))}
+            </p>
+
+            <p>
+              Tipo:
+              ${item.origen === "historico"
+                ? "Histórico"
+                : "Reconocimiento de la aplicación"}
+            </p>
+
+            <p>${escapar(item.observacion || "Sin observaciones")}</p>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+              <button class="btn btn-primary"
+                onclick="ctMvpAbrirEdicion('${escapar(item.id)}')">
+                ✏️ Editar
+              </button>
+
+              <button class="btn"
+                style="background:#a52e43; border-color:#ef536b;"
+                onclick="ctMvpEliminar('${escapar(item.id)}')">
+                🗑️ Eliminar
+              </button>
+
+            </div>
+
+          </div>
+        `;
+      });
+    }
+
+    html += `
+        <button class="btn" onclick="mostrarRegistroHistoricoMVP()">
+          ← Volver
+        </button>
+
+      </div>
+    `;
+
+    document.getElementById("moduleContent").innerHTML = html;
+  };
+
+
+  // ===================================================
+  // 5. ABRIR FORMULARIO DE EDICIÓN
+  // ===================================================
+
+  window.ctMvpAbrirEdicion = function (id) {
+
+    const item = db.reconocimientosMVP.find(x => x.id === id);
+
+    if (!item) {
+      alert("No se encontró el reconocimiento.");
+      return;
+    }
+
+    window.ctMvpEditandoId = id;
+
+    const jugadores = db.jugadores
+      .slice()
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    const horarios = db.ajustes.horarios || [];
+
+    document.getElementById("moduleContent").innerHTML = `
+
+      <div class="modulo">
+
+        <h2>✏️ Corregir reconocimiento MVP</h2>
+
+        <div class="tarjeta">
+
+          <label>Jugador correcto</label>
+
+          <select id="ctMvpJugadorEditar">
+
+            ${jugadores.map(j => `
+              <option value="${escapar(j.id)}"
+                ${j.id === item.jugadorId ? "selected" : ""}>
+                ${escapar(j.nombre)}
+              </option>
+            `).join("")}
+
+          </select>
+
+          <label>Mes del reconocimiento</label>
+
+          <input type="month"
+            id="ctMvpPeriodoEditar"
+            value="${escapar(item.periodo)}">
+
+          <label>Horario</label>
+
+          <select id="ctMvpHorarioEditar">
+
+            ${horarios.map(h => `
+              <option value="${escapar(h.id)}"
+                ${h.id === item.horario ? "selected" : ""}>
+                ${escapar(h.nombre)}
+              </option>
+            `).join("")}
+
+          </select>
+
+          <label>Observación</label>
+
+          <textarea id="ctMvpObservacionEditar">${escapar(item.observacion || "")}</textarea>
+
+          <button class="btn btn-primary"
+            onclick="ctMvpGuardarEdicion()">
+
+            ✓ Guardar corrección
+
+          </button>
+
+        </div>
+
+        <button class="btn"
+          onclick="ctMvpMostrarEdicion()">
+          ← Cancelar
+        </button>
+
+      </div>
+    `;
+  };
+
+
+  // ===================================================
+  // 6. GUARDAR CORRECCIÓN
+  // ===================================================
+
+  window.ctMvpGuardarEdicion = function () {
+
+    const id = window.ctMvpEditandoId;
+
+    const item = db.reconocimientosMVP.find(x => x.id === id);
+
+    if (!item) {
+      alert("No se encontró el reconocimiento.");
+      return;
+    }
+
+    const jugadorId =
+      document.getElementById("ctMvpJugadorEditar").value;
+
+    const periodo =
+      document.getElementById("ctMvpPeriodoEditar").value;
+
+    const horario =
+      document.getElementById("ctMvpHorarioEditar").value;
+
+    const observacion =
+      document.getElementById("ctMvpObservacionEditar").value.trim();
+
+    if (!jugadorId || !periodo || !horario) {
+      alert("Completa jugador, mes y horario.");
+      return;
+    }
+
+    const jugador = obtenerJugadorMVP(jugadorId);
+
+    if (!jugador) {
+      alert("No se encontró el jugador seleccionado.");
+      return;
+    }
+
+    const duplicado = db.reconocimientosMVP.some(x =>
+      x.id !== id &&
+      x.jugadorId === jugadorId &&
+      x.periodo === periodo &&
+      x.horario === horario
+    );
+
+    if (duplicado) {
+      alert(
+        "Ese jugador ya tiene un reconocimiento " +
+        "registrado para ese mes y horario."
+      );
+      return;
+    }
+
+    const anterior = { ...item };
+
+    Object.assign(item, {
+      jugadorId,
+      nombreJugador: jugador.nombre,
+      periodo,
+      horario,
+      observacion
+    });
+
+    if (!guardarSeguro()) {
+      Object.assign(item, anterior);
+      return;
+    }
+
+    if (typeof registrarActividad === "function") {
+      registrarActividad(
+        "Reconocimiento MVP corregido: " + jugador.nombre
+      );
+      guardarDB();
+    }
+
+    alert(
+      "Reconocimiento corregido correctamente.\n\n" +
+      "El contador de medallas se actualizará automáticamente."
+    );
+
+    window.ctMvpEditandoId = null;
+
+    ctMvpMostrarEdicion();
+  };
+
+
+  // ===================================================
+  // 7. ELIMINAR RECONOCIMIENTO EQUIVOCADO
+  // ===================================================
+
+  window.ctMvpEliminar = function (id) {
+
+    const item = db.reconocimientosMVP.find(x => x.id === id);
+
+    if (!item) {
+      alert("No se encontró el reconocimiento.");
+      return;
+    }
+
+    const jugador = obtenerJugadorMVP(item.jugadorId);
+
+    const nombre = jugador
+      ? jugador.nombre
+      : item.nombreJugador || "Jugador";
+
+    if (!confirm(
+      "¿Seguro que deseas eliminar este MVP?\n\n" +
+      nombre + "\n" +
+      "Mes: " + item.periodo + "\n\n" +
+      "Su contador de medallas disminuirá en uno."
+    )) return;
+
+    const reconocimientosAnteriores =
+      db.reconocimientosMVP.slice();
+
+    const cierresAnteriores = db.cierresMVP.map(c => ({
+      ...c,
+      ganadores: Array.isArray(c.ganadores)
+        ? c.ganadores.slice()
+        : []
+    }));
+
+    db.reconocimientosMVP =
+      db.reconocimientosMVP.filter(x => x.id !== id);
+
+    // Si era un MVP de cierre mensual, actualizar
+    // también la relación con el cierre.
+    db.cierresMVP.forEach(cierre => {
+      if (Array.isArray(cierre.ganadores)) {
+        cierre.ganadores =
+          cierre.ganadores.filter(g => g !== id);
+      }
+    });
+
+    // Quitar cierres que ya no tienen ganadores.
+    db.cierresMVP = db.cierresMVP.filter(cierre =>
+      !Array.isArray(cierre.ganadores) ||
+      cierre.ganadores.length > 0
+    );
+
+    if (!guardarSeguro()) {
+      db.reconocimientosMVP = reconocimientosAnteriores;
+      db.cierresMVP = cierresAnteriores;
+      return;
+    }
+
+    if (typeof registrarActividad === "function") {
+      registrarActividad(
+        "Reconocimiento MVP eliminado: " + nombre
+      );
+      guardarDB();
+    }
+
+    alert(
+      "Reconocimiento eliminado correctamente.\n\n" +
+      "Medallas actuales de " + nombre + ": " +
+      contarMVPJugador(item.jugadorId)
+    );
+
+    ctMvpMostrarEdicion();
+  };
+
+  console.log(
+    "CONTROL TIBURONES: corrección y protección de MVP activadas."
+  );
+
+})();
+</script>
+<!-- FIN DE CORRECCIÓN MVP -->  
 </body>
 </html>
