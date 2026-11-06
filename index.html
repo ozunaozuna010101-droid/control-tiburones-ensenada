@@ -12453,6 +12453,87 @@ console.log(
 
 })();
 </script>
-<!-- FIN DE CORRECCIÓN MVP -->  
+<!-- FIN DE CORRECCIÓN MVP --> 
+ <script>
+(function () {
+    // Evita instalar el mismo ajuste dos veces
+    if (window.__ctMvpMedallaVisualInstalada) return;
+    window.__ctMvpMedallaVisualInstalada = true;
+
+    // Cuenta únicamente los MVP registrados oficialmente
+    window.mostrarCopasJugador = function (jugadorId) {
+        let total = 0;
+
+        if (typeof window.contarMVPJugador === "function") {
+            total = Number(window.contarMVPJugador(jugadorId)) || 0;
+        } else if (Array.isArray(window.db?.reconocimientosMVP)) {
+            total = window.db.reconocimientosMVP.filter(
+                item => item.jugadorId === jugadorId
+            ).length;
+        }
+
+        return `
+            <span class="ct-medalla-mvp"
+                  title="${total} MVP oficiales ganados">
+                🏅 x${total}
+            </span>
+        `;
+    };
+
+    // Conserva el ranking y el resaltado amarillo,
+    // pero quita la copa que aparece junto al líder.
+    const mostrarMVPOriginal = window.mostrarMVP;
+
+    if (typeof mostrarMVPOriginal === "function") {
+        window.mostrarMVP = function (...args) {
+            const resultado = mostrarMVPOriginal.apply(this, args);
+
+            const zona = document.getElementById("moduleContent");
+
+            if (zona) {
+                zona.querySelectorAll(
+                    ".fila-mvp.mvp-lider strong"
+                ).forEach(elemento => {
+                    const recorrido = document.createTreeWalker(
+                        elemento,
+                        NodeFilter.SHOW_TEXT
+                    );
+
+                    let nodo;
+
+                    while ((nodo = recorrido.nextNode())) {
+                        if (nodo.nodeValue.includes("🏆")) {
+                            nodo.nodeValue = nodo.nodeValue.replace("🏆", "");
+                            break;
+                        }
+                    }
+                });
+            }
+
+            return resultado;
+        };
+    }
+
+    // Apariencia de la medalla
+    const estilo = document.createElement("style");
+    estilo.textContent = `
+        .ct-medalla-mvp {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 7px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: #fff3cd;
+            color: #805b00;
+            border: 1px solid #e5bd55;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+    `;
+    document.head.appendChild(estilo);
+
+})();
+ </script> 
 </body>
 </html>
