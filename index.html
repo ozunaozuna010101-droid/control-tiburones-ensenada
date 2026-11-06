@@ -7901,5 +7901,658 @@ console.log(
 
 })();
       </script>
+<!-- =====================================================
+ CONTROL TIBURONES - BLOQUE FINAL DE CORRECCIONES
+ MVP + ESTADO + PDF DESCARGABLE + COMPARTIR ANDROID
+===================================================== -->
+<script>
+(function(){
+"use strict";
+
+/* ---------- UTILIDADES ---------- */
+
+function ctFinalEscapar(valor){
+  return String(valor ?? "").replace(/[&<>"']/g,function(c){
+    return {
+      "&":"&amp;","<":"&lt;",">":"&gt;",
+      '"':"&quot;","'":"&#039;"
+    }[c];
+  });
+}
+
+function ctFinalFecha(fecha){
+  try{
+    return typeof formatearFecha === "function"
+      ? formatearFecha(fecha)
+      : String(fecha || "");
+  }catch(e){
+    return String(fecha || "");
+  }
+}
+
+/* ---------- 1. RESUMEN MVP ---------- */
+
+function ctFinalMVP(){
+
+  const zona = document.getElementById("resumenMVP");
+
+  if(!zona || typeof calcularResumenMVP !== "function") return;
+
+  try{
+
+    const grupos = calcularResumenMVP();
+
+    if(!Array.isArray(grupos) || !grupos.length){
+      zona.textContent = "Todavía no hay información del MVP.";
+      return;
+    }
+
+    zona.innerHTML = grupos.map(grupo=>{
+
+      const lideres = Array.isArray(grupo.lideres)
+        ? grupo.lideres : [];
+
+      const nombres = lideres.length
+        ? lideres.map(j=>ctFinalEscapar(j.nombre)).join(", ")
+        : "Sin puntuaciones registradas";
+
+      return `
+        <div style="padding:12px 0;border-bottom:1px solid #344b68">
+          <strong style="color:#29a7ff">
+            ${ctFinalEscapar(grupo.horario)}
+          </strong>
+          <div style="margin-top:6px;color:#f7f9fd">
+            ${nombres}
+          </div>
+          <div style="font-size:11px;color:#b8c6d8;margin-top:4px">
+            ${Number(grupo.totalJugadores)||0} jugadores
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  }catch(error){
+    console.error("Error en resumen MVP:",error);
+    zona.textContent = "No se pudo actualizar el resumen MVP.";
+  }
+}
+
+/* ---------- 2. ESTADO DE LA APLICACIÓN ---------- */
+
+function ctFinalEstado(){
+
+  const zona = document.getElementById("ultimoGuardado");
+
+  if(!zona) return;
+
+  if(typeof db !== "undefined" && db && sistemaDisponible){
+    zona.textContent = "Aplicación lista · Datos disponibles en este dispositivo.";
+  }
+}
+
+const actualizarPanelAnterior = window.actualizarPanel;
+
+if(typeof actualizarPanelAnterior === "function"){
+  window.actualizarPanel = function(){
+    const resultado = actualizarPanelAnterior.apply(this,arguments);
+    ctFinalMVP();
+    return resultado;
+  };
+}
+
+/* ---------- 3. CARGAR GENERADOR PDF ---------- */
+
+function ctFinalCargarPDF(){
+
+  return new Promise((resolve,reject)=>{
+
+    if(window.jspdf && window.jspdf.jsPDF){
+      resolve(window.jspdf.jsPDF);
+      return;
+    }
+
+    const fuentes = [
+      "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js",
+      "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"
+    ];
+
+    let indice = 0;
+
+    function intentar(){
+
+      if(indice >= fuentes.length){
+        reject(new Error("No se pudo cargar el generador PDF."));
+        return;
+      }
+
+      const script = document.createElement("script");
+
+      script.src = fuentes[indice++];
+
+      script.onload = function(){
+        if(window.jspdf && window.jspdf.jsPDF){
+          resolve(window.jspdf.jsPDF);
+        }else{
+          intentar();
+        }
+      };
+
+      script.onerror = intentar;
+
+      document.head.appendChild(script);
+    }
+
+    intentar();
+  });
+}
+
+/* ---------- 4. CONSTRUIR PDF PROFESIONAL ---------- */
+
+function ctFinalCrearPDF(JsPDF,jugador){
+
+  const doc = new JsPDF({
+    orientation:"portrait",
+    unit:"mm",
+    format:"a4"
+  });
+
+  const ancho = 210;
+  const margen = 17;
+  const anchoTexto = ancho - margen*2;
+  let y = 20;
+
+  function nuevaPagina(){
+    doc.addPage();
+    y = 18;
+  }
+
+  function revisarEspacio(altura){
+    if(y + altura > 278){
+      nuevaPagina();
+    }
+  }
+
+  function texto(valor,opciones){
+
+    opciones = opciones || {};
+
+    const contenido = String(valor ?? "");
+    const tam = opciones.tam || 10;
+    const alto = opciones.alto || 5;
+    const negrita = opciones.negrita || false;
+    const color = opciones.color || [35,55,75];
+    const x = opciones.x || margen;
+
+    doc.setFont("helvetica",negrita ? "bold" : "normal");
+    doc.setFontSize(tam);
+    doc.setTextColor(color[0],color[1],color[2]);
+
+    const lineas = doc.splitTextToSize(contenido,opciones.ancho || anchoTexto);
+
+    revisarEspacio(lineas.length*alto + 2);
+
+    doc.text(lineas,x,y);
+    y += lineas.length*alto + (opciones.separacion ?? 2);
+  }
+
+  function tituloSeccion(nombre){
+    revisarEspacio(13);
+    y += 3;
+    doc.setFillColor(235,243,250);
+    doc.roundedRect(margen,y-5,anchoTexto,9,2,2,"F");
+    texto(nombre,{
+      tam:11,
+      negrita:true,
+      color:[18,54,90],
+      alto:5
+    });
+  }
+
+  // Encabezado.
+  doc.setFillColor(15,39,64);
+  doc.rect(0,0,ancho,39,"F");
+
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(19);
+  doc.text("ACADEMIA TIBURONES",ancho/2,17,{align:"center"});
+
+  doc.setFontSize(10);
+  doc.text("ENSENADA · REPORTE DE SEGUIMIENTO DEPORTIVO",
+    ancho/2,25,{align:"center"});
+
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(8);
+  doc.text("FORMACION · DISCIPLINA · DESARROLLO",
+    ancho/2,32,{align:"center"});
+
+  y = 49;
+
+  texto("HISTORIAL DEPORTIVO DEL JUGADOR",{
+    tam:14,
+    negrita:true,
+    color:[18,54,90],
+    separacion:5
+  });
+
+  const horario = typeof obtenerHorario === "function"
+    ? obtenerHorario(jugador.horario)
+    : null;
+
+  const registros = [];
+
+  (db.entrenamientos || []).forEach(entrenamiento=>{
+
+    const asistencia = (db.asistencias || []).find(a=>
+      a.entrenamientoId === entrenamiento.id &&
+      a.jugadorId === jugador.id
+    );
+
+    const evaluacion = (db.evaluaciones || []).find(e=>
+      e.entrenamientoId === entrenamiento.id &&
+      e.jugadorId === jugador.id
+    );
+
+    if(asistencia || evaluacion){
+      registros.push({entrenamiento,asistencia,evaluacion});
+    }
+  });
+
+  registros.sort((a,b)=>
+    String(a.entrenamiento.fecha).localeCompare(
+      String(b.entrenamiento.fecha)
+    )
+  );
+
+  const asistio = registros.filter(r=>
+    r.asistencia?.estado === "asistio"
+  ).length;
+
+  const falta = registros.filter(r=>
+    r.asistencia?.estado === "falta"
+  ).length;
+
+  const justificada = registros.filter(r=>
+    r.asistencia?.estado === "justificada"
+  ).length;
+
+  const retardo = registros.filter(r=>
+    r.asistencia?.estado === "retardo"
+  ).length;
+
+  // Ficha del jugador.
+  doc.setDrawColor(205,220,233);
+  doc.setFillColor(246,249,252);
+  doc.roundedRect(margen,y,anchoTexto,39,3,3,"FD");
+
+  y += 8;
+
+  texto("JUGADOR: " + jugador.nombre,{
+    tam:12,negrita:true,color:[18,54,90]
+  });
+
+  texto("Categoria: " + (horario?.categoria || jugador.categoria || "Sin categoría"),{
+    tam:9
+  });
+
+  texto("Horario: " + (horario?.nombre || "Sin horario"),{
+    tam:9
+  });
+
+  texto("Estado: " + (jugador.estado || "Activo"),{
+    tam:9
+  });
+
+  texto("Fecha del reporte: " + ctFinalFecha(
+    typeof obtenerFechaLocal === "function"
+      ? obtenerFechaLocal()
+      : new Date().toISOString().slice(0,10)
+  ),{
+    tam:9
+  });
+
+  tituloSeccion("RESUMEN DE ASISTENCIA");
+
+  texto("Entrenamientos con registro: " + registros.length,{
+    tam:10,negrita:true
+  });
+
+  texto("Asistencias: " + asistio +
+    "     Faltas: " + falta +
+    "     Justificadas: " + justificada +
+    "     Retardos: " + retardo,{
+    tam:9
+  });
+
+  tituloSeccion("HISTORIAL DE ENTRENAMIENTOS");
+
+  if(!registros.length){
+    texto("No hay entrenamientos registrados para este jugador.",{
+      tam:10
+    });
+  }
+
+  registros.forEach((registro,indice)=>{
+
+    const entrenamiento = registro.entrenamiento;
+    const asistencia = registro.asistencia;
+    const evaluacion = registro.evaluacion;
+    const selecciones = evaluacion?.seleccionesMVP || {};
+
+    revisarEspacio(39);
+
+    doc.setDrawColor(205,220,233);
+    doc.setFillColor(249,251,253);
+    doc.roundedRect(margen,y,anchoTexto,8,2,2,"FD");
+
+    y += 6;
+
+    texto("ENTRENAMIENTO " + (indice+1) + " · " +
+      ctFinalFecha(entrenamiento.fecha),{
+      tam:10,negrita:true,color:[18,54,90]
+    });
+
+    const estado = asistencia
+      ? ({
+          asistio:"Asistió",
+          falta:"Falta injustificada",
+          justificada:"Falta justificada",
+          retardo:"Retardo"
+        }[asistencia.estado] || asistencia.estado)
+      : "Sin asistencia registrada";
+
+    texto("Asistencia: " + estado,{tam:9});
+
+    if(evaluacion){
+
+      texto("Desempeño: " +
+        (selecciones.desempeno || "Sin dato"),{tam:9});
+
+      texto("Actitud y atención: " +
+        (selecciones.actitud || "Sin dato"),{tam:9});
+
+      texto("Esfuerzo: " +
+        (selecciones.esfuerzo || "Sin dato"),{tam:9});
+
+      let uniforme = selecciones.uniforme || "Sin dato";
+
+      if(!selecciones.uniforme && evaluacion.uniforme){
+        uniforme = evaluacion.uniforme;
+      }
+
+      texto("Uniforme: " + uniforme,{tam:9});
+
+      texto("Observaciones del Coach: " +
+        (evaluacion.observaciones || "Sin observaciones registradas."),{
+        tam:9
+      });
+
+    }else{
+
+      texto("Evaluación: No registrada.",{tam:9});
+
+    }
+
+    y += 3;
+  });
+
+  // Pie de página.
+  const paginas = doc.internal.getNumberOfPages();
+
+  for(let pagina=1;pagina<=paginas;pagina++){
+
+    doc.setPage(pagina);
+
+    doc.setDrawColor(205,220,233);
+    doc.line(margen,285,ancho-margen,285);
+
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100,117,138);
+
+    doc.text("ACADEMIA TIBURONES ENSENADA",margen,290);
+
+    doc.text(
+      "Pagina " + pagina + " de " + paginas,
+      ancho-margen,290,{align:"right"}
+    );
+  }
+
+  doc.setProperties({
+    title:"Historial deportivo - " + jugador.nombre,
+    subject:"Seguimiento deportivo",
+    author:"Academia Tiburones Ensenada"
+  });
+
+  return doc;
+}
+
+/* ---------- 5. VENTANA DE DESCARGA Y COMPARTIR ---------- */
+
+function ctFinalMostrarVentana(archivo){
+
+  const anterior = document.getElementById("ctFinalCompartir");
+
+  if(anterior) anterior.remove();
+
+  const modal = document.createElement("div");
+
+  modal.id = "ctFinalCompartir";
+
+  modal.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    background:rgba(0,0,0,.78);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      width:100%;
+      max-width:390px;
+      padding:23px;
+      border-radius:20px;
+      background:#17263b;
+      color:white;
+      border:1px solid #45617f;
+      box-shadow:0 15px 45px #0008;
+      font-family:Arial,sans-serif;
+    ">
+
+      <div style="font-size:34px;text-align:center">📄</div>
+
+      <h3 style="text-align:center;margin:10px 0">
+        ¡PDF descargado!
+      </h3>
+
+      <p style="
+        text-align:center;
+        color:#c3d1df;
+        font-size:14px;
+        line-height:1.5;
+      ">
+        El historial ya se descargó en tu teléfono.
+        ¿Quieres compartirlo ahora?
+      </p>
+
+      <button id="ctFinalBotonCompartir" style="
+        width:100%;
+        padding:15px;
+        border:0;
+        border-radius:12px;
+        background:#168bd2;
+        color:white;
+        font-size:16px;
+        font-weight:bold;
+        margin-top:12px;
+      ">
+        Compartir PDF
+      </button>
+
+      <button id="ctFinalBotonCerrar" style="
+        width:100%;
+        padding:13px;
+        border:1px solid #536982;
+        border-radius:12px;
+        background:#253b57;
+        color:white;
+        font-size:14px;
+        margin-top:9px;
+      ">
+        Después
+      </button>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById("ctFinalBotonCerrar").onclick = function(){
+    modal.remove();
+  };
+
+  document.getElementById("ctFinalBotonCompartir").onclick = async function(){
+
+    if(
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({files:[archivo]})
+    ){
+
+      try{
+
+        await navigator.share({
+          files:[archivo],
+          title:"Historial deportivo",
+          text:"Historial deportivo de Academia Tiburones Ensenada."
+        });
+
+        modal.remove();
+
+      }catch(error){
+
+        if(error.name === "AbortError") return;
+
+        alert("No se pudo abrir el menú de compartir. El PDF permanece descargado.");
+
+      }
+
+    }else{
+
+      alert(
+        "Tu navegador no permite compartir el archivo directamente. " +
+        "El PDF está guardado en Descargas."
+      );
+
+    }
+  };
+}
+
+/* ---------- 6. FUNCIÓN DEFINITIVA DEL BOTÓN PDF ---------- */
+
+window.ctDescargarHistorial = async function(id){
+
+  const jugador = obtenerJugador(id);
+
+  if(!jugador){
+    alert("No se encontró al jugador.");
+    return;
+  }
+
+  const boton = document.querySelector(
+    ".ct-reporte-acciones button.btn-primary"
+  );
+
+  try{
+
+    if(boton){
+      boton.disabled = true;
+      boton.textContent = "Generando PDF...";
+    }
+
+    const JsPDF = await ctFinalCargarPDF();
+
+    const documento = ctFinalCrearPDF(JsPDF,jugador);
+
+    const nombre =
+      "Historial_" +
+      jugador.nombre.replace(/[^a-z0-9]/gi,"_") +
+      ".pdf";
+
+    const blob = documento.output("blob");
+
+    const archivo = new File(
+      [blob],
+      nombre,
+      {type:"application/pdf"}
+    );
+
+    // Descargar primero el archivo.
+    const url = URL.createObjectURL(blob);
+
+    const enlace = document.createElement("a");
+
+    enlace.href = url;
+    enlace.download = nombre;
+
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+
+    setTimeout(()=>{
+      URL.revokeObjectURL(url);
+    },120000);
+
+    // Mostrar ventana propia para compartir.
+    ctFinalMostrarVentana(archivo);
+
+  }catch(error){
+
+    console.error("Error PDF CONTROL TIBURONES:",error);
+
+    alert(
+      "No se pudo generar el PDF. " +
+      "Comprueba tu conexión a internet e inténtalo nuevamente."
+    );
+
+  }finally{
+
+    if(boton){
+      boton.disabled = false;
+      boton.textContent = "⬇ Descargar historial PDF";
+    }
+
+  }
+};
+
+/* ---------- 7. ACTIVACIÓN ---------- */
+
+function ctFinalActivar(){
+
+  ctFinalMVP();
+  ctFinalEstado();
+
+}
+
+if(document.readyState === "loading"){
+
+  document.addEventListener("DOMContentLoaded",function(){
+    setTimeout(ctFinalActivar,700);
+  });
+
+}else{
+
+  setTimeout(ctFinalActivar,700);
+
+}
+
+console.log("CONTROL TIBURONES: bloque final activado.");
+
+})();
+      </script>
 </body>
 </html>
