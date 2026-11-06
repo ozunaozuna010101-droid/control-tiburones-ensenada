@@ -10408,7 +10408,61 @@ if(document.readyState==="loading"){
 
 })();
 </script>
-  
-  
+
+<!-- =========================================
+ CONTROL TIBURONES
+ OCULTAR BOTONES DEL MODULO FINANZAS
+========================================= -->
+
+<script>
+(function(){
+
+  const ocultarBotonesFinanzas = () => {
+
+    const modulo = document.getElementById("moduleContent");
+
+    if (!modulo) return;
+
+    const botones = modulo.querySelectorAll("button");
+
+    botones.forEach(boton => {
+
+      const texto = boton.textContent.trim();
+
+      if (
+        texto === "Consultar mensualidades" ||
+        texto === "Registrar pago" ||
+        texto === "Registrar cargo adicional"
+      ) {
+        boton.remove();
+      }
+
+    });
+
+  };
+
+  const observarCambios = new MutationObserver(() => {
+    ocultarBotonesFinanzas();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const modulo = document.getElementById("moduleContent");
+
+    if (modulo) {
+      observarCambios.observe(modulo, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    ocultarBotonesFinanzas();
+
+  });
+
+  ocultarBotonesFinanzas();
+
+})();
+</script>  
 </body>
 </html>
