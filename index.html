@@ -6825,5 +6825,376 @@ textarea {
 
 })();
   </script>
+<!-- =========================================================
+     CONTROL TIBURONES
+     HISTORIAL PROFESIONAL PARA FAMILIAS
+     Sin información interna de MVP
+========================================================= -->
+<style>
+.ct-historial-grupo{margin:16px 0;padding:16px;border:1px solid #3a506c;border-radius:16px;background:linear-gradient(145deg,#1a2b42,#142238)}
+.ct-historial-jugador{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px;margin:9px 0;border:1px solid #405875;border-radius:12px;background:#203650}
+.ct-historial-jugador strong{font-size:15px}
+.ct-historial-meta{color:#b8c6d8;font-size:12px;margin-top:5px}
+.ct-reporte{max-width:760px;margin:12px auto;padding:18px;background:#fff;color:#17263b;border-radius:14px}
+.ct-reporte-cabecera{text-align:center;border-bottom:3px solid #168bd2;padding:8px 0 16px;margin-bottom:16px}
+.ct-reporte-cabecera h1{font-size:23px;letter-spacing:1px;margin:0;color:#12365a}
+.ct-reporte-cabecera p{margin:5px 0;color:#47708f;font-weight:bold}
+.ct-reporte-ficha{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}
+.ct-reporte-dato{padding:10px;background:#eef4f9;border-radius:8px}
+.ct-reporte-dato small{display:block;color:#60758a;font-size:10px;text-transform:uppercase;font-weight:bold}
+.ct-reporte-dato strong{display:block;margin-top:4px;font-size:13px}
+.ct-reporte-fecha{margin:14px 0;padding:13px;border:1px solid #d4e0ea;border-left:4px solid #168bd2;border-radius:8px;break-inside:avoid;page-break-inside:avoid}
+.ct-reporte-fecha h3{margin:0 0 8px;color:#12365a;font-size:15px}
+.ct-reporte-fecha p{margin:5px 0;font-size:12px;line-height:1.45}
+.ct-reporte-etiqueta{font-weight:bold;color:#315875}
+.ct-reporte-pie{margin-top:22px;padding-top:12px;border-top:1px solid #d4e0ea;color:#60758a;font-size:10px;text-align:center}
+.ct-reporte-acciones{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+@media(max-width:480px){.ct-reporte-ficha{grid-template-columns:1fr}}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff!important;color:#17263b!important}
+  .app,.header,.menu,.module-header,.footer{display:none!important}
+  #ct-ventana-reporte{display:block!important}
+  .ct-reporte{max-width:none;margin:0;padding:0;border:0;border-radius:0}
+  .ct-reporte-acciones{display:none!important}
+  .ct-reporte-fecha{break-inside:avoid;page-break-inside:avoid}
+}
+</style>
+
+<script>
+(function(){
+  "use strict";
+
+  const etiquetaAsistencia = {
+    asistio: "Asistió",
+    falta: "Falta injustificada",
+    justificada: "Falta justificada",
+    retardo: "Retardo"
+  };
+
+  function ctTexto(v){
+    return typeof textoSeguro === "function"
+      ? textoSeguro(v || "")
+      : String(v || "");
+  }
+
+  function ctHorario(j){
+    return (db.ajustes.horarios || []).find(x => x.id === j.horario) || {};
+  }
+
+  function ctCategoria(j){
+    const h = ctHorario(j);
+    return h.categoria || j.categoria || "Sin categoría";
+  }
+
+  function ctFechasJugador(jugadorId){
+    const registros = [];
+
+    (db.entrenamientos || []).forEach(t => {
+      const asistencia = (db.asistencias || []).find(a =>
+        a.entrenamientoId === t.id && a.jugadorId === jugadorId
+      );
+
+      const evaluacion = (db.evaluaciones || []).find(e =>
+        e.entrenamientoId === t.id && e.jugadorId === jugadorId
+      );
+
+      if(asistencia || evaluacion){
+        registros.push({t, asistencia, evaluacion});
+      }
+    });
+
+    return registros.sort((a,b) =>
+      String(a.t.fecha).localeCompare(String(b.t.fecha))
+    );
+  }
+
+  function ctEstadoUniforme(e){
+    if(!e) return "Sin evaluación registrada";
+
+    if(e.seleccionesMVP && e.seleccionesMVP.uniforme){
+      return e.seleccionesMVP.uniforme;
+    }
+
+    if(e.uniforme === "completo") return "Completo";
+    if(e.uniforme === "incompleto") return "No cumple";
+    if(e.uniforme === "justificado") return "Justificado";
+
+    return "Sin dato";
+  }
+
+  function ctContenidoReporte(j){
+    const h = ctHorario(j);
+    const historial = ctFechasJugador(j.id);
+    const nombreHorario = h.nombre || "Horario no disponible";
+    const categoria = ctCategoria(j);
+    const total = historial.length;
+
+    const asistencias = historial.filter(x =>
+      x.asistencia?.estado === "asistio"
+    ).length;
+
+    const faltas = historial.filter(x =>
+      x.asistencia?.estado === "falta"
+    ).length;
+
+    const justificadas = historial.filter(x =>
+      x.asistencia?.estado === "justificada"
+    ).length;
+
+    const retardos = historial.filter(x =>
+      x.asistencia?.estado === "retardo"
+    ).length;
+
+    const detalle = historial.length
+      ? historial.map(({t, asistencia, evaluacion}) => {
+
+          const estado = asistencia
+            ? (etiquetaAsistencia[asistencia.estado] || asistencia.estado)
+            : "Sin asistencia registrada";
+
+          const selecciones = evaluacion?.seleccionesMVP || {};
+          const uniforme = ctEstadoUniforme(evaluacion);
+          const observaciones = evaluacion?.observaciones ||
+            "Sin observaciones registradas.";
+
+          const evaluacionTexto = evaluacion
+            ? `
+              <p><span class="ct-reporte-etiqueta">Desempeño:</span> ${ctTexto(selecciones.desempeno || "Sin dato")}</p>
+              <p><span class="ct-reporte-etiqueta">Actitud y atención:</span> ${ctTexto(selecciones.actitud || "Sin dato")}</p>
+              <p><span class="ct-reporte-etiqueta">Esfuerzo:</span> ${ctTexto(selecciones.esfuerzo || "Sin dato")}</p>
+              <p><span class="ct-reporte-etiqueta">Uniforme:</span> ${ctTexto(uniforme)}</p>
+              <p><span class="ct-reporte-etiqueta">Observación del Coach:</span> ${ctTexto(observaciones)}</p>
+            `
+            : `<p><span class="ct-reporte-etiqueta">Evaluación:</span> No hay evaluación guardada para esta fecha.</p>`;
+
+          return `
+            <section class="ct-reporte-fecha">
+              <h3>Entrenamiento · ${ctTexto(formatearFecha(t.fecha))}</h3>
+              <p><span class="ct-reporte-etiqueta">Horario:</span> ${ctTexto(nombreHorario)}</p>
+              <p><span class="ct-reporte-etiqueta">Asistencia:</span> ${ctTexto(estado)}</p>
+              ${evaluacionTexto}
+            </section>
+          `;
+        }).join("")
+      : `<p>No hay entrenamientos registrados para este jugador.</p>`;
+
+    return `
+      <div class="ct-reporte">
+        <header class="ct-reporte-cabecera">
+          <h1>ACADEMIA TIBURONES ENSENADA</h1>
+          <p>REPORTE DE SEGUIMIENTO DEPORTIVO</p>
+          <small>Formación · Disciplina · Desarrollo</small>
+        </header>
+
+        <div class="ct-reporte-ficha">
+          <div class="ct-reporte-dato"><small>Jugador</small><strong>${ctTexto(j.nombre)}</strong></div>
+          <div class="ct-reporte-dato"><small>Categoría</small><strong>${ctTexto(categoria)}</strong></div>
+          <div class="ct-reporte-dato"><small>Horario</small><strong>${ctTexto(nombreHorario)}</strong></div>
+          <div class="ct-reporte-dato"><small>Estado</small><strong>${ctTexto(j.estado || "Activo")}</strong></div>
+          <div class="ct-reporte-dato"><small>Entrenamientos con registro</small><strong>${total}</strong></div>
+          <div class="ct-reporte-dato"><small>Reporte generado</small><strong>${ctTexto(formatearFecha(obtenerFechaLocal()))}</strong></div>
+        </div>
+
+        <h2 style="font-size:16px;color:#12365a">Resumen de asistencia</h2>
+
+        <div class="ct-reporte-ficha">
+          <div class="ct-reporte-dato"><small>Asistencias</small><strong>${asistencias}</strong></div>
+          <div class="ct-reporte-dato"><small>Faltas injustificadas</small><strong>${faltas}</strong></div>
+          <div class="ct-reporte-dato"><small>Faltas justificadas</small><strong>${justificadas}</strong></div>
+          <div class="ct-reporte-dato"><small>Retardos</small><strong>${retardos}</strong></div>
+        </div>
+
+        <h2 style="font-size:16px;color:#12365a">Historial de entrenamientos</h2>
+
+        ${detalle}
+
+        <footer class="ct-reporte-pie">
+          Academia Tiburones Ensenada · CONTROL TIBURONES<br>
+          Este documento refleja únicamente los registros capturados en la aplicación hasta la fecha de generación.
+        </footer>
+      </div>
+    `;
+  }
+
+  window.ctMostrarHistorial = function(){
+    const zona = document.getElementById("moduleContent");
+    if(!zona) return;
+
+    const horarios = (db.ajustes.horarios || [])
+      .filter(h => h.activo !== false);
+
+    zona.innerHTML = `
+      <div class="modulo">
+        <h2>📁 Historial deportivo</h2>
+        <p class="mini-text">
+          Selecciona un horario y después al jugador para consultar su seguimiento completo.
+        </p>
+
+        ${horarios.map(h => {
+          const jugadores = (db.jugadores || [])
+            .filter(j => j.horario === h.id)
+            .sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
+
+          return `
+            <section class="ct-historial-grupo">
+              <h3>${ctTexto(h.nombre)} · ${ctTexto(h.categoria)}</h3>
+
+              ${jugadores.length
+                ? jugadores.map(j => `
+                    <div class="ct-historial-jugador">
+                      <div>
+                        <strong>${ctTexto(j.nombre)}</strong>
+                        <div class="ct-historial-meta">
+                          ${ctTexto(j.estado || "activo")} ·
+                          ${ctFechasJugador(j.id).length} entrenamientos registrados
+                        </div>
+                      </div>
+
+                      <button class="btn btn-primary"
+                        onclick="ctVerHistorialJugador('${j.id}')">
+                        Ver historial
+                      </button>
+                    </div>
+                  `).join("")
+                : `<p class="mini-text">No hay jugadores registrados en este horario.</p>`
+              }
+            </section>
+          `;
+        }).join("")}
+      </div>
+    `;
+  };
+
+  window.ctVerHistorialJugador = function(id){
+    const j = obtenerJugador(id);
+
+    if(!j){
+      alert("No se encontró al jugador.");
+      return;
+    }
+
+    const zona = document.getElementById("moduleContent");
+
+    zona.innerHTML = `
+      <div class="modulo">
+        <div class="ct-reporte-acciones">
+          <button class="btn" onclick="ctMostrarHistorial()">
+            ← Lista de jugadores
+          </button>
+
+          <button class="btn btn-primary"
+            onclick="ctDescargarHistorial('${j.id}')">
+            ⬇ Descargar historial PDF
+          </button>
+        </div>
+
+        <div id="ctReporteVista">
+          ${ctContenidoReporte(j)}
+        </div>
+      </div>
+    `;
+  };
+
+  window.ctDescargarHistorial = function(id){
+    const j = obtenerJugador(id);
+
+    if(!j){
+      alert("No se encontró al jugador.");
+      return;
+    }
+
+    const contenido = ctContenidoReporte(j);
+    const ventana = window.open("", "_blank");
+
+    if(!ventana){
+      alert("El navegador bloqueó la ventana del PDF. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.");
+      return;
+    }
+
+    ventana.document.open();
+
+    ventana.document.write(`<!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Historial deportivo - ${ctTexto(j.nombre)}</title>
+
+        <style>
+          *{box-sizing:border-box}
+          body{font-family:Arial,Helvetica,sans-serif;color:#17263b;background:#fff;margin:0;padding:20px}
+          .ct-reporte{max-width:760px;margin:0 auto;padding:10px}
+          .ct-reporte-cabecera{text-align:center;border-bottom:3px solid #168bd2;padding:8px 0 16px;margin-bottom:16px}
+          .ct-reporte-cabecera h1{font-size:23px;letter-spacing:1px;margin:0;color:#12365a}
+          .ct-reporte-cabecera p{margin:5px 0;color:#47708f;font-weight:bold}
+          .ct-reporte-ficha{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}
+          .ct-reporte-dato{padding:10px;background:#eef4f9;border-radius:8px}
+          .ct-reporte-dato small{display:block;color:#60758a;font-size:10px;text-transform:uppercase;font-weight:bold}
+          .ct-reporte-dato strong{display:block;margin-top:4px;font-size:13px}
+          .ct-reporte-fecha{margin:14px 0;padding:13px;border:1px solid #d4e0ea;border-left:4px solid #168bd2;border-radius:8px;break-inside:avoid;page-break-inside:avoid}
+          .ct-reporte-fecha h3{margin:0 0 8px;color:#12365a;font-size:15px}
+          .ct-reporte-fecha p{margin:5px 0;font-size:12px;line-height:1.45}
+          .ct-reporte-etiqueta{font-weight:bold;color:#315875}
+          .ct-reporte-pie{margin-top:22px;padding-top:12px;border-top:1px solid #d4e0ea;color:#60758a;font-size:10px;text-align:center}
+          h2{font-size:16px;color:#12365a}
+          @page{size:A4;margin:14mm}
+          @media print{body{padding:0}.ct-reporte{max-width:none;padding:0}}
+        </style>
+      </head>
+
+      <body>
+        ${contenido}
+        <script>
+          window.onload=function(){
+            setTimeout(function(){window.print();},350);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+
+    ventana.document.close();
+  };
+
+  // Cambia el botón "Informes" por "Historial".
+  const boton = document.querySelector(
+    '#menuPrincipal button[onclick*="informes"]'
+  );
+
+  if(boton){
+    boton.innerHTML =
+      '<span class="menu-icon">📁</span>Historial';
+  }
+
+  // Intercepta la entrada al módulo Informes.
+  const abrirModuloOriginal = window.abrirModulo;
+
+  if(typeof abrirModuloOriginal === "function"){
+    window.abrirModulo = function(nombre){
+
+      if(nombre === "informes"){
+        abrirModuloOriginal("informes");
+
+        const titulo = document.getElementById("moduleTitle");
+
+        if(titulo){
+          titulo.textContent = "Historial deportivo";
+        }
+
+        window.ctMostrarHistorial();
+        return;
+      }
+
+      return abrirModuloOriginal(nombre);
+    };
+  }
+
+  console.log(
+    "CONTROL TIBURONES: módulo de historial deportivo familiar activado."
+  );
+
+})();
+            </script>
 </body>
 </html>
