@@ -7435,5 +7435,471 @@ window.ctDescargarHistorial = async function(id) {
 
 };
           </script>
+<!-- =====================================================
+ CONTROL TIBURONES - CORRECCIONES FINALES
+ MVP + ESTADO DEL SISTEMA + PDF Y COMPARTIR
+===================================================== -->
+<script>
+(function(){
+
+"use strict";
+
+/* =====================================================
+ 1. CORREGIR RESUMEN MVP
+===================================================== */
+
+function ctActualizarResumenMVP(){
+
+  const zona = document.getElementById("resumenMVP");
+
+  if(!zona || typeof calcularResumenMVP !== "function") return;
+
+  try{
+
+    const resumen = calcularResumenMVP();
+
+    if(!Array.isArray(resumen) || !resumen.length){
+      zona.textContent = "Todavía no hay información del MVP.";
+      return;
+    }
+
+    zona.innerHTML = resumen.map(grupo=>{
+
+      const lideres = Array.isArray(grupo.lideres)
+        ? grupo.lideres
+        : [];
+
+      const nombres = lideres.length
+        ? lideres.map(j=>ctEscapar(j.nombre)).join(", ")
+        : "Sin puntuaciones registradas";
+
+      return `
+        <div style="
+          padding:12px 0;
+          border-bottom:1px solid #344b68;
+        ">
+          <strong style="color:#29a7ff">
+            ${ctEscapar(grupo.horario)}
+          </strong>
+
+          <div style="margin-top:6px;color:#f7f9fd">
+            ${nombres}
+          </div>
+
+          <div style="font-size:11px;color:#b8c6d8;margin-top:4px">
+            ${grupo.totalJugadores || 0} jugadores
+          </div>
+        </div>
+      `;
+
+    }).join("");
+
+  }catch(error){
+
+    console.error("Error en resumen MVP:",error);
+
+    zona.textContent = "No se pudo actualizar el resumen MVP.";
+
+  }
+
+}
+
+function ctEscapar(valor){
+
+  return String(valor ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================================
+ 2. CORREGIR ESTADO DEL SISTEMA
+===================================================== */
+
+function ctActualizarEstado(){
+
+  const indicador = document.getElementById("ultimoGuardado");
+
+  if(!indicador) return;
+
+  if(typeof db !== "undefined" && db && sistemaDisponible){
+
+    indicador.textContent =
+      "Aplicación lista · Almacenamiento local disponible.";
+
+  }else{
+
+    indicador.textContent =
+      "Revisando disponibilidad de la aplicación...";
+
+  }
+
+}
+
+
+/* =====================================================
+ 3. CARGAR GENERADOR PDF CON RESPALDO DE SERVIDORES
+===================================================== */
+
+function ctCargarGeneradorPDF(){
+
+  return new Promise((resolve,reject)=>{
+
+    if(typeof window.html2pdf === "function"){
+      resolve();
+      return;
+    }
+
+    const servidores = [
+      "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
+      "https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"
+    ];
+
+    let indice = 0;
+
+    function intentar(){
+
+      if(indice >= servidores.length){
+        reject(new Error("No se pudo cargar el generador PDF."));
+        return;
+      }
+
+      const script = document.createElement("script");
+
+      script.src = servidores[indice++];
+
+      script.onload = function(){
+
+        if(typeof window.html2pdf === "function"){
+          resolve();
+        }else{
+          intentar();
+        }
+
+      };
+
+      script.onerror = intentar;
+
+      document.head.appendChild(script);
+
+    }
+
+    intentar();
+
+  });
+
+}
+
+
+/* =====================================================
+ 4. NUEVA DESCARGA PDF Y COMPARTIR
+===================================================== */
+
+window.ctDescargarHistorial = async function(id){
+
+  const jugador = obtenerJugador(id);
+
+  if(!jugador){
+    alert("No se encontró al jugador.");
+    return;
+  }
+
+  const boton = document.querySelector(
+    ".ct-reporte-acciones button.btn-primary"
+  );
+
+  let temporal = null;
+
+  try{
+
+    if(boton){
+      boton.disabled = true;
+      boton.textContent = "Preparando PDF...";
+    }
+
+    await ctCargarGeneradorPDF();
+
+    temporal = document.createElement("div");
+
+    temporal.innerHTML = `
+      <style>
+        *{box-sizing:border-box}
+
+        .ct-reporte{
+          width:100%;
+          padding:22px;
+          background:#fff;
+          color:#17263b;
+          font-family:Arial,sans-serif;
+        }
+
+        .ct-reporte-cabecera{
+          text-align:center;
+          border-bottom:3px solid #168bd2;
+          padding:12px;
+          margin-bottom:18px;
+        }
+
+        .ct-reporte-cabecera h1{
+          font-size:23px;
+          color:#12365a;
+        }
+
+        .ct-reporte-cabecera p{
+          color:#47708f;
+          font-weight:bold;
+        }
+
+        .ct-reporte-ficha{
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:9px;
+          margin:14px 0;
+        }
+
+        .ct-reporte-dato{
+          padding:10px;
+          background:#eef4f9;
+          border-radius:8px;
+        }
+
+        .ct-reporte-dato small{
+          display:block;
+          color:#60758a;
+          font-size:10px;
+          font-weight:bold;
+        }
+
+        .ct-reporte-dato strong{
+          display:block;
+          margin-top:4px;
+          font-size:13px;
+        }
+
+        .ct-reporte-fecha{
+          margin:14px 0;
+          padding:13px;
+          border:1px solid #d4e0ea;
+          border-left:4px solid #168bd2;
+          border-radius:8px;
+          page-break-inside:avoid;
+        }
+
+        .ct-reporte-fecha h3{
+          color:#12365a;
+          font-size:15px;
+        }
+
+        .ct-reporte-fecha p{
+          font-size:12px;
+          line-height:1.5;
+        }
+
+        .ct-reporte-etiqueta{
+          font-weight:bold;
+          color:#315875;
+        }
+
+        .ct-reporte-pie{
+          text-align:center;
+          border-top:1px solid #d4e0ea;
+          padding-top:15px;
+          font-size:10px;
+          color:#60758a;
+        }
+
+        h2{
+          font-size:16px;
+          color:#12365a;
+        }
+
+      </style>
+
+      ${ctContenidoReporte(jugador)}
+    `;
+
+    temporal.style.position = "fixed";
+    temporal.style.left = "-10000px";
+    temporal.style.top = "0";
+    temporal.style.width = "760px";
+    temporal.style.background = "#ffffff";
+
+    document.body.appendChild(temporal);
+
+    const nombreArchivo =
+      "Historial_" +
+      jugador.nombre.replace(/[^a-z0-9]/gi,"_") +
+      ".pdf";
+
+    const pdfBlob = await window.html2pdf()
+      .set({
+
+        margin:10,
+
+        filename:nombreArchivo,
+
+        image:{
+          type:"jpeg",
+          quality:0.98
+        },
+
+        html2canvas:{
+          scale:2,
+          useCORS:true,
+          backgroundColor:"#ffffff"
+        },
+
+        jsPDF:{
+          unit:"mm",
+          format:"a4",
+          orientation:"portrait"
+        },
+
+        pagebreak:{
+          mode:["css","legacy"]
+        }
+
+      })
+      .from(temporal)
+      .outputPdf("blob");
+
+    temporal.remove();
+    temporal = null;
+
+    const archivo = new File(
+      [pdfBlob],
+      nombreArchivo,
+      {type:"application/pdf"}
+    );
+
+    // Descargar el PDF.
+    const url = URL.createObjectURL(pdfBlob);
+
+    const enlace = document.createElement("a");
+
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+
+    setTimeout(()=>{
+      URL.revokeObjectURL(url);
+    },60000);
+
+    // Intentar abrir compartir de Android.
+    if(
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({files:[archivo]})
+    ){
+
+      try{
+
+        await navigator.share({
+
+          files:[archivo],
+
+          title:"Historial deportivo - " + jugador.nombre,
+
+          text:
+            "Historial deportivo de Academia Tiburones Ensenada."
+
+        });
+
+      }catch(error){
+
+        if(error.name !== "AbortError"){
+          console.warn("No se pudo abrir compartir:",error);
+        }
+
+      }
+
+    }else{
+
+      alert(
+        "El PDF se descargó correctamente. " +
+        "Puedes encontrarlo en Descargas y compartirlo por WhatsApp."
+      );
+
+    }
+
+  }catch(error){
+
+    console.error("Error al generar historial PDF:",error);
+
+    alert(
+      "No se pudo generar el PDF. " +
+      "Revisa tu conexión a internet e inténtalo nuevamente."
+    );
+
+  }finally{
+
+    if(temporal){
+      temporal.remove();
+    }
+
+    if(boton){
+      boton.disabled = false;
+      boton.textContent = "⬇ Descargar historial PDF";
+    }
+
+  }
+
+};
+
+
+/* =====================================================
+ 5. ACTUALIZAR PANEL AL CARGAR Y AL GUARDAR
+===================================================== */
+
+function ctRefrescarTodo(){
+
+  ctActualizarResumenMVP();
+  ctActualizarEstado();
+
+}
+
+const ctActualizarPanelOriginal = window.actualizarPanel;
+
+if(typeof ctActualizarPanelOriginal === "function"){
+
+  window.actualizarPanel = function(){
+
+    const resultado = ctActualizarPanelOriginal.apply(this,arguments);
+
+    ctRefrescarTodo();
+
+    return resultado;
+
+  };
+
+}
+
+if(document.readyState === "loading"){
+
+  document.addEventListener("DOMContentLoaded",function(){
+
+    setTimeout(ctRefrescarTodo,500);
+
+  });
+
+}else{
+
+  setTimeout(ctRefrescarTodo,500);
+
+}
+
+console.log(
+  "CONTROL TIBURONES: correcciones finales activadas."
+);
+
+})();
+      </script>
 </body>
 </html>
