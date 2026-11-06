@@ -6218,5 +6218,452 @@ textarea {
 
 })();
  </script>
+  <script>
+// ============================================================
+// CONTROL TIBURONES
+// NAVEGACIÓN, BLOQUEO E HISTORIAL DE EVALUACIONES
+// ============================================================
+
+(function () {
+    "use strict";
+
+    // Recordar el entrenamiento que estamos trabajando.
+    window.ctEntrenamientoActual = null;
+
+    // --------------------------------------------------------
+    // 1. PANTALLA PRINCIPAL DE EVALUACIONES
+    // --------------------------------------------------------
+
+    window.mostrarEvaluaciones = function () {
+
+        const entrenamientos = [...db.entrenamientos]
+            .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+        const zona = obtenerZonaEvaluaciones();
+
+        if (!entrenamientos.length) {
+            zona.innerHTML = `
+                <div class="modulo">
+                    <h3>Evaluaciones</h3>
+                    <p>No hay entrenamientos registrados.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const seleccionado = entrenamientos.some(
+            t => t.id === window.ctEntrenamientoActual
+        );
+
+        if (!seleccionado) {
+            window.ctEntrenamientoActual = entrenamientos[0].id;
+        }
+
+        zona.innerHTML = `
+            <div class="modulo">
+
+                <h3>⭐ Evaluaciones de jugadores</h3>
+
+                <div class="tarjeta">
+                    <label>Seleccionar entrenamiento</label>
+
+                    <select id="ctSeleccionEntrenamiento">
+                        ${entrenamientos.map(t => `
+                            <option
+                                value="${textoSeguro(t.id)}"
+                                ${t.id === window.ctEntrenamientoActual
+                                    ? "selected" : ""}>
+                                ${formatearFecha(t.fecha)} ·
+                                ${textoSeguro(
+                                    obtenerHorario(t.horario)?.nombre || ""
+                                )}
+                            </option>
+                        `).join("")}
+                    </select>
+                </div>
+
+                <div id="ctListaEvaluaciones"></div>
+
+            </div>
+        `;
+
+        document.getElementById(
+            "ctSeleccionEntrenamiento"
+        ).addEventListener("change", function () {
+
+            window.ctEntrenamientoActual = this.value;
+
+            window.cargarJugadoresEvaluacion();
+        });
+
+        window.cargarJugadoresEvaluacion();
+    };
+
+
+    // --------------------------------------------------------
+    // 2. LISTA DE JUGADORES PENDIENTES Y EVALUADOS
+    // --------------------------------------------------------
+
+    window.cargarJugadoresEvaluacion = function () {
+
+        const zona = document.getElementById(
+            "ctListaEvaluaciones"
+        );
+
+        if (!zona) {
+            window.mostrarEvaluaciones();
+            return;
+        }
+
+        const entrenamientoId =
+            window.ctEntrenamientoActual;
+
+        const entrenamiento = db.entrenamientos.find(
+            t => t.id === entrenamientoId
+        );
+
+        if (!entrenamiento) {
+            zona.innerHTML = `
+                <div class="empty-state">
+                    Entrenamiento no encontrado.
+                </div>
+            `;
+            return;
+        }
+
+        const asistencias = db.asistencias.filter(a =>
+            a.entrenamientoId === entrenamientoId &&
+            a.estado === "asistio"
+        );
+
+        if (!asistencias.length) {
+            zona.innerHTML = `
+                <div class="empty-state">
+                    No hay jugadores con asistencia registrada.
+                </div>
+            `;
+            return;
+        }
+
+        let pendientes = 0;
+        let completadas = 0;
+
+        const tarjetas = asistencias.map(a => {
+
+            const jugador = obtenerJugador(a.jugadorId);
+
+            if (!jugador) return "";
+
+            const evaluacion = db.evaluaciones.find(e =>
+                e.entrenamientoId === entrenamientoId &&
+                e.jugadorId === jugador.id
+            );
+
+            if (evaluacion) {
+                completadas++;
+            } else {
+                pendientes++;
+            }
+
+            return `
+                <div class="tarjeta">
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:8px;
+                        flex-wrap:wrap;
+                    ">
+
+                        <strong>
+                            ${textoSeguro(jugador.nombre)}
+                        </strong>
+
+                        <span style="
+                            color:${evaluacion ? "#22c55e" : "#f59e0b"};
+                            font-weight:800;
+                        ">
+                            ${evaluacion
+                                ? "✓ EVALUACIÓN COMPLETADA"
+                                : "PENDIENTE"}
+                        </span>
+
+                    </div>
+
+                    ${
+                        evaluacion
+                        ? `
+                            <p class="mini-text">
+                                Este jugador ya fue evaluado
+                                en este entrenamiento.
+                            </p>
+
+                            <button
+                                class="btn"
+                                onclick="verHistorialEvaluacionCT('${jugador.id}')">
+                                Consultar historial
+                            </button>
+                        `
+                        : `
+                            <button
+                                class="btn btn-primary"
+                                onclick="abrirFormularioEvaluacion(
+                                    '${entrenamientoId}',
+                                    '${jugador.id}'
+                                )">
+                                Evaluar jugador
+                            </button>
+                        `
+                    }
+
+                </div>
+            `;
+
+        }).join("");
+
+        zona.innerHTML = `
+            <div class="tarjeta">
+
+                <strong>Resumen de evaluación</strong>
+
+                <p class="mini-text">
+                    Asistieron: ${asistencias.length}
+                    · Pendientes: ${pendientes}
+                    · Completadas: ${completadas}
+                </p>
+
+            </div>
+
+            ${tarjetas}
+        `;
+    };
+
+
+    // --------------------------------------------------------
+    // 3. CONSULTA DEL HISTORIAL SIN PERMITIR MODIFICACIONES
+    // --------------------------------------------------------
+
+    window.verHistorialEvaluacionCT = function (jugadorId) {
+
+        const entrenamientoId =
+            window.ctEntrenamientoActual;
+
+        const evaluacion = db.evaluaciones.find(e =>
+            e.entrenamientoId === entrenamientoId &&
+            e.jugadorId === jugadorId
+        );
+
+        const jugador = obtenerJugador(jugadorId);
+
+        if (!evaluacion || !jugador) {
+            alert("No se encontró la evaluación.");
+            return;
+        }
+
+        const entrenamiento = db.entrenamientos.find(
+            t => t.id === entrenamientoId
+        );
+
+        const selecciones =
+            evaluacion.seleccionesMVP || {};
+
+        const zona = obtenerZonaEvaluaciones();
+
+        const puntos = Number(evaluacion.puntosMVP || 0);
+
+        zona.innerHTML = `
+            <div class="modulo">
+
+                <h3>Historial de evaluación</h3>
+
+                <div class="tarjeta">
+
+                    <strong>
+                        ${textoSeguro(jugador.nombre)}
+                    </strong>
+
+                    <p class="mini-text">
+                        ${formatearFecha(entrenamiento.fecha)}
+                    </p>
+
+                    <span style="color:#22c55e;font-weight:800">
+                        ✓ EVALUACIÓN COMPLETADA
+                    </span>
+
+                </div>
+
+                <div class="tarjeta">
+
+                    <h3>Evaluación deportiva</h3>
+
+                    <p>Desempeño: ${evaluacion.desempeno ?? "—"}</p>
+
+                    <p>Actitud: ${evaluacion.actitud ?? "—"}</p>
+
+                    <p>Esfuerzo: ${evaluacion.esfuerzo ?? "—"}</p>
+
+                    <p>Disciplina: ${evaluacion.disciplina ?? "—"}</p>
+
+                    <p>
+                        Uniforme:
+                        ${textoSeguro(evaluacion.uniforme || "—")}
+                    </p>
+
+                </div>
+
+                <div class="tarjeta">
+
+                    <h3>Botones MVP</h3>
+
+                    ${Object.entries(selecciones).map(
+                        ([grupo, valor]) => `
+                            <p>
+                                <strong>
+                                    ${textoSeguro(grupo)}:
+                                </strong>
+                                ${textoSeguro(valor)}
+                            </p>
+                        `
+                    ).join("")}
+
+                    <h3>
+                        Puntos de evaluación:
+                        ${puntos > 0 ? "+" : ""}${puntos}
+                    </h3>
+
+                    ${
+                        evaluacion.ajusteExtra
+                        ? `
+                            <p>
+                                Descuento:
+                                ${evaluacion.ajusteExtra}
+                            </p>
+
+                            <p>
+                                Motivo:
+                                ${textoSeguro(
+                                    evaluacion.motivoAjuste || ""
+                                )}
+                            </p>
+                        `
+                        : ""
+                    }
+
+                </div>
+
+                <div class="tarjeta">
+
+                    <h3>Observaciones del Coach</h3>
+
+                    <p>
+                        ${textoSeguro(
+                            evaluacion.observaciones ||
+                            "Sin observaciones."
+                        )}
+                    </p>
+
+                </div>
+
+                <div class="tarjeta">
+                    <strong>
+                        Esta evaluación ya está guardada.
+                    </strong>
+
+                    <p class="mini-text">
+                        Consulta de solo lectura.
+                        No se permite modificar la evaluación.
+                    </p>
+                </div>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="cargarJugadoresEvaluacion()">
+                    Volver a la lista de jugadores
+                </button>
+
+            </div>
+        `;
+    };
+
+
+    // --------------------------------------------------------
+    // 4. IMPEDIR QUE SE VUELVA A CALIFICAR UN JUGADOR
+    // --------------------------------------------------------
+
+    const abrirFormularioAnterior =
+        window.abrirFormularioEvaluacion;
+
+    window.abrirFormularioEvaluacion = function (
+        entrenamientoId,
+        jugadorId
+    ) {
+
+        window.ctEntrenamientoActual = entrenamientoId;
+
+        const existente = db.evaluaciones.find(e =>
+            e.entrenamientoId === entrenamientoId &&
+            e.jugadorId === jugadorId
+        );
+
+        if (existente) {
+            window.verHistorialEvaluacionCT(jugadorId);
+            return;
+        }
+
+        return abrirFormularioAnterior(
+            entrenamientoId,
+            jugadorId
+        );
+    };
+
+
+    // --------------------------------------------------------
+    // 5. GUARDAR Y REGRESAR AUTOMÁTICAMENTE A LA LISTA
+    // --------------------------------------------------------
+
+    const guardarEvaluacionAnterior =
+        window.guardarEvaluacion;
+
+    window.guardarEvaluacion = function (
+        entrenamientoId,
+        jugadorId
+    ) {
+
+        window.ctEntrenamientoActual = entrenamientoId;
+
+        // Si ya existe una evaluación, no permitir duplicarla.
+        const existente = db.evaluaciones.find(e =>
+            e.entrenamientoId === entrenamientoId &&
+            e.jugadorId === jugadorId
+        );
+
+        if (existente) {
+
+            alert(
+                "Este jugador ya tiene su evaluación guardada. " +
+                "Puedes consultar su historial."
+            );
+
+            window.verHistorialEvaluacionCT(jugadorId);
+
+            return;
+        }
+
+        // Ejecutar el guardado original.
+        // La función original vuelve a llamar a
+        // cargarJugadoresEvaluacion() al terminar.
+        return guardarEvaluacionAnterior(
+            entrenamientoId,
+            jugadorId
+        );
+    };
+
+
+    console.log(
+        "CONTROL TIBURONES: navegación y bloqueo de evaluaciones activados."
+    );
+
+})();
+</script>
 </body>
 </html>
