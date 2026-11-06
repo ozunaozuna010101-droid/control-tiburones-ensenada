@@ -12976,6 +12976,192 @@ console.log(
 </script>
 
 <!-- FIN DE ESTADOS AUTOMÁTICOS DE ASISTENCIA -->
-  
+<!-- =====================================================
+ CONTROL TIBURONES
+ INDICADOR AUTOMÁTICO DE EVALUACIONES COMPLETADAS
+ ===================================================== -->
+
+<script>
+(function () {
+    "use strict";
+
+    if (window.__CT_INDICADOR_EVALUACIONES_V2) return;
+    window.__CT_INDICADOR_EVALUACIONES_V2 = true;
+
+    // -----------------------------------------------
+    // 1. DETERMINAR SI TODOS LOS ASISTENTES FUERON
+    // EVALUADOS EN EL ENTRENAMIENTO
+    // -----------------------------------------------
+
+    function ctEvaluacionCompletaV2(entrenamientoId) {
+
+        if (!window.db) return false;
+
+        const asistencias = (db.asistencias || []).filter(a =>
+            a.entrenamientoId === entrenamientoId &&
+            a.estado === "asistio" &&
+            obtenerJugador(a.jugadorId)
+        );
+
+        if (asistencias.length === 0) return false;
+
+        const jugadores = [
+            ...new Set(asistencias.map(a => a.jugadorId))
+        ];
+
+        return jugadores.every(jugadorId =>
+            (db.evaluaciones || []).some(e =>
+                e.entrenamientoId === entrenamientoId &&
+                e.jugadorId === jugadorId
+            )
+        );
+    }
+
+    // -----------------------------------------------
+    // 2. ACTUALIZAR LOS COLORES DEL SELECTOR
+    // -----------------------------------------------
+
+    function ctActualizarSelectorEvaluacionesV2() {
+
+        const selector = document.getElementById(
+            "ctSeleccionEntrenamiento"
+        );
+
+        if (!selector || !window.db) return;
+
+        Array.from(selector.options).forEach(opcion => {
+
+            const id = opcion.value;
+
+            if (!opcion.dataset.ctTextoOriginal) {
+                opcion.dataset.ctTextoOriginal =
+                    opcion.textContent.trim();
+            }
+
+            const textoOriginal =
+                opcion.dataset.ctTextoOriginal;
+
+            const completada =
+                ctEvaluacionCompletaV2(id);
+
+            if (completada) {
+
+                opcion.textContent = "✓ " + textoOriginal;
+                opcion.style.backgroundColor = "#DDF3E3";
+                opcion.style.color = "#236B3B";
+                opcion.style.fontWeight = "700";
+
+            } else {
+
+                opcion.textContent = textoOriginal;
+                opcion.style.backgroundColor = "";
+                opcion.style.color = "";
+                opcion.style.fontWeight = "";
+
+            }
+        });
+
+        // Colorear también el selector cuando la opción
+        // completada está seleccionada.
+        const actual = selector.options[selector.selectedIndex];
+
+        if (actual &&
+            ctEvaluacionCompletaV2(actual.value)) {
+
+            selector.style.backgroundColor = "#DDF3E3";
+            selector.style.color = "#236B3B";
+
+        } else {
+
+            selector.style.backgroundColor = "";
+            selector.style.color = "";
+
+        }
+    }
+
+    // -----------------------------------------------
+    // 3. ACTUALIZAR AL ABRIR LA PANTALLA
+    // -----------------------------------------------
+
+    const mostrarEvaluacionesAnterior =
+        window.mostrarEvaluaciones;
+
+    if (typeof mostrarEvaluacionesAnterior === "function") {
+
+        window.mostrarEvaluaciones = function () {
+
+            const resultado =
+                mostrarEvaluacionesAnterior.apply(this, arguments);
+
+            ctActualizarSelectorEvaluacionesV2();
+
+            return resultado;
+        };
+    }
+
+    // -----------------------------------------------
+    // 4. ACTUALIZAR AUTOMÁTICAMENTE DESPUÉS DE GUARDAR
+    // -----------------------------------------------
+
+    const guardarEvaluacionAnterior =
+        window.guardarEvaluacion;
+
+    if (typeof guardarEvaluacionAnterior === "function") {
+
+        window.guardarEvaluacion = function () {
+
+            const resultado =
+                guardarEvaluacionAnterior.apply(this, arguments);
+
+            ctActualizarSelectorEvaluacionesV2();
+
+            return resultado;
+        };
+    }
+
+    // -----------------------------------------------
+    // 5. ACTUALIZAR CUANDO CAMBIA EL ENTRENAMIENTO
+    // -----------------------------------------------
+
+    document.addEventListener("change", function (evento) {
+
+        if (evento.target &&
+            evento.target.id === "ctSeleccionEntrenamiento") {
+
+            setTimeout(
+                ctActualizarSelectorEvaluacionesV2,
+                0
+            );
+        }
+    });
+
+    // -----------------------------------------------
+    // 6. ACTUALIZAR CUANDO SE REDIBUJA LA PANTALLA
+    // -----------------------------------------------
+
+    const observador = new MutationObserver(function () {
+
+        const selector = document.getElementById(
+            "ctSeleccionEntrenamiento"
+        );
+
+        if (selector) {
+            ctActualizarSelectorEvaluacionesV2();
+        }
+    });
+
+    observador.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    console.log(
+        "CONTROL TIBURONES: indicador automático de evaluaciones activado."
+    );
+
+})();
+</script>
+
+<!-- FIN DEL INDICADOR AUTOMÁTICO -->  
 </body>
 </html>
