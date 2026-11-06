@@ -9741,5 +9741,674 @@ if(document.readyState==="loading"){
 })();
                             </script>
   
+<!-- =====================================================
+ CONTROL TIBURONES
+ BLOQUE FINANCIERO MEJORADO - VERSION FINAL
+===================================================== -->
+
+<style>
+.ct-finanzas-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:14px 0;
+}
+.ct-finanzas-card{
+  background:#203650;
+  border:1px solid #3a506c;
+  border-radius:14px;
+  padding:14px;
+  min-width:0;
+}
+.ct-finanzas-card small{
+  display:block;
+  color:#b8c6d8;
+  font-size:13px;
+  margin-bottom:9px;
+}
+.ct-finanzas-card strong{
+  font-size:clamp(19px,4vw,25px);
+  font-weight:900;
+  overflow-wrap:anywhere;
+}
+.ct-pendiente{
+  border:1px solid #ff596b!important;
+  background:#382938!important;
+}
+.ct-liquidado{
+  border:1px solid #18d69a!important;
+  background:#174139!important;
+}
+.ct-estado{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:800;
+}
+.ct-estado-rojo{
+  color:#ff7180;
+  background:#592b38;
+}
+.ct-estado-verde{
+  color:#36e2aa;
+  background:#17483f;
+}
+.ct-accion-pago{
+  background:linear-gradient(135deg,#176eaa,#2698ff)!important;
+  border-color:#29a7ff!important;
+}
+@media(max-width:360px){
+  .ct-finanzas-grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+<script>
+(function CONTROL_TIBURONES_FINANZAS(){
+
+"use strict";
+
+/* =========================================
+   1. FUNCIONES GENERALES
+========================================= */
+
+function ctPeriodo(){
+  return obtenerPeriodoActual();
+}
+
+function ctActivos(){
+  return (db.jugadores||[]).filter(
+    j=>j.estado==="activo"
+  );
+}
+
+function ctCargosMes(periodo){
+  return (db.cargos||[]).filter(
+    c=>c.periodo===periodo
+  );
+}
+
+function ctCargosActivos(periodo){
+
+  const ids=new Set(
+    ctActivos().map(j=>j.id)
+  );
+
+  return ctCargosMes(periodo).filter(
+    c=>ids.has(c.jugadorId)
+  );
+}
+
+/* =========================================
+   2. CÁLCULOS FINANCIEROS
+========================================= */
+
+function ctTotalMensualidades(periodo){
+
+  const ids=new Set(
+    ctActivos().map(j=>j.id)
+  );
+
+  return ctCargosMes(periodo)
+    .filter(c=>
+      c.concepto==="Mensualidad" &&
+      ids.has(c.jugadorId)
+    )
+    .reduce((n,c)=>
+      n+Number(c.total||c.monto||0),0
+    );
+}
+
+function ctTotalRecibido(periodo){
+
+  const cargos=new Set(
+    ctCargosActivos(periodo).map(c=>c.id)
+  );
+
+  return (db.pagos||[])
+    .filter(p=>cargos.has(p.cargoId))
+    .reduce((n,p)=>
+      n+Number(p.monto||0),0
+    );
+}
+
+function ctTotalPendiente(periodo){
+
+  return ctCargosActivos(periodo)
+    .reduce((n,c)=>
+      n+obtenerSaldoCargo(c),0
+    );
+}
+
+function ctGastosRegistrados(periodo){
+
+  return typeof obtenerTotalGastos==="function"
+    ? obtenerTotalGastos(periodo)
+    : 0;
+}
+
+/* =========================================
+   3. GENERAR MENSUALIDADES DEL MES
+========================================= */
+
+function ctGenerarMensualidades(){
+
+  if(!db || !Array.isArray(db.jugadores) ||
+     !Array.isArray(db.cargos)) return 0;
+
+  const periodo=ctPeriodo();
+  const jugadores=ctActivos();
+  const nuevos=[];
+
+  jugadores.forEach(j=>{
+
+    const existe=db.cargos.some(c=>
+      c.jugadorId===j.id &&
+      c.periodo===periodo &&
+      c.concepto==="Mensualidad"
+    );
+
+    if(existe) return;
+
+    const cuota=Math.max(
+      0,
+      Number(j.cuota ?? 500)
+    );
+
+    const cargo={
+      id:generarId(),
+      jugadorId:j.id,
+      familiaId:j.familiaId||"",
+      periodo:periodo,
+      concepto:"Mensualidad",
+      monto:cuota,
+      total:cuota,
+      fechaRegistro:obtenerFechaLocal(),
+      fechaLimite:periodo+"-05",
+      estado:"pendiente"
+    };
+
+    db.cargos.push(cargo);
+    nuevos.push(cargo.id);
+
+  });
+
+  if(nuevos.length){
+
+    if(!guardarDB()){
+
+      db.cargos=db.cargos.filter(
+        c=>!nuevos.includes(c.id)
+      );
+
+      return 0;
+    }
+  }
+
+  return nuevos.length;
+}
+
+/* =========================================
+   4. RESUMEN DE LA PANTALLA PRINCIPAL
+========================================= */
+
+function ctActualizarResumen(){
+
+  if(!db) return;
+
+  const periodo=ctPeriodo();
+
+  const total=ctTotalMensualidades(periodo);
+  const recibido=ctTotalRecibido(periodo);
+  const pendiente=ctTotalPendiente(periodo);
+  const gastos=ctGastosRegistrados(periodo);
+
+  const balance=recibido-gastos;
+
+  const recibidoOriginal=
+    document.getElementById("dineroRecibido");
+
+  const panel=recibidoOriginal
+    ? recibidoOriginal.closest(".panel")
+    : null;
+
+  const grid=panel
+    ? panel.querySelector(".money-grid")
+    : null;
+
+  if(grid){
+
+    grid.innerHTML=`
+
+      <div class="money-card">
+        <div class="mini-text">
+          Total de mensualidades
+        </div>
+        <div class="amount blue">
+          ${formatoMoneda(total)}
+        </div>
+      </div>
+
+      <div class="money-card">
+        <div class="mini-text">
+          Dinero recibido
+        </div>
+        <div class="amount green">
+          ${formatoMoneda(recibido)}
+        </div>
+      </div>
+
+      <div class="money-card">
+        <div class="mini-text">
+          Dinero pendiente
+        </div>
+        <div class="amount red">
+          ${formatoMoneda(pendiente)}
+        </div>
+      </div>
+
+      <div class="money-card">
+        <div class="mini-text">
+          Balance del mes
+        </div>
+        <div class="amount ${balance>=0?"green":"red"}">
+          ${formatoMoneda(balance)}
+        </div>
+      </div>
+
+    `;
+  }
+
+  const contador=
+    document.getElementById("pagosPendientes");
+
+  if(contador){
+
+    contador.textContent=
+      ctCargosActivos(periodo).filter(
+        c=>obtenerSaldoCargo(c)>0
+      ).length;
+
+  }
+
+}
+
+/* =========================================
+   5. ACTUALIZAR PANEL SIN PERDER OTROS DATOS
+========================================= */
+
+const actualizarPanelOriginal=window.actualizarPanel;
+
+window.actualizarPanel=function(){
+
+  const resultado=
+    typeof actualizarPanelOriginal==="function"
+    ? actualizarPanelOriginal.apply(this,arguments)
+    : undefined;
+
+  ctActualizarResumen();
+
+  return resultado;
+};
+
+/* =========================================
+   6. PANTALLA PRINCIPAL DE FINANZAS
+========================================= */
+
+window.mostrarFinanzas=function(){
+
+  ctGenerarMensualidades();
+
+  const periodo=ctPeriodo();
+
+  const total=ctTotalMensualidades(periodo);
+  const recibido=ctTotalRecibido(periodo);
+  const pendiente=ctTotalPendiente(periodo);
+  const gastos=ctGastosRegistrados(periodo);
+
+  const balance=recibido-gastos;
+
+  document.getElementById("moduleContent").innerHTML=`
+
+    <div class="modulo">
+
+      <h2>💰 Finanzas</h2>
+
+      <p>
+        Periodo:
+        <strong>${textoSeguro(periodo)}</strong>
+      </p>
+
+      <div class="ct-finanzas-grid">
+
+        <div class="ct-finanzas-card">
+          <small>Total de mensualidades</small>
+          <strong class="blue">
+            ${formatoMoneda(total)}
+          </strong>
+          <p class="mini-text">
+            Cuotas de todos los alumnos activos
+          </p>
+        </div>
+
+        <div class="ct-finanzas-card">
+          <small>Dinero recibido</small>
+          <strong class="green">
+            ${formatoMoneda(recibido)}
+          </strong>
+        </div>
+
+        <div class="ct-finanzas-card ${pendiente>0?"ct-pendiente":"ct-liquidado"}">
+          <small>Dinero pendiente</small>
+          <strong class="${pendiente>0?"red":"green"}">
+            ${formatoMoneda(pendiente)}
+          </strong>
+        </div>
+
+        <div class="ct-finanzas-card">
+          <small>Balance del mes</small>
+          <strong class="${balance>=0?"green":"red"}">
+            ${formatoMoneda(balance)}
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="tarjeta">
+
+        <button class="btn btn-primary"
+          onclick="mostrarCuentasPorCobrar()">
+          Consultar mensualidades
+        </button>
+
+        <button class="btn"
+          onclick="mostrarFormularioPago()">
+          Registrar pago
+        </button>
+
+        <button class="btn"
+          onclick="mostrarFormularioCargoExtra()">
+          Registrar cargo adicional
+        </button>
+
+        <button class="btn"
+          onclick="mostrarHistorialPagos()">
+          Historial de pagos
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+  ctActualizarResumen();
+
+};
+
+/* =========================================
+   7. CONSULTAR MENSUALIDADES
+========================================= */
+
+window.mostrarCuentasPorCobrar=function(){
+
+  ctGenerarMensualidades();
+
+  const periodo=ctPeriodo();
+
+  const cargos=ctCargosActivos(periodo).slice().sort((a,b)=>{
+
+    const ja=obtenerJugador(a.jugadorId)?.nombre||"";
+    const jb=obtenerJugador(b.jugadorId)?.nombre||"";
+
+    return ja.localeCompare(jb,"es");
+
+  });
+
+  const total=ctTotalMensualidades(periodo);
+  const recibido=ctTotalRecibido(periodo);
+  const pendiente=ctTotalPendiente(periodo);
+
+  let html=`
+
+    <div class="modulo">
+
+      <h2>📋 Mensualidades</h2>
+
+      <p>Periodo: <strong>${textoSeguro(periodo)}</strong></p>
+
+      <div class="ct-finanzas-grid">
+
+        <div class="ct-finanzas-card">
+          <small>Total mensualidades</small>
+          <strong>${formatoMoneda(total)}</strong>
+        </div>
+
+        <div class="ct-finanzas-card">
+          <small>Dinero recibido</small>
+          <strong class="green">
+            ${formatoMoneda(recibido)}
+          </strong>
+        </div>
+
+        <div class="ct-finanzas-card">
+          <small>Dinero pendiente</small>
+          <strong class="red">
+            ${formatoMoneda(pendiente)}
+          </strong>
+        </div>
+
+      </div>
+
+  `;
+
+  if(!cargos.length){
+
+    html+=`
+      <div class="tarjeta">
+        No hay mensualidades de alumnos activos.
+      </div>
+    `;
+
+  }
+
+  cargos.forEach(c=>{
+
+    const jugador=obtenerJugador(c.jugadorId);
+
+    if(!jugador) return;
+
+    const saldo=obtenerSaldoCargo(c);
+    const pagado=
+      Number(c.total||c.monto||0)-saldo;
+
+    const liquidado=saldo<=0;
+
+    html+=`
+
+      <div class="tarjeta ${liquidado?"ct-liquidado":"ct-pendiente"}">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:8px;
+          flex-wrap:wrap">
+
+          <strong>
+            ${textoSeguro(jugador.nombre)}
+          </strong>
+
+          <span class="ct-estado ${liquidado?"ct-estado-verde":"ct-estado-rojo"}">
+            ${liquidado?"PAGADO":"PENDIENTE"}
+          </span>
+
+        </div>
+
+        <p>
+          Concepto:
+          ${textoSeguro(c.concepto)}
+        </p>
+
+        <p>
+          Total:
+          <strong>${formatoMoneda(c.total||c.monto)}</strong>
+        </p>
+
+        <p>
+          Pagado:
+          <strong class="green">${formatoMoneda(pagado)}</strong>
+        </p>
+
+        <p>
+          Saldo:
+          <strong class="${liquidado?"green":"red"}">
+            ${formatoMoneda(saldo)}
+          </strong>
+        </p>
+
+        ${!liquidado?`
+
+          <button class="btn ct-accion-pago"
+            onclick="confirmarPagoCompleto('${c.id}')">
+            Confirmar pago completo
+          </button>
+
+          <button class="btn"
+            onclick="mostrarFormularioPago('${c.id}')">
+            Registrar pago parcial
+          </button>
+
+        `:""}
+
+      </div>
+
+    `;
+
+  });
+
+  html+=`
+
+      <button class="btn"
+        onclick="mostrarFinanzas()">
+        Volver a Finanzas
+      </button>
+
+    </div>
+
+  `;
+
+  document.getElementById("moduleContent").innerHTML=html;
+
+};
+
+/* =========================================
+   8. CONFIRMAR PAGO COMPLETO
+========================================= */
+
+window.confirmarPagoCompleto=function(cargoId){
+
+  const cargo=db.cargos.find(
+    c=>c.id===cargoId
+  );
+
+  if(!cargo){
+
+    alert("No se encontró la mensualidad.");
+    return;
+
+  }
+
+  const saldo=obtenerSaldoCargo(cargo);
+
+  if(saldo<=0){
+
+    mostrarCuentasPorCobrar();
+    return;
+
+  }
+
+  const jugador=obtenerJugador(cargo.jugadorId);
+
+  const nombre=jugador?.nombre||"el alumno";
+
+  if(!confirm(
+    "¿Confirmas que "+nombre+
+    " ya pagó "+formatoMoneda(saldo)+"?"
+  )) return;
+
+  const pago={
+
+    id:generarId(),
+    cargoId:cargo.id,
+    jugadorId:cargo.jugadorId,
+    familiaId:cargo.familiaId||"",
+    monto:saldo,
+    metodo:"Confirmación manual",
+    referencia:"Pago completo confirmado por administración",
+    fecha:obtenerFechaLocal(),
+    fechaRegistro:obtenerFechaLocal()
+
+  };
+
+  db.pagos.push(pago);
+
+  if(!guardarDB()){
+
+    db.pagos.pop();
+    return;
+
+  }
+
+  registrarActividad(
+    "Pago confirmado: "+
+    nombre+" · "+formatoMoneda(saldo)
+  );
+
+  guardarDB();
+
+  alert(
+    "Pago confirmado correctamente."
+  );
+
+  mostrarCuentasPorCobrar();
+
+  ctActualizarResumen();
+
+};
+
+/* =========================================
+   9. INICIO Y ACTUALIZACIÓN
+========================================= */
+
+function ctIniciarFinanzas(){
+
+  if(!db) return;
+
+  ctGenerarMensualidades();
+
+  ctActualizarResumen();
+
+}
+
+if(document.readyState==="loading"){
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    ctIniciarFinanzas
+  );
+
+}else{
+
+  ctIniciarFinanzas();
+
+}
+
+})();
+</script>
+  
+  
 </body>
 </html>
