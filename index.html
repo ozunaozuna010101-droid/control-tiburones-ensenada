@@ -10464,5 +10464,594 @@ if(document.readyState==="loading"){
 
 })();
 </script>  
+
+<!-- ============================================
+ CONTROL TIBURONES
+ CONTROL VISUAL DE MENSUALIDADES POR FAMILIA
+=============================================== -->
+
+<style>
+.ctmm-btn-principal{
+  display:block;
+  width:100%;
+  padding:19px 12px;
+  margin:22px 0;
+  border:2px solid #38aaff;
+  border-radius:15px;
+  background:linear-gradient(135deg,#1266a5,#2698ff);
+  color:white;
+  font-size:19px;
+  font-weight:900;
+  text-align:center;
+  box-shadow:0 5px 15px #0003;
+}
+.ctmm-resumen{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:15px 0;
+}
+.ctmm-dato{
+  background:#213650;
+  border:1px solid #3a506c;
+  border-radius:13px;
+  padding:14px;
+}
+.ctmm-dato small{
+  display:block;
+  color:#b8c6d8;
+  margin-bottom:8px;
+}
+.ctmm-dato strong{
+  font-size:21px;
+  overflow-wrap:anywhere;
+}
+.ctmm-familia{
+  padding:16px;
+  margin:15px 0;
+  border-radius:16px;
+  border:2px solid #ef5965;
+  background:#382938;
+}
+.ctmm-familia.pagada{
+  border-color:#21c78a;
+  background:#174139;
+}
+.ctmm-familia h3{
+  margin:0 0 8px;
+}
+.ctmm-jugador{
+  padding:13px;
+  margin-top:11px;
+  border-radius:11px;
+  background:#192538;
+  border:1px solid #46566d;
+}
+.ctmm-jugador.pagado{
+  border:1px solid #21c78a;
+}
+.ctmm-jugador.pendiente{
+  border:1px solid #ef5965;
+}
+.ctmm-pago-btn{
+  width:100%;
+  padding:13px;
+  margin-top:10px;
+  border:0;
+  border-radius:10px;
+  background:#168b5b;
+  color:white;
+  font-weight:900;
+  font-size:15px;
+}
+.ctmm-estado{
+  display:inline-block;
+  padding:5px 11px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:900;
+}
+.ctmm-rojo{
+  color:#ff8791;
+  background:#592b38;
+}
+.ctmm-verde{
+  color:#43e2aa;
+  background:#17483f;
+}
+.ctmm-volver{
+  width:100%;
+  padding:14px;
+  margin-top:18px;
+  border:1px solid #46566d;
+  border-radius:11px;
+  background:#263b56;
+  color:white;
+  font-weight:bold;
+}
+@media(max-width:360px){
+  .ctmm-resumen{grid-template-columns:1fr}
+}
+</style>
+
+<script>
+(function CONTROL_MENSUALIDADES_FAMILIAS(){
+
+"use strict";
+
+function ctmmDinero(valor){
+  return typeof formatoMoneda==="function"
+    ? formatoMoneda(valor)
+    : "$"+Number(valor||0).toFixed(2);
+}
+
+function ctmmTexto(valor){
+  return typeof textoSeguro==="function"
+    ? textoSeguro(String(valor??""))
+    : String(valor??"").replace(/[&<>"']/g,c=>({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      })[c]);
+}
+
+function ctmmPeriodo(){
+  return obtenerPeriodoActual();
+}
+
+function ctmmPago(cargoId){
+  return (db.pagos||[])
+    .filter(p=>p.cargoId===cargoId)
+    .reduce((s,p)=>s+Number(p.monto||0),0);
+}
+
+function ctmmSaldo(cargo){
+  return Math.max(
+    0,
+    Number(cargo.total||cargo.monto||0)-ctmmPago(cargo.id)
+  );
+}
+
+function ctmmCargo(jugadorId,periodo){
+  return (db.cargos||[]).find(c=>
+    c.jugadorId===jugadorId &&
+    c.periodo===periodo &&
+    c.concepto==="Mensualidad"
+  );
+}
+
+/* BOTON GRANDE EN FINANZAS */
+
+function ctmmAgregarBoton(){
+
+  const zona=document.getElementById("moduleContent");
+  if(!zona) return;
+
+  const modulo=zona.querySelector(".modulo");
+  if(!modulo) return;
+
+  const titulo=modulo.querySelector("h2");
+
+  if(!titulo || !titulo.textContent.includes("Finanzas")){
+    return;
+  }
+
+  if(modulo.querySelector("#ctmmAbrir")) return;
+
+  const boton=document.createElement("button");
+
+  boton.id="ctmmAbrir";
+  boton.className="ctmm-btn-principal";
+  boton.innerHTML="📋 CONTROL DE MENSUALIDADES";
+
+  boton.onclick=ctmmAbrir;
+
+  const resumen=modulo.querySelector(".ct-finanzas-grid");
+
+  if(resumen){
+    resumen.insertAdjacentElement("afterend",boton);
+  }else{
+    titulo.insertAdjacentElement("afterend",boton);
+  }
+}
+
+/* ABRIR CONTROL */
+
+function ctmmAbrir(){
+
+  // Genera primero las mensualidades del mes
+  // utilizando el sistema financiero existente.
+
+  if(typeof window.mostrarFinanzas==="function"){
+    window.mostrarFinanzas();
+  }
+
+  ctmmMostrarLista();
+}
+
+/* AGRUPAR ALUMNOS POR FAMILIA */
+
+function ctmmGrupos(){
+
+  const periodo=ctmmPeriodo();
+
+  const jugadores=(db.jugadores||[])
+    .filter(j=>j.estado==="activo")
+    .slice()
+    .sort((a,b)=>
+      String(a.nombre).localeCompare(String(b.nombre),"es")
+    );
+
+  const grupos=new Map();
+
+  jugadores.forEach(j=>{
+
+    const clave=j.familiaId
+      ? "familia_"+j.familiaId
+      : "jugador_"+j.id;
+
+    if(!grupos.has(clave)){
+
+      const familia=j.familiaId
+        ? (db.familias||[]).find(f=>f.id===j.familiaId)
+        : null;
+
+      grupos.set(clave,{
+        familia,
+        familiaId:j.familiaId||null,
+        jugadores:[]
+      });
+
+    }
+
+    grupos.get(clave).jugadores.push({
+      jugador:j,
+      cargo:ctmmCargo(j.id,periodo)
+    });
+
+  });
+
+  return Array.from(grupos.values());
+}
+
+/* MOSTRAR LISTA */
+
+function ctmmMostrarLista(){
+
+  const zona=document.getElementById("moduleContent");
+  if(!zona || !db) return;
+
+  const periodo=ctmmPeriodo();
+
+  const grupos=ctmmGrupos();
+
+  const cargos=(db.cargos||[]).filter(c=>
+    c.periodo===periodo &&
+    c.concepto==="Mensualidad" &&
+    (db.jugadores||[]).some(j=>
+      j.id===c.jugadorId &&
+      j.estado==="activo"
+    )
+  );
+
+  const total=cargos.reduce((s,c)=>
+    s+Number(c.total||c.monto||0),0
+  );
+
+  const recibido=cargos.reduce((s,c)=>
+    s+ctmmPago(c.id),0
+  );
+
+  const pendiente=cargos.reduce((s,c)=>
+    s+ctmmSaldo(c),0
+  );
+
+  let html=`
+
+    <div class="modulo">
+
+      <h2>📋 Control de mensualidades</h2>
+
+      <p>
+        Periodo:
+        <strong>${ctmmTexto(periodo)}</strong>
+      </p>
+
+      <div class="ctmm-resumen">
+
+        <div class="ctmm-dato">
+          <small>Total por cobrar</small>
+          <strong>${ctmmDinero(total)}</strong>
+        </div>
+
+        <div class="ctmm-dato">
+          <small>Dinero recibido</small>
+          <strong style="color:#21c78a">
+            ${ctmmDinero(recibido)}
+          </strong>
+        </div>
+
+        <div class="ctmm-dato">
+          <small>Falta por cobrar</small>
+          <strong style="color:#ff6575">
+            ${ctmmDinero(pendiente)}
+          </strong>
+        </div>
+
+        <div class="ctmm-dato">
+          <small>Alumnos activos</small>
+          <strong>${(db.jugadores||[]).filter(j=>j.estado==="activo").length}</strong>
+        </div>
+
+      </div>
+
+  `;
+
+  if(!grupos.length){
+
+    html+=`
+      <div class="ctmm-familia">
+        No hay alumnos activos registrados.
+      </div>
+    `;
+
+  }
+
+  grupos.forEach(grupo=>{
+
+    const totalGrupo=grupo.jugadores.reduce((s,item)=>
+      s+Number(
+        item.cargo?.total||
+        item.cargo?.monto||
+        0
+      ),0
+    );
+
+    const pagadoGrupo=grupo.jugadores.reduce((s,item)=>
+      s+(item.cargo?ctmmPago(item.cargo.id):0),0
+    );
+
+    const pendienteGrupo=grupo.jugadores.reduce((s,item)=>
+      s+(item.cargo?ctmmSaldo(item.cargo):0),0
+    );
+
+    const todosPagados=
+      grupo.jugadores.length>0 &&
+      grupo.jugadores.every(item=>
+        item.cargo && ctmmSaldo(item.cargo)<=0
+      );
+
+    const nombreGrupo=grupo.familia
+      ? grupo.familia.responsable
+      : grupo.jugadores[0].jugador.nombre;
+
+    html+=`
+
+      <div class="ctmm-familia ${todosPagados?"pagada":""}">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:8px;
+          flex-wrap:wrap">
+
+          <h3>
+            ${grupo.familia?"👨‍👩‍👧":"🏀"}
+            ${ctmmTexto(nombreGrupo)}
+          </h3>
+
+          <span class="ctmm-estado ${todosPagados?"ctmm-verde":"ctmm-rojo"}">
+            ${todosPagados?"PAGADO":"PENDIENTE"}
+          </span>
+
+        </div>
+
+        ${grupo.familia?`
+          <p class="mini-text">
+            Familia · ${grupo.jugadores.length} alumno(s)
+          </p>
+        `:""}
+
+        <p>
+          Total familiar:
+          <strong>${ctmmDinero(totalGrupo)}</strong>
+        </p>
+
+        <p style="color:#43e2aa">
+          Pagado: ${ctmmDinero(pagadoGrupo)}
+        </p>
+
+        <p style="color:${pendienteGrupo>0?"#ff8791":"#43e2aa"}">
+          Pendiente: ${ctmmDinero(pendienteGrupo)}
+        </p>
+
+    `;
+
+    grupo.jugadores.forEach(item=>{
+
+      const j=item.jugador;
+      const cargo=item.cargo;
+
+      const cuota=cargo
+        ? Number(cargo.total||cargo.monto||0)
+        : Number(j.cuota||0);
+
+      const saldo=cargo?ctmmSaldo(cargo):cuota;
+      const pagado=cargo?ctmmPago(cargo.id):0;
+      const liquidado=!!cargo && saldo<=0;
+
+      html+=`
+
+        <div class="ctmm-jugador ${liquidado?"pagado":"pendiente"}">
+
+          <strong>${ctmmTexto(j.nombre)}</strong>
+
+          <p class="mini-text">
+            Mensualidad individual
+          </p>
+
+          <p>
+            Cuota:
+            <strong>${ctmmDinero(cuota)}</strong>
+          </p>
+
+          <p>
+            Pagado:
+            <strong style="color:#43e2aa">
+              ${ctmmDinero(pagado)}
+            </strong>
+          </p>
+
+          <p>
+            Saldo:
+            <strong style="color:${liquidado?"#43e2aa":"#ff8791"}">
+              ${ctmmDinero(saldo)}
+            </strong>
+          </p>
+
+          ${liquidado?`
+
+            <span class="ctmm-estado ctmm-verde">
+              ✓ MENSUALIDAD PAGADA
+            </span>
+
+          `:cargo?`
+
+            <button class="ctmm-pago-btn"
+              onclick="ctmmConfirmarPago('${ctmmTexto(cargo.id)}')">
+              ✓ CONFIRMAR PAGO
+            </button>
+
+          `:`
+
+            <span class="ctmm-estado ctmm-rojo">
+              SIN MENSUALIDAD GENERADA
+            </span>
+
+          `}
+
+        </div>
+
+      `;
+
+    });
+
+    html+=`</div>`;
+
+  });
+
+  html+=`
+
+      <button class="ctmm-volver"
+        onclick="mostrarFinanzas()">
+        ← Volver a Finanzas
+      </button>
+
+    </div>
+
+  `;
+
+  zona.innerHTML=html;
+}
+
+/* CONFIRMAR PAGO INDIVIDUAL */
+
+window.ctmmConfirmarPago=function(cargoId){
+
+  const cargo=(db.cargos||[]).find(c=>
+    c.id===cargoId
+  );
+
+  if(!cargo){
+    alert("No se encontró la mensualidad.");
+    return;
+  }
+
+  const saldo=ctmmSaldo(cargo);
+
+  if(saldo<=0){
+    ctmmMostrarLista();
+    return;
+  }
+
+  const jugador=(db.jugadores||[]).find(j=>
+    j.id===cargo.jugadorId
+  );
+
+  if(!jugador){
+    alert("No se encontró al alumno.");
+    return;
+  }
+
+  if(!confirm(
+    "¿Confirmas que "+jugador.nombre+
+    " ya pagó "+ctmmDinero(saldo)+"?"
+  )){
+    return;
+  }
+
+  const pago={
+
+    id:generarId(),
+    cargoId:cargo.id,
+    jugadorId:cargo.jugadorId,
+    familiaId:cargo.familiaId||"",
+    monto:saldo,
+    metodo:"Confirmación manual",
+    referencia:"Pago confirmado desde Control de Mensualidades",
+    fecha:obtenerFechaLocal(),
+    fechaRegistro:obtenerFechaLocal()
+
+  };
+
+  db.pagos.push(pago);
+
+  if(!guardarDB()){
+
+    db.pagos.pop();
+
+    alert("No se pudo guardar el pago.");
+    return;
+
+  }
+
+  registrarActividad(
+    "Pago confirmado: "+jugador.nombre+
+    " · "+ctmmDinero(saldo)
+  );
+
+  guardarDB();
+
+  ctmmMostrarLista();
+
+};
+
+/* DETECTAR CUANDO SE ABRE FINANZAS */
+
+function ctmmIniciar(){
+
+  const zona=document.getElementById("moduleContent");
+
+  if(!zona) return;
+
+  const observador=new MutationObserver(()=>{
+    ctmmAgregarBoton();
+  });
+
+  observador.observe(zona,{
+    childList:true,
+    subtree:true
+  });
+
+  ctmmAgregarBoton();
+}
+
+ctmmIniciar();
+
+})();
+</script>
 </body>
 </html>
