@@ -12581,6 +12581,131 @@ console.log(
 
     document.head.appendChild(estilo);
 })();
+</script> 
+ 
+<script>
+(function () {
+    if (window.__ctReversionGeneralMVP) return;
+    window.__ctReversionGeneralMVP = true;
+
+    window.revertirCierreMVPHorario = function (horarioId) {
+        const periodo = obtenerPeriodoActual();
+
+        const cierres = db.cierresMVP.filter(item =>
+            item.periodo === periodo &&
+            item.horario === horarioId
+        );
+
+        if (cierres.length !== 1) {
+            alert("No se encontró un único cierre para revertir en este horario.");
+            return;
+        }
+
+        const cierre = cierres[0];
+
+        if (!Array.isArray(cierre.ganadores)) {
+            alert("No se pudieron identificar los ganadores. No se modificó ningún dato.");
+            return;
+        }
+
+        const idsGanadores = cierre.ganadores;
+
+        const confirmar = confirm(
+            "¿Quieres revertir el cierre MVP de este horario?\n\n" +
+            "Se quitará el cierre y los reconocimientos generados por él.\n\n" +
+            "Los puntos, asistencias, evaluaciones y MVP históricos se conservarán."
+        );
+
+        if (!confirmar) return;
+
+        const cierresAnteriores = db.cierresMVP;
+        const reconocimientosAnteriores = db.reconocimientosMVP;
+
+        db.cierresMVP = db.cierresMVP.filter(item =>
+            item.id !== cierre.id
+        );
+
+        db.reconocimientosMVP = db.reconocimientosMVP.filter(item =>
+            !(
+                item.periodo === periodo &&
+                item.horario === horarioId &&
+                item.origen === "aplicacion" &&
+                idsGanadores.includes(item.jugadorId)
+            )
+        );
+
+        if (!guardarDB()) {
+            db.cierresMVP = cierresAnteriores;
+            db.reconocimientosMVP = reconocimientosAnteriores;
+
+            alert("No se pudo guardar el cambio. Los datos anteriores se conservaron.");
+            return;
+        }
+
+        alert("Cierre revertido correctamente. Ya puedes volver a cerrar ese horario cuando corresponda.");
+
+        mostrarMVP();
+    };
+
+    const mostrarMVPAnterior = window.mostrarMVP;
+
+    if (typeof mostrarMVPAnterior === "function") {
+        window.mostrarMVP = function (...args) {
+            const resultado = mostrarMVPAnterior.apply(this, args);
+
+            const zona = document.getElementById("moduleContent");
+
+            if (!zona) return resultado;
+
+            // Retirar el botón adicional del parche anterior, si existe.
+            zona.querySelectorAll("button").forEach(boton => {
+                if (boton.textContent.includes(
+                    "Deshacer cierre accidental de 6:30"
+                )) {
+                    boton.remove();
+                }
+            });
+
+            (db.ajustes.horarios || []).forEach(horario => {
+                const tarjeta = Array.from(
+                    zona.querySelectorAll(".tarjeta")
+                ).find(elemento =>
+                    elemento.querySelector("h3")?.textContent.trim() ===
+                    horario.nombre
+                );
+
+                if (!tarjeta) return;
+
+                const botonCerrado = Array.from(
+                    tarjeta.querySelectorAll("button")
+                ).find(boton =>
+                    boton.textContent.trim() === "Mes cerrado"
+                );
+
+                if (!botonCerrado) return;
+
+                if (tarjeta.querySelector(".btn-revertir-mvp")) return;
+
+                const botonRevertir = document.createElement("button");
+
+                botonRevertir.className = "btn btn-revertir-mvp";
+                botonRevertir.style.marginTop = "10px";
+                botonRevertir.textContent = "↩ Revertir cierre";
+
+                botonRevertir.onclick = function () {
+                    window.revertirCierreMVPHorario(horario.id);
+                };
+
+                botonCerrado.insertAdjacentElement(
+                    "afterend",
+                    botonRevertir
+                );
+            });
+
+            return resultado;
+        };
+    }
+})();
 </script>  
 </body>
 </html>
