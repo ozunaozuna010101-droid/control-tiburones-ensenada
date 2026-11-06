@@ -7196,5 +7196,244 @@ textarea {
 
 })();
             </script>
+<!-- NUEVA DESCARGA Y COMPARTIR PDF DEL HISTORIAL -->
+<script>
+window.ctDescargarHistorial = async function(id) {
+
+  const jugador = obtenerJugador(id);
+
+  if (!jugador) {
+    alert("No se encontró al jugador.");
+    return;
+  }
+
+  let temporal = null;
+
+  try {
+
+    const boton = document.querySelector(
+      ".ct-reporte-acciones button.btn-primary"
+    );
+
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Generando PDF...";
+    }
+
+    // Cargar el generador PDF.
+    if (!window.html2pdf) {
+
+      await new Promise((resolve, reject) => {
+
+        const script = document.createElement("script");
+
+        script.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+
+        script.onload = resolve;
+        script.onerror = reject;
+
+        document.head.appendChild(script);
+
+      });
+
+    }
+
+    // Crear el reporte.
+    temporal = document.createElement("div");
+
+    temporal.innerHTML = `
+      <style>
+        * { box-sizing:border-box; }
+        .ct-reporte {
+          width:100%;
+          padding:20px;
+          background:#fff;
+          color:#17263b;
+          font-family:Arial,sans-serif;
+        }
+        .ct-reporte-cabecera {
+          text-align:center;
+          border-bottom:3px solid #168bd2;
+          padding:12px;
+          margin-bottom:18px;
+        }
+        .ct-reporte-cabecera h1 {
+          font-size:23px;
+          color:#12365a;
+        }
+        .ct-reporte-cabecera p {
+          color:#47708f;
+          font-weight:bold;
+        }
+        .ct-reporte-ficha {
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:9px;
+          margin:14px 0;
+        }
+        .ct-reporte-dato {
+          padding:10px;
+          background:#eef4f9;
+          border-radius:8px;
+        }
+        .ct-reporte-dato small {
+          display:block;
+          color:#60758a;
+          font-size:10px;
+          font-weight:bold;
+        }
+        .ct-reporte-dato strong {
+          display:block;
+          margin-top:4px;
+          font-size:13px;
+        }
+        .ct-reporte-fecha {
+          margin:14px 0;
+          padding:13px;
+          border:1px solid #d4e0ea;
+          border-left:4px solid #168bd2;
+          border-radius:8px;
+          page-break-inside:avoid;
+        }
+        .ct-reporte-fecha h3 {
+          color:#12365a;
+          font-size:15px;
+        }
+        .ct-reporte-fecha p {
+          font-size:12px;
+          line-height:1.5;
+        }
+        .ct-reporte-etiqueta {
+          font-weight:bold;
+          color:#315875;
+        }
+        .ct-reporte-pie {
+          text-align:center;
+          border-top:1px solid #d4e0ea;
+          padding-top:15px;
+          font-size:10px;
+          color:#60758a;
+        }
+        h2 {
+          font-size:16px;
+          color:#12365a;
+        }
+      </style>
+
+      ${ctContenidoReporte(jugador)}
+    `;
+
+    temporal.style.position = "fixed";
+    temporal.style.left = "-10000px";
+    temporal.style.top = "0";
+    temporal.style.width = "760px";
+    temporal.style.background = "#ffffff";
+
+    document.body.appendChild(temporal);
+
+    const nombreArchivo =
+      "Historial_" +
+      jugador.nombre.replace(/[^a-z0-9]/gi, "_") +
+      ".pdf";
+
+    // Generar el PDF sin abrir la impresora.
+    const pdfBlob = await html2pdf()
+      .set({
+        margin: 10,
+        filename: nombreArchivo,
+        image: {
+          type: "jpeg",
+          quality: 0.98
+        },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff"
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait"
+        },
+        pagebreak: {
+          mode: ["css", "legacy"]
+        }
+      })
+      .from(temporal)
+      .outputPdf("blob");
+
+    temporal.remove();
+    temporal = null;
+
+    const archivo = new File(
+      [pdfBlob],
+      nombreArchivo,
+      { type: "application/pdf" }
+    );
+
+    // Descargar automáticamente.
+    const url = URL.createObjectURL(pdfBlob);
+    const enlace = document.createElement("a");
+
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000);
+
+    // Abrir el menú nativo de compartir.
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [archivo] })
+    ) {
+
+      await navigator.share({
+        files: [archivo],
+        title: "Historial deportivo - " + jugador.nombre,
+        text: "Historial deportivo de Academia Tiburones Ensenada."
+      });
+
+    } else {
+
+      alert(
+        "El PDF se descargó. Puedes encontrarlo en Descargas " +
+        "y compartirlo desde tu teléfono."
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error("Error al generar PDF:", error);
+
+    alert(
+      "No se pudo generar o compartir el PDF. " +
+      "Revisa tu conexión e inténtalo nuevamente."
+    );
+
+  } finally {
+
+    if (temporal) temporal.remove();
+
+    const boton = document.querySelector(
+      ".ct-reporte-acciones button.btn-primary"
+    );
+
+    if (boton) {
+      boton.disabled = false;
+      boton.textContent = "⬇ Descargar historial PDF";
+    }
+
+  }
+
+};
+          </script>
 </body>
 </html>
