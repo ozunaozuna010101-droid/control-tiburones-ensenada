@@ -9406,5 +9406,340 @@ if(document.readyState==="loading"){
 </script>
 
 <!-- FIN MVP COMPACTO -->  
+
+<script>
+// ============================================================
+// CONTROL TIBURONES
+// EDICIÓN DE EVALUACIONES EXISTENTES + ACTUALIZACIÓN MVP
+// ============================================================
+(function () {
+  "use strict";
+
+  const OPCIONES = {
+    desempeno: [
+      ["Excelente", 3],
+      ["Buen trabajo", 2],
+      ["Mejorando", 1]
+    ],
+    actitud: [
+      ["Buena actitud", 2],
+      ["Puso atención", 2],
+      ["Platicador", -1],
+      ["No siguió indicaciones", -2],
+      ["No puso atención", -3],
+      ["Estuvo jugando", -3]
+    ],
+    esfuerzo: [
+      ["Mucho esfuerzo", 3],
+      ["Va mejorando", 2],
+      ["Reforzar práctica", 0]
+    ],
+    uniforme: [
+      ["Completo", 1],
+      ["Justificado", 0],
+      ["No cumple", -1]
+    ]
+  };
+
+  const nombres = {
+    desempeno: "Desempeño",
+    actitud: "Actitud y atención",
+    esfuerzo: "Esfuerzo",
+    uniforme: "Uniforme"
+  };
+
+  function puntos(selecciones) {
+    return Object.entries(OPCIONES).reduce((total, [grupo, opciones]) => {
+      const opcion = opciones.find(
+        o => o[0] === selecciones[grupo]
+      );
+      return total + (opcion ? opcion[1] : 0);
+    }, 0);
+  }
+
+  function encontrarEvaluacion(entrenamientoId, jugadorId) {
+    return db.evaluaciones.find(e =>
+      e.entrenamientoId === entrenamientoId &&
+      e.jugadorId === jugadorId
+    );
+  }
+
+  // AGREGAR BOTÓN EDITAR A LA LISTA
+  const cargarListaOriginal = window.cargarJugadoresEvaluacion;
+
+  window.cargarJugadoresEvaluacion = function () {
+    const resultado = cargarListaOriginal.apply(this, arguments);
+    const zona = document.getElementById("ctListaEvaluaciones");
+
+    if (!zona) return resultado;
+
+    zona.querySelectorAll("button").forEach(boton => {
+      if (boton.textContent.trim() !== "Consultar historial") return;
+
+      if (boton.parentElement.querySelector(".ct-editar-evaluacion")) return;
+
+      const jugadorId = boton.getAttribute("onclick")
+        .match(/verHistorialEvaluacionCT\('([^']+)'\)/)?.[1];
+
+      if (!jugadorId) return;
+
+      const editar = document.createElement("button");
+      editar.type = "button";
+      editar.className = "btn ct-editar-evaluacion";
+      editar.textContent = "✏️ Editar evaluación";
+      editar.onclick = () => {
+        ctAbrirEditor(jugadorId, window.ctEntrenamientoActual);
+      };
+
+      boton.insertAdjacentElement("afterend", editar);
+    });
+
+    return resultado;
+  };
+
+  // AGREGAR BOTÓN EDITAR AL HISTORIAL
+  const historialOriginal = window.verHistorialEvaluacionCT;
+
+  window.verHistorialEvaluacionCT = function (jugadorId) {
+    const resultado = historialOriginal.apply(this, arguments);
+    const zona = obtenerZonaEvaluaciones();
+    const modulo = zona.querySelector(".modulo");
+
+    if (!modulo || modulo.querySelector(".ct-editar-evaluacion")) {
+      return resultado;
+    }
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "btn btn-primary ct-editar-evaluacion";
+    boton.textContent = "✏️ Editar evaluación";
+    boton.onclick = () => {
+      ctAbrirEditor(jugadorId, window.ctEntrenamientoActual);
+    };
+
+    const botonVolver = Array.from(
+      modulo.querySelectorAll("button")
+    ).find(b => b.textContent.includes("Volver a la lista"));
+
+    if (botonVolver) {
+      botonVolver.insertAdjacentElement("beforebegin", boton);
+    } else {
+      modulo.appendChild(boton);
+    }
+
+    return resultado;
+  };
+
+  // ABRIR FORMULARIO CON LOS DATOS YA GUARDADOS
+  window.ctAbrirEditor = function (jugadorId, entrenamientoId) {
+    const evaluacion = encontrarEvaluacion(entrenamientoId, jugadorId);
+    const jugador = obtenerJugador(jugadorId);
+    const entrenamiento = db.entrenamientos.find(
+      t => t.id === entrenamientoId
+    );
+
+    if (!evaluacion || !jugador || !entrenamiento) {
+      alert("No se encontró la evaluación que deseas editar.");
+      return;
+    }
+
+    const selecciones = evaluacion.seleccionesMVP || {};
+    const zona = obtenerZonaEvaluaciones();
+
+    zona.innerHTML = `
+      <div class="modulo" id="ctEditorEvaluacion">
+
+        <h3>✏️ Editar evaluación</h3>
+
+        <div class="tarjeta">
+          <strong>${textoSeguro(jugador.nombre)}</strong>
+          <p class="mini-text">
+            ${formatearFecha(entrenamiento.fecha)}
+            · ${textoSeguro(obtenerHorario(entrenamiento.horario)?.nombre || "")}
+          </p>
+          <p class="mini-text">
+            Estás modificando la evaluación original.
+          </p>
+        </div>
+
+        ${Object.entries(OPCIONES).map(([grupo, opciones]) => `
+          <div class="ct-eval-grupo">
+            <strong class="ct-eval-titulo">${nombres[grupo]}</strong>
+            <div class="ct-eval-opciones">
+              ${opciones.map(op => `
+                <button type="button"
+                  class="ct-eval-btn ${
+                    op[1] > 0 ? "ct-verde" :
+                    op[1] < 0 ? "ct-rojo" : "ct-amarillo"
+                  } ${selecciones[grupo] === op[0] ? "ct-seleccionado" : ""}"
+                  data-grupo="${grupo}"
+                  data-texto="${textoSeguro(op[0])}">
+                  ${textoSeguro(op[0])}
+                  <small>${op[1] > 0 ? "+" : ""}${op[1]} puntos</small>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+
+        <div class="ct-eval-ajuste">
+          <strong>Descuento extra del Coach</strong>
+          <label>Puntos a restar</label>
+          <input id="ctEditAjuste" type="number"
+            min="-20" max="0" step="0.5"
+            value="${Number(evaluacion.ajusteExtra || 0)}">
+
+          <label>Motivo del descuento</label>
+          <input id="ctEditMotivo" type="text"
+            maxlength="250"
+            value="${textoSeguro(evaluacion.motivoAjuste || "")}">
+        </div>
+
+        <div class="ct-eval-grupo">
+          <label class="ct-eval-titulo">Observación del Coach</label>
+          <textarea id="ctEditObservaciones" rows="3"
+            maxlength="2000">${textoSeguro(evaluacion.observaciones || "")}</textarea>
+        </div>
+
+        <div class="ct-eval-total" id="ctEditTotal"></div>
+
+        <button type="button" class="btn btn-primary"
+          id="ctGuardarCambiosEvaluacion">
+          💾 Guardar cambios
+        </button>
+
+        <button type="button" class="btn"
+          onclick="verHistorialEvaluacionCT('${jugadorId}')">
+          Cancelar
+        </button>
+
+      </div>
+    `;
+
+    const root = document.getElementById("ctEditorEvaluacion");
+
+    function leer() {
+      const seleccionActual = {};
+
+      Object.keys(OPCIONES).forEach(grupo => {
+        const activo = root.querySelector(
+          `.ct-eval-btn[data-grupo="${grupo}"].ct-seleccionado`
+        );
+        seleccionActual[grupo] = activo?.dataset.texto || "";
+      });
+
+      const ajuste = Number(root.querySelector("#ctEditAjuste").value);
+
+      return {
+        selecciones: seleccionActual,
+        ajuste,
+        motivo: root.querySelector("#ctEditMotivo").value.trim(),
+        observaciones: root.querySelector("#ctEditObservaciones").value.trim()
+      };
+    }
+
+    function actualizarTotal() {
+      const datos = leer();
+      const total = puntos(datos.selecciones) + datos.ajuste;
+
+      root.querySelector("#ctEditTotal").textContent =
+        `${total > 0 ? "+" : ""}${total} puntos MVP`;
+    }
+
+    root.querySelectorAll(".ct-eval-btn").forEach(boton => {
+      boton.addEventListener("click", () => {
+        root.querySelectorAll(
+          `.ct-eval-btn[data-grupo="${boton.dataset.grupo}"]`
+        ).forEach(b => b.classList.remove("ct-seleccionado"));
+
+        boton.classList.add("ct-seleccionado");
+        actualizarTotal();
+      });
+    });
+
+    root.querySelector("#ctEditAjuste").addEventListener(
+      "input", actualizarTotal
+    );
+
+    actualizarTotal();
+
+    // GUARDAR MODIFICACIONES EN LA MISMA EVALUACIÓN
+    root.querySelector("#ctGuardarCambiosEvaluacion").onclick = function () {
+      const datos = leer();
+
+      if (Object.values(datos.selecciones).some(v => !v)) {
+        alert("Selecciona una opción en todos los apartados.");
+        return;
+      }
+
+      if (
+        !Number.isFinite(datos.ajuste) ||
+        datos.ajuste > 0 ||
+        datos.ajuste < -20 ||
+        Math.round(datos.ajuste * 2) !== datos.ajuste * 2
+      ) {
+        alert("El descuento debe ser de cero a -20, en incrementos de medio punto.");
+        return;
+      }
+
+      if (datos.ajuste < 0 && !datos.motivo) {
+        alert("Escribe el motivo del descuento.");
+        return;
+      }
+
+      const copiaAnterior = JSON.parse(JSON.stringify(evaluacion));
+      const puntosBotones = puntos(datos.selecciones);
+      const nuevosPuntos = puntosBotones + datos.ajuste;
+
+      const ahora = new Date().toISOString();
+
+      evaluacion.seleccionesMVP = datos.selecciones;
+      evaluacion.puntosBotonesMVP = puntosBotones;
+      evaluacion.ajusteExtra = datos.ajuste;
+      evaluacion.motivoAjuste = datos.motivo;
+      evaluacion.observaciones = datos.observaciones;
+      evaluacion.puntosMVP = nuevosPuntos;
+
+      evaluacion.uniforme =
+        datos.selecciones.uniforme === "Completo" ? "completo" :
+        datos.selecciones.uniforme === "No cumple" ? "incompleto" :
+        "justificado";
+
+      evaluacion.fechaActualizacion = ahora;
+      evaluacion.historialCambios ||= [];
+      evaluacion.historialCambios.push({
+        fecha: ahora,
+        anterior: copiaAnterior
+      });
+
+      registrarActividad(
+        "Se corrigió la evaluación de " + jugador.nombre +
+        ". Nuevos puntos MVP: " + nuevosPuntos
+      );
+
+      if (!guardarDB()) {
+        Object.keys(evaluacion).forEach(k => delete evaluacion[k]);
+        Object.assign(evaluacion, copiaAnterior);
+        return;
+      }
+
+      alert(
+        "Evaluación actualizada correctamente. " +
+        "Los puntos MVP también fueron actualizados."
+      );
+
+      // El MVP calcula los puntos directamente desde la evaluación.
+      // Al cambiar puntosMVP, el ranking mensual utiliza el nuevo valor.
+      window.verHistorialEvaluacionCT(jugadorId);
+    };
+  };
+
+  console.log(
+    "CONTROL TIBURONES: edición de evaluaciones y actualización MVP activadas."
+  );
+
+})();
+                            </script>
+  
 </body>
 </html>
