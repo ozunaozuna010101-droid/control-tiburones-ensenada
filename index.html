@@ -12535,5 +12535,52 @@ console.log(
 
 })();
  </script> 
+<script>
+(function () {
+    if (window.__ctMedallasAlInicio) return;
+    window.__ctMedallasAlInicio = true;
+
+    const mostrarMVPAnterior = window.mostrarMVP;
+
+    if (typeof mostrarMVPAnterior === "function") {
+        window.mostrarMVP = function (...args) {
+            const resultado = mostrarMVPAnterior.apply(this, args);
+
+            const zona = document.getElementById("moduleContent");
+
+            if (zona) {
+                zona.querySelectorAll(
+                    ".fila-mvp strong .ct-medalla-mvp"
+                ).forEach(medalla => {
+                    const contenedor = medalla.parentElement;
+
+                    if (contenedor && contenedor.firstChild !== medalla) {
+                        contenedor.insertBefore(
+                            medalla,
+                            contenedor.firstChild
+                        );
+                    }
+                });
+            }
+
+            return resultado;
+        };
+    }
+
+    const estilo = document.createElement("style");
+
+    estilo.textContent = `
+        .fila-mvp .ct-medalla-mvp {
+            margin-left: 0 !important;
+            margin-right: 8px !important;
+            vertical-align: middle;
+            display: inline-flex;
+            align-items: center;
+        }
+    `;
+
+    document.head.appendChild(estilo);
+})();
+</script>  
 </body>
 </html>
