@@ -9209,5 +9209,202 @@ console.log("CONTROL TIBURONES: archivo mensual activado.");
 
 })();
 </script>
+<!-- ==========================================
+     TIBURONES · MVP DEL MES
+     MOSTRAR SOLO GANADOR O EMPATADOS
+========================================== -->
+
+<style>
+.ct-mvp-final{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  margin-top:10px;
+}
+
+.ct-mvp-final-grupo{
+  padding:11px 12px;
+  border:1px solid #3b526f;
+  border-radius:12px;
+  background:linear-gradient(135deg,#1c3049,#17283e);
+}
+
+.ct-mvp-final-horario{
+  color:#36adff;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.ct-mvp-final-lista{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+.ct-mvp-final-jugador{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:1 1 180px;
+  min-width:0;
+  padding:8px 10px;
+  border:1px solid #806b37;
+  border-radius:9px;
+  background:#29364a;
+}
+
+.ct-mvp-final-corona{
+  font-size:19px;
+  flex-shrink:0;
+}
+
+.ct-mvp-final-nombre{
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+  overflow-wrap:anywhere;
+}
+
+.ct-mvp-final-puntos{
+  margin-left:auto;
+  flex-shrink:0;
+  color:#ffd166;
+  font-size:14px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.ct-mvp-final-puntos small{
+  font-size:9px;
+  font-weight:500;
+  color:#c5ceda;
+}
+
+.ct-mvp-final-vacio{
+  color:#b8c6d8;
+  font-size:12px;
+  padding:3px 0;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+function ctMvpFinalEscapar(valor){
+  return String(valor ?? "").replace(/[&<>"']/g,function(c){
+    return {
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[c];
+  });
+}
+
+window.ctMvpMostrarGanadores=function(){
+
+  const zona=document.getElementById("resumenMVP");
+
+  if(!zona || typeof obtenerRankingMVP!=="function") return;
+
+  try{
+
+    const periodo=obtenerPeriodoActual();
+    const horarios=db.ajustes.horarios || [];
+
+    zona.innerHTML=`
+      <div class="ct-mvp-final">
+
+        ${horarios.map(h=>{
+
+          const ranking=obtenerRankingMVP(h.id,periodo);
+
+          const mayor=ranking.length
+            ? Math.max(...ranking.map(j=>Number(j.total)||0))
+            : 0;
+
+          // Solo los líderes con puntuación mayor que cero.
+          const ganadores=mayor>0
+            ? ranking.filter(j=>(Number(j.total)||0)===mayor)
+            : [];
+
+          return `
+            <section class="ct-mvp-final-grupo">
+
+              <div class="ct-mvp-final-horario">
+                🏀 ${ctMvpFinalEscapar(h.nombre)}
+              </div>
+
+              ${
+                ganadores.length
+                ? `
+                  <div class="ct-mvp-final-lista">
+
+                    ${ganadores.map(j=>`
+                      <div class="ct-mvp-final-jugador">
+
+                        <span class="ct-mvp-final-corona">🏆</span>
+
+                        <span class="ct-mvp-final-nombre">
+                          ${ctMvpFinalEscapar(j.nombre)}
+                        </span>
+
+                        <span class="ct-mvp-final-puntos">
+                          ${Number(j.total)||0}
+                          <small>pts.</small>
+                        </span>
+
+                      </div>
+                    `).join("")}
+
+                  </div>
+                `
+                : `
+                  <div class="ct-mvp-final-vacio">
+                    Sin puntuaciones registradas
+                  </div>
+                `
+              }
+
+            </section>
+          `;
+
+        }).join("")}
+
+      </div>
+    `;
+
+  }catch(error){
+    console.error("Error mostrando ganadores MVP:",error);
+  }
+};
+
+// Actualizar el resumen cuando se actualice el panel.
+const actualizarAnterior=window.actualizarPanel;
+
+if(typeof actualizarAnterior==="function"){
+  window.actualizarPanel=function(){
+    const resultado=actualizarAnterior.apply(this,arguments);
+    window.ctMvpMostrarGanadores();
+    return resultado;
+  };
+}
+
+// Mostrar al entrar a la aplicación.
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",()=>{
+    setTimeout(window.ctMvpMostrarGanadores,1000);
+  });
+}else{
+  setTimeout(window.ctMvpMostrarGanadores,1000);
+}
+
+})();
+</script>
+
+<!-- FIN MVP COMPACTO -->  
 </body>
 </html>
