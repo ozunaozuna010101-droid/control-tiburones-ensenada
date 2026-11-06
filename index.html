@@ -8554,5 +8554,660 @@ console.log("CONTROL TIBURONES: bloque final activado.");
 
 })();
       </script>
+<!-- =====================================================
+ CONTROL TIBURONES · ARCHIVO DE INFORMES MENSUALES
+ Pegar este bloque completo justo antes de </body>
+===================================================== -->
+<script>
+(function(){
+"use strict";
+
+const CT_ARCHIVO_VERSION = 1;
+
+function ctAMPreparar(){
+  if(!Array.isArray(db.informesMensuales)){
+    db.informesMensuales = [];
+  }
+}
+
+function ctAMMesAnterior(){
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth()-1);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+
+function ctAMNombreMes(periodo){
+  const [a,m] = periodo.split("-").map(Number);
+  return new Date(a,m-1,1).toLocaleDateString("es-MX",{
+    month:"long",year:"numeric"
+  });
+}
+
+function ctAMRegistros(jugadorId,periodo){
+  const lista = [];
+
+  (db.entrenamientos || []).forEach(t=>{
+    if(!t.fecha || String(t.fecha).slice(0,7)!==periodo) return;
+
+    const asistencia = (db.asistencias || []).find(a =>
+      a.entrenamientoId===t.id && a.jugadorId===jugadorId
+    );
+
+    const evaluacion = (db.evaluaciones || []).find(e =>
+      e.entrenamientoId===t.id && e.jugadorId===jugadorId
+    );
+
+    if(asistencia || evaluacion){
+      lista.push({
+        fecha:t.fecha,
+        horario:t.horario,
+        asistencia:asistencia ? JSON.parse(JSON.stringify(asistencia)) : null,
+        evaluacion:evaluacion ? JSON.parse(JSON.stringify(evaluacion)) : null
+      });
+    }
+  });
+
+  lista.sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+  return lista;
+}
+
+function ctAMCrear(jugadorId,periodo){
+  ctAMPreparar();
+
+  const jugador = obtenerJugador(jugadorId);
+  if(!jugador) throw new Error("No se encontró al jugador.");
+
+  if(!/^\d{4}-\d{2}$/.test(periodo)){
+    throw new Error("Selecciona un mes válido.");
+  }
+
+  if(periodo===obtenerPeriodoActual()){
+    const hoy=new Date();
+    const ultimoDia=new Date(
+      hoy.getFullYear(),hoy.getMonth()+1,0
+    ).getDate();
+
+    if(hoy.getDate()<ultimoDia){
+      throw new Error(
+        "El mes todavía está en curso. Podrás archivarlo al terminar. " +
+        "El mes anterior se archiva automáticamente al iniciar el siguiente."
+      );
+    }
+  }
+
+  const existente = db.informesMensuales.find(x =>
+    x.jugadorId===jugadorId && x.periodo===periodo
+  );
+
+  if(existente) return {informe:existente,creado:false};
+
+  const registros = ctAMRegistros(jugadorId,periodo);
+
+  if(!registros.length){
+    throw new Error(
+      "No hay entrenamientos con asistencia o evaluación de este jugador en ese mes."
+    );
+  }
+
+  const horario = obtenerHorario(jugador.horario) || {};
+
+  const informe = {
+    id:generarId(),
+    version:CT_ARCHIVO_VERSION,
+    jugadorId:jugador.id,
+    jugadorNombre:jugador.nombre,
+    periodo,
+    creadoEn:new Date().toISOString(),
+    jugador:{
+      nombre:jugador.nombre,
+      estado:jugador.estado || "activo",
+      horario:jugador.horario || "",
+      nombreHorario:horario.nombre || "Horario no disponible",
+      categoria:horario.categoria || jugador.categoria || "Sin categoría"
+    },
+    registros
+  };
+
+  db.informesMensuales.push(informe);
+
+  if(!guardarDB()){
+    db.informesMensuales = db.informesMensuales.filter(
+      x=>x.id!==informe.id
+    );
+    throw new Error("No se pudo guardar el informe mensual.");
+  }
+
+  return {informe,creado:true};
+}
+
+function ctAMAutoCerrarMesAnterior(){
+  try{
+    ctAMPreparar();
+
+    const periodo = ctAMMesAnterior();
+    let cambios = false;
+
+    (db.jugadores || []).forEach(j=>{
+      const existe = db.informesMensuales.some(x =>
+        x.jugadorId===j.id && x.periodo===periodo
+      );
+
+      if(existe) return;
+
+      const registros = ctAMRegistros(j.id,periodo);
+      if(!registros.length) return;
+
+      const horario = obtenerHorario(j.horario) || {};
+
+      db.informesMensuales.push({
+        id:generarId(),
+        version:CT_ARCHIVO_VERSION,
+        jugadorId:j.id,
+        jugadorNombre:j.nombre,
+        periodo,
+        creadoEn:new Date().toISOString(),
+        jugador:{
+          nombre:j.nombre,
+          estado:j.estado || "activo",
+          horario:j.horario || "",
+          nombreHorario:horario.nombre || "Horario no disponible",
+          categoria:horario.categoria || j.categoria || "Sin categoría"
+        },
+        registros
+      });
+
+      cambios = true;
+    });
+
+    if(cambios) guardarDB();
+
+  }catch(error){
+    console.warn("No se pudo archivar el mes anterior:",error);
+  }
+}
+
+function ctAMTextoEstado(estado){
+  return ({
+    asistio:"Asistió",
+    falta:"Falta injustificada",
+    justificada:"Falta justificada",
+    retardo:"Retardo"
+  })[estado] || "Sin asistencia registrada";
+}
+
+function ctAMPDFCargar(){
+  return new Promise((resolve,reject)=>{
+    if(window.jspdf && window.jspdf.jsPDF){
+      resolve(window.jspdf.jsPDF);
+      return;
+    }
+
+    const fuentes=[
+      "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js",
+      "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"
+    ];
+
+    let i=0;
+
+    function intentar(){
+      if(i>=fuentes.length){
+        reject(new Error("No se pudo cargar el generador PDF."));
+        return;
+      }
+
+      const script=document.createElement("script");
+      script.src=fuentes[i++];
+
+      script.onload=()=>{
+        window.jspdf?.jsPDF
+          ? resolve(window.jspdf.jsPDF)
+          : intentar();
+      };
+
+      script.onerror=intentar;
+      document.head.appendChild(script);
+    }
+
+    intentar();
+  });
+}
+
+async function ctAMDescargar(informe){
+  const JsPDF=await ctAMPDFCargar();
+
+  const doc=new JsPDF({
+    orientation:"portrait",
+    unit:"mm",
+    format:"a4"
+  });
+
+  const ancho=210;
+  const margen=16;
+  const util=ancho-margen*2;
+  let y=48;
+
+  function pagina(){
+    doc.addPage();
+    y=20;
+  }
+
+  function espacio(h){
+    if(y+h>278) pagina();
+  }
+
+  function linea(texto,opciones={}){
+    const tam=opciones.tam||9;
+    const color=opciones.color||[42,59,77];
+    const negrita=!!opciones.negrita;
+    const anchoLinea=opciones.ancho||util;
+
+    doc.setFont("helvetica",negrita?"bold":"normal");
+    doc.setFontSize(tam);
+    doc.setTextColor(...color);
+
+    const lineas=doc.splitTextToSize(
+      String(texto??""),anchoLinea
+    );
+
+    const alto=lineas.length*(tam*0.48+1.2);
+    espacio(alto+3);
+
+    doc.text(lineas,margen,y);
+    y+=alto+2;
+  }
+
+  function seccion(t){
+    espacio(13);
+    y+=3;
+
+    doc.setFillColor(235,243,250);
+    doc.roundedRect(margen,y-5,util,9,2,2,"F");
+
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(10);
+    doc.setTextColor(18,54,90);
+    doc.text(t,margen+3,y+1);
+
+    y+=9;
+  }
+
+  function fecha(f){
+    return typeof formatearFecha==="function"
+      ? formatearFecha(f)
+      : String(f||"");
+  }
+
+  doc.setFillColor(15,39,64);
+  doc.rect(0,0,ancho,37,"F");
+
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(18);
+  doc.text("TIBURONES ENSENADA",ancho/2,15,{align:"center"});
+
+  doc.setFontSize(9);
+  doc.text("ACADEMIA DE BÁSQUETBOL",ancho/2,22,{align:"center"});
+
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(8);
+  doc.text(
+    "INFORME MENSUAL DE SEGUIMIENTO DEPORTIVO",
+    ancho/2,29,{align:"center"}
+  );
+
+  linea(
+    "REPORTE DE "+ctAMNombre(informe.periodo).toLocaleUpperCase("es-MX"),
+    {tam:13,negrita:true,color:[18,54,90]}
+  );
+
+  doc.setFillColor(246,249,252);
+  doc.setDrawColor(205,220,233);
+  doc.roundedRect(margen,y,util,29,3,3,"FD");
+
+  y+=7;
+
+  linea("JUGADOR: "+informe.jugador.nombre,{
+    tam:11,negrita:true,color:[18,54,90]
+  });
+
+  linea(
+    "Categoría: "+informe.jugador.categoria+
+    "  |  Horario: "+informe.jugador.nombreHorario,
+    {tam:9}
+  );
+
+  linea("Estado al generar: "+informe.jugador.estado,{tam:8});
+  y+=2;
+
+  const regs=informe.registros||[];
+  const cuenta=k=>regs.filter(
+    r=>r.asistencia?.estado===k
+  ).length;
+
+  seccion("RESUMEN DEL MES");
+
+  linea("Entrenamientos con registro: "+regs.length,{
+    tam:10,negrita:true
+  });
+
+  linea(
+    "Asistencias: "+cuenta("asistio")+
+    "    Faltas: "+cuenta("falta")+
+    "    Justificadas: "+cuenta("justificada")+
+    "    Retardos: "+cuenta("retardo"),
+    {tam:9}
+  );
+
+  seccion("SEGUIMIENTO POR ENTRENAMIENTO");
+
+  if(!regs.length){
+    linea("No hay registros en este periodo.");
+  }
+
+  regs.forEach((r,i)=>{
+    espacio(34);
+
+    doc.setFillColor(249,251,253);
+    doc.setDrawColor(213,224,234);
+    doc.roundedRect(margen,y,util,8,2,2,"FD");
+
+    y+=5;
+
+    linea(
+      "ENTRENAMIENTO "+(i+1)+" · "+fecha(r.fecha),
+      {tam:9,negrita:true,color:[18,54,90]}
+    );
+
+    linea(
+      "Asistencia: "+ctAMTextoEstado(r.asistencia?.estado),
+      {tam:8}
+    );
+
+    const e=r.evaluacion;
+
+    if(e){
+      const sel=e.seleccionesMVP||{};
+
+      linea(
+        "Desempeño: "+(sel.desempeno||"Sin dato")+
+        "  |  Actitud: "+(sel.actitud||"Sin dato"),
+        {tam:8}
+      );
+
+      linea(
+        "Esfuerzo: "+(sel.esfuerzo||"Sin dato")+
+        "  |  Uniforme: "+(sel.uniforme||e.uniforme||"Sin dato"),
+        {tam:8}
+      );
+
+      linea(
+        "Observaciones del Coach: "+
+        (e.observaciones||"Sin observaciones registradas."),
+        {tam:8}
+      );
+
+    }else{
+      linea("Evaluación: No registrada.",{tam:8});
+    }
+
+    y+=3;
+  });
+
+  const paginas=doc.internal.getNumberOfPages();
+
+  for(let n=1;n<=paginas;n++){
+    doc.setPage(n);
+
+    doc.setDrawColor(205,220,233);
+    doc.line(margen,285,ancho-margen,285);
+
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100,117,138);
+
+    doc.text(
+      "ACADEMIA TIBURONES ENSENADA · CONTROL TIBURONES",
+      margen,290
+    );
+
+    doc.text(
+      "Página "+n+" de "+paginas,
+      ancho-margen,290,{align:"right"}
+    );
+  }
+
+  const blob=doc.output("blob");
+
+  const nombre=
+    "Informe_"+informe.periodo+"_"+
+    (informe.jugador.nombre||"Jugador").replace(/[^a-z0-9]/gi,"_")+
+    ".pdf";
+
+  const archivo=new File([blob],nombre,{type:"application/pdf"});
+  const url=URL.createObjectURL(blob);
+
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  setTimeout(()=>URL.revokeObjectURL(url),120000);
+
+  if(
+    navigator.share &&
+    navigator.canShare &&
+    navigator.canShare({files:[archivo]})
+  ){
+    try{
+      await navigator.share({
+        files:[archivo],
+        title:"Informe mensual deportivo",
+        text:"Informe mensual de "+informe.jugador.nombre+
+          " · Academia Tiburones Ensenada."
+      });
+    }catch(error){
+      if(error.name!=="AbortError"){
+        alert(
+          "El PDF quedó descargado. Puedes compartirlo desde Descargas."
+        );
+      }
+    }
+  }else{
+    alert(
+      "El informe PDF se descargó. Puedes encontrarlo en Descargas " +
+      "y compartirlo por WhatsApp."
+    );
+  }
+}
+
+window.ctAMDescargarGuardado=async function(id){
+  const informe=(db.informesMensuales||[]).find(x=>x.id===id);
+
+  if(!informe){
+    alert("No se encontró el informe archivado.");
+    return;
+  }
+
+  try{
+    await ctAMDescargar(informe);
+  }catch(e){
+    console.error(e);
+    alert(
+      "No se pudo generar el PDF. Revisa tu conexión e inténtalo nuevamente."
+    );
+  }
+};
+
+window.ctAMCrearDesdePantalla=function(jugadorId){
+  const selector=document.getElementById("ctAMPeriodo");
+  const periodo=selector?.value;
+
+  if(!periodo){
+    alert("Selecciona el mes del informe.");
+    return;
+  }
+
+  try{
+    const resultado=ctAMCrear(jugadorId,periodo);
+
+    if(!resultado.creado){
+      alert(
+        "Ese informe ya está archivado y no se modificó. " +
+        "Puedes volver a descargarlo desde la lista."
+      );
+    }else{
+      alert(
+        "Informe mensual archivado correctamente. " +
+        "Ya quedó guardado en la aplicación y en los respaldos."
+      );
+    }
+
+    window.ctVerHistorialJugador(jugadorId);
+
+  }catch(e){
+    alert(e.message||"No se pudo crear el informe mensual.");
+  }
+};
+
+window.ctVerHistorialJugador=function(id){
+  const j=obtenerJugador(id);
+
+  if(!j){
+    alert("No se encontró al jugador.");
+    return;
+  }
+
+  ctAMPreparar();
+
+  const periodos=new Set(
+    (db.entrenamientos||[])
+      .filter(t=>ctAMRegistros(
+        id,String(t.fecha||"").slice(0,7)
+      ).length)
+      .map(t=>String(t.fecha).slice(0,7))
+  );
+
+  periodos.add(obtenerPeriodoActual());
+
+  (db.informesMensuales||[])
+    .filter(x=>x.jugadorId===id)
+    .forEach(x=>periodos.add(x.periodo));
+
+  const opciones=[...periodos].filter(Boolean).sort().reverse();
+
+  const archivados=(db.informesMensuales||[])
+    .filter(x=>x.jugadorId===id)
+    .sort((a,b)=>b.periodo.localeCompare(a.periodo));
+
+  const zona=document.getElementById("moduleContent");
+
+  zona.innerHTML=`
+    <div class="modulo">
+      <div class="ct-reporte-acciones">
+        <button class="btn" onclick="ctMostrarHistorial()">
+          ← Lista de jugadores
+        </button>
+
+        <button class="btn btn-primary"
+          onclick="ctDescargarHistorial('${j.id}')">
+          ⬇ Descargar historial completo
+        </button>
+      </div>
+
+      <h2>📁 ${textoSeguro(j.nombre)}</h2>
+
+      <p class="mini-text">
+        El historial completo conserva todos los entrenamientos.
+        Los informes mensuales se guardan por separado y no se sobrescriben.
+      </p>
+
+      <div class="tarjeta">
+        <h3>Crear archivo mensual</h3>
+
+        <label for="ctAMPeriodo">Selecciona el mes</label>
+
+        <select id="ctAMPeriodo">
+          ${opciones.map(p=>`
+            <option value="${p}">${ctAMNombreMes(p)}</option>
+          `).join("")}
+        </select>
+
+        <button class="btn btn-primary"
+          onclick="ctAMCrearDesdePantalla('${j.id}')">
+          Guardar informe de este mes
+        </button>
+
+        <p class="mini-text">
+          Al iniciar la aplicación en un nuevo mes, el mes anterior
+          se archiva automáticamente. También puedes archivar manualmente
+          un mes anterior que tenga registros.
+        </p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Informes mensuales archivados</h3>
+
+        ${
+          archivados.length
+          ? archivados.map(x=>`
+            <div style="padding:12px 0;border-bottom:1px solid var(--borde)">
+              <strong>${ctAMNombreMes(x.periodo)}</strong>
+
+              <div class="mini-text">
+                ${(x.registros||[]).length} entrenamientos ·
+                Guardado ${new Date(x.creadoEn).toLocaleDateString("es-MX")}
+              </div>
+
+              <button class="btn btn-primary"
+                onclick="ctAMDescargarGuardado('${x.id}')">
+                Descargar / compartir PDF
+              </button>
+            </div>
+          `).join("")
+          : `<p class="mini-text">
+              Todavía no hay informes mensuales archivados.
+            </p>`
+        }
+      </div>
+
+      <div class="tarjeta">
+        <h3>Historial completo</h3>
+
+        <p class="mini-text">
+          Este reporte incluye todos los entrenamientos registrados
+          del jugador, sin limitarse a un mes.
+        </p>
+
+        <button class="btn btn-primary"
+          onclick="ctDescargarHistorial('${j.id}')">
+          Descargar historial completo PDF
+        </button>
+      </div>
+    </div>
+  `;
+};
+
+// Archiva el mes anterior una sola vez, sin reemplazar informes existentes.
+function ctAMIniciar(){
+  if(typeof db==="undefined" || !db || !sistemaDisponible) return;
+  ctAMAutoCerrarMesAnterior();
+}
+
+if(document.readyState==="loading"){
+  document.addEventListener(
+    "DOMContentLoaded",
+    ()=>setTimeout(ctAMIniciar,900)
+  );
+}else{
+  setTimeout(ctAMIniciar,900);
+}
+
+console.log("CONTROL TIBURONES: archivo mensual activado.");
+
+})();
+</script>
 </body>
 </html>
