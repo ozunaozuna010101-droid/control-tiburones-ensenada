@@ -12717,6 +12717,265 @@ console.log(
         };
     }
 })();
-</script>  
+</script> 
+
+<!-- =====================================================
+ CONTROL TIBURONES
+ ESTADOS AUTOMÁTICOS DE ASISTENCIA
+ INCLUYE FECHA DE INGRESO DE CADA ALUMNO
+ NO MODIFICA EVALUACIONES MVP
+===================================================== -->
+
+<script>
+(function () {
+  "use strict";
+
+  if (window.__ctEstadosAsistenciaV2) return;
+  window.__ctEstadosAsistenciaV2 = true;
+
+  // --------------------------------------------------
+  // ESTILOS
+  // --------------------------------------------------
+
+  if (!document.getElementById("ctEstadoAsistenciaCSS")) {
+    const css = document.createElement("style");
+    css.id = "ctEstadoAsistenciaCSS";
+
+    css.textContent = `
+      .ct-asistencia-etiqueta {
+        display:inline-block;
+        padding:7px 10px;
+        border-radius:9px;
+        font-size:11px;
+        font-weight:900;
+        text-align:center;
+        margin:5px 0;
+      }
+
+      .ct-asistencia-verde {
+        color:#bbf7d0;
+        background:#14532d;
+        border:1px solid #22c55e;
+      }
+
+      .ct-asistencia-naranja {
+        color:#fde68a;
+        background:#78350f;
+        border:1px solid #f59e0b;
+      }
+
+      .ct-asistencia-rojo {
+        color:#fecaca;
+        background:#7f1d1d;
+        border:1px solid #ef4444;
+      }
+
+      .ct-asistencia-fila {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+      }
+    `;
+
+    document.head.appendChild(css);
+  }
+
+  // --------------------------------------------------
+  // FECHA LOCAL
+  // --------------------------------------------------
+
+  function fechaLocalCT() {
+    if (typeof obtenerFechaLocal === "function") {
+      return obtenerFechaLocal();
+    }
+
+    const d = new Date();
+
+    return [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, "0"),
+      String(d.getDate()).padStart(2, "0")
+    ].join("-");
+  }
+
+  // --------------------------------------------------
+  // FECHA DE INGRESO DEL ALUMNO
+  // Los alumnos nuevos tienen fechaRegistro.
+  // Los registros antiguos sin fechaRegistro
+  // se consideran existentes desde antes.
+  // --------------------------------------------------
+
+  function fechaIngresoCT(jugador) {
+    const fecha = String(jugador.fechaRegistro || "").slice(0, 10);
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(fecha)
+      ? fecha
+      : "0000-00-00";
+  }
+
+  // --------------------------------------------------
+  // CALCULAR ESTADO DE ASISTENCIA
+  // --------------------------------------------------
+
+  function estadoAsistenciaCT(entrenamiento) {
+    const fecha = String(entrenamiento.fecha);
+
+    const jugadoresActivos = (db.jugadores || []).filter(j =>
+      j.estado === "activo" &&
+      j.horario === entrenamiento.horario &&
+      fechaIngresoCT(j) <= fecha
+    );
+
+    const registros = (db.asistencias || []).filter(a =>
+      a.entrenamientoId === entrenamiento.id
+    );
+
+    const jugadoresConRegistro = new Set(
+      registros
+        .filter(a =>
+          ["asistio", "falta", "justificada", "retardo"]
+            .includes(a.estado)
+        )
+        .map(a => a.jugadorId)
+    );
+
+    // Incluir alumnos con registros históricos aunque
+    // actualmente ya no estén activos.
+    const idsEsperados = new Set(
+      jugadoresActivos.map(j => j.id)
+    );
+
+    registros.forEach(a => {
+      const jugador = (db.jugadores || []).find(j =>
+        j.id === a.jugadorId
+      );
+
+      if (
+        jugador &&
+        fechaIngresoCT(jugador) <= fecha
+      ) {
+        idsEsperados.add(jugador.id);
+      }
+    });
+
+    const total = idsEsperados.size;
+
+    const registrados = [...idsEsperados].filter(id =>
+      jugadoresConRegistro.has(id)
+    ).length;
+
+    const completo =
+      total > 0 &&
+      registrados === total;
+
+    if (completo) {
+      return {
+        texto: "✓ ASISTENCIA REALIZADA",
+        clase: "ct-asistencia-verde"
+      };
+    }
+
+    if (fecha === fechaLocalCT()) {
+      return {
+        texto: "● ASISTENCIA PENDIENTE",
+        clase: "ct-asistencia-naranja"
+      };
+    }
+
+    return {
+      texto: "● ASISTENCIA PENDIENTE",
+      clase: "ct-asistencia-rojo"
+    };
+  }
+
+  // --------------------------------------------------
+  // MOSTRAR HISTORIAL DE ENTRENAMIENTOS
+  // --------------------------------------------------
+
+  window.listarEntrenamientos = function () {
+    const zona = document.getElementById("listaEntrenamientos");
+
+    if (!zona || !window.db) return;
+
+    const lista = [...db.entrenamientos].sort((a, b) =>
+      String(b.fecha).localeCompare(String(a.fecha))
+    );
+
+    if (!lista.length) {
+      zona.innerHTML = `
+        <div class="empty-state">
+          Todavía no hay entrenamientos registrados.
+        </div>
+      `;
+      return;
+    }
+
+    zona.innerHTML = lista.map(t => {
+      const horario = obtenerHorario(t.horario);
+
+      const registros = db.asistencias.filter(a =>
+        a.entrenamientoId === t.id
+      );
+
+      const evaluaciones = db.evaluaciones.filter(e =>
+        e.entrenamientoId === t.id
+      );
+
+      const estado = estadoAsistenciaCT(t);
+
+      return `
+        <div class="tarjeta">
+
+          <div class="ct-asistencia-fila">
+            <strong>${formatearFecha(t.fecha)}</strong>
+
+            <span class="ct-asistencia-etiqueta ${estado.clase}">
+              ${estado.texto}
+            </span>
+          </div>
+
+          <p class="mini-text">
+            ${textoSeguro(horario?.nombre || "Horario anterior")}
+          </p>
+
+          <p class="mini-text">
+            Asistencias registradas: ${registros.length}
+            · Evaluaciones: ${evaluaciones.length}
+          </p>
+
+          <button class="btn btn-primary"
+            onclick="abrirEntrenamiento('${t.id}')">
+            Abrir asistencia
+          </button>
+
+          <button class="btn"
+            onclick="verAsistenciaEntrenamiento('${t.id}')">
+            Consultar
+          </button>
+
+        </div>
+      `;
+    }).join("");
+  };
+
+  // --------------------------------------------------
+  // ACTUALIZACIÓN DISPONIBLE
+  // --------------------------------------------------
+
+  window.ctActualizarEstadosAsistencia = function () {
+    window.listarEntrenamientos();
+  };
+
+  console.log(
+    "CONTROL TIBURONES: estados de asistencia y fecha de ingreso activados."
+  );
+
+})();
+</script>
+
+<!-- FIN DE ESTADOS AUTOMÁTICOS DE ASISTENCIA -->
+  
 </body>
 </html>
