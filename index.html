@@ -12718,5 +12718,32 @@ console.log(
     }
 })();
 </script> 
+<!-- CORRECCIÓN VISUAL: PUNTOS DEL RANKING MVP -->
+<style>
+/* Mantener los puntos completos en una sola línea */
+.fila-mvp > strong:last-child {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    min-width: max-content !important;
+    width: auto !important;
+    text-align: right !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    line-height: 1.35 !important;
+}
+
+/* Dejar que el nombre ocupe el espacio disponible */
+.fila-mvp > div:first-child {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+/* Evitar que el número se comprima en celulares */
+.fila-mvp {
+    align-items: center !important;
+    gap: 10px !important;
+}
+</style>
+<!-- FIN DE LA CORRECCIÓN -->  
 </body>
 </html>
