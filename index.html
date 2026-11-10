@@ -12745,5 +12745,661 @@ console.log(
 }
 </style>
 <!-- FIN DE LA CORRECCIÓN -->  
+
+<!-- =========================================================
+ CONTROL TIBURONES
+ NUEVO HISTORIAL PROFESIONAL PDF
+ BLOQUE INDEPENDIENTE - NO REEMPLAZA FUNCIONES EXISTENTES
+========================================================= -->
+<script>
+(function () {
+  "use strict";
+
+  // Evita instalar dos veces este mismo complemento.
+  if (window.ctHistorialProInstalado) return;
+  window.ctHistorialProInstalado = true;
+
+  const CT_HP_OPCIONES = {
+    desempeno: {
+      "Excelente trabajo": 3,
+      "Buen desempeño": 2,
+      "Cumplió con la actividad": 1.5,
+      "Buena participación en la práctica": 0.5,
+      "No completó la actividad": -1,
+      "No siguió el ejercicio": -2,
+      "Se negó a realizar la actividad": -3
+    },
+    actitud: {
+      "Actitud ejemplar": 2.5,
+      "Buena disposición": 1.5,
+      "Colaboró con sus compañeros": 1,
+      "Atendió las indicaciones": 0.5,
+      "Platicó durante la práctica": -1,
+      "No prestó atención": -2,
+      "Jugó durante la práctica": -2,
+      "Persistió después de varias correcciones": -3
+    },
+    esfuerzo: {
+      "Dio su máximo": 3,
+      "Gran esfuerzo": 2.5,
+      "Trabajó con constancia": 1.5,
+      "Mostró disposición": 1,
+      "En proceso de superación": 0.5,
+      "No mostró buena actitud durante la práctica": -1,
+      "Abandonó los ejercicios sin justificación": -2,
+      "Se negó a trabajar": -3
+    },
+    uniforme: {
+      "Completo": 1,
+      "Justificado": 0,
+      "No cumple": -1
+    }
+  };
+
+  const CT_HP_NOMBRES = {
+    desempeno: "Desempeño",
+    actitud: "Actitud y atención",
+    esfuerzo: "Esfuerzo",
+    uniforme: "Uniforme"
+  };
+
+  function ctHPFecha(fecha) {
+    if (!fecha) return "Sin fecha";
+    try {
+      if (typeof formatearFecha === "function") {
+        return formatearFecha(fecha);
+      }
+      const partes = String(fecha).slice(0, 10).split("-");
+      if (partes.length === 3) {
+        return partes[2] + "/" + partes[1] + "/" + partes[0];
+      }
+      return String(fecha);
+    } catch (e) {
+      return String(fecha);
+    }
+  }
+
+  function ctHPPuntos(grupo, valor, evaluacion) {
+    const tabla = CT_HP_OPCIONES[grupo] || {};
+    if (Object.prototype.hasOwnProperty.call(tabla, valor)) {
+      return Number(tabla[valor]);
+    }
+
+    const guardados = evaluacion &&
+      evaluacion.puntosBotonesMVP;
+
+    if (guardados && typeof guardados === "object") {
+      const punto = Number(guardados[grupo]);
+      if (Number.isFinite(punto)) return punto;
+    }
+
+    return 0;
+  }
+
+  function ctHPFormatoPuntos(valor) {
+    const n = Number(valor) || 0;
+    return (n > 0 ? "+" : "") + n;
+  }
+
+  function ctHPColorPuntos(doc, puntos) {
+    if (puntos > 0) {
+      doc.setTextColor(20, 135, 75);
+    } else if (puntos < 0) {
+      doc.setTextColor(190, 45, 55);
+    } else {
+      doc.setTextColor(90, 105, 120);
+    }
+  }
+
+  function ctHPTexto(doc, texto, x, y, ancho, opciones) {
+    opciones = opciones || {};
+
+    const tam = opciones.tam || 9;
+    const alto = opciones.alto || 4.5;
+    const color = opciones.color || [40, 55, 70];
+
+    doc.setFont("helvetica", opciones.negrita ? "bold" : "normal");
+    doc.setFontSize(tam);
+    doc.setTextColor(color[0], color[1], color[2]);
+
+    const lineas = doc.splitTextToSize(
+      String(texto == null ? "" : texto),
+      ancho
+    );
+
+    const altoTotal = lineas.length * alto;
+
+    if (y + altoTotal > 275) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.text(lineas, x, y);
+
+    return y + altoTotal + (opciones.espacio == null ? 2 : opciones.espacio);
+  }
+
+  function ctHPSeccion(doc, titulo, estado) {
+    let y = estado.y + 3;
+
+    if (y + 12 > 275) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFillColor(232, 241, 249);
+    doc.roundedRect(16, y, 178, 9, 2, 2, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(18, 54, 90);
+    doc.text(titulo, 20, y + 6);
+
+    estado.y = y + 14;
+  }
+
+  async function ctHPCargarJsPDF() {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return window.jspdf.jsPDF;
+    }
+
+    if (window.jsPDF) return window.jsPDF;
+
+    const existente = document.getElementById("ct-hp-jspdf");
+
+    if (existente) {
+      await new Promise((resolve, reject) => {
+        existente.addEventListener("load", resolve, { once: true });
+        existente.addEventListener("error", reject, { once: true });
+      });
+
+      if (window.jspdf && window.jspdf.jsPDF) {
+        return window.jspdf.jsPDF;
+      }
+      throw new Error("No se pudo cargar jsPDF.");
+    }
+
+    await new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.id = "ct-hp-jspdf";
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return window.jspdf.jsPDF;
+    }
+
+    throw new Error("La biblioteca PDF no está disponible.");
+  }
+
+  function ctHPGenerarDocumento(JsPDF, jugador) {
+    const doc = new JsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const margen = 16;
+    const ancho = 178;
+    const estado = { y: 49 };
+
+    const horario = typeof obtenerHorario === "function"
+      ? obtenerHorario(jugador.horario)
+      : null;
+
+    const registros = [];
+
+    (db.entrenamientos || []).forEach(entrenamiento => {
+      const asistencia = (db.asistencias || []).find(a =>
+        a.entrenamientoId === entrenamiento.id &&
+        a.jugadorId === jugador.id
+      );
+
+      const evaluacion = (db.evaluaciones || []).find(e =>
+        e.entrenamientoId === entrenamiento.id &&
+        e.jugadorId === jugador.id
+      );
+
+      if (asistencia || evaluacion) {
+        registros.push({
+          entrenamiento,
+          asistencia,
+          evaluacion
+        });
+      }
+    });
+
+    registros.sort((a, b) =>
+      String(a.entrenamiento.fecha || "").localeCompare(
+        String(b.entrenamiento.fecha || "")
+      )
+    );
+
+    // ENCABEZADO
+    doc.setFillColor(15, 39, 64);
+    doc.rect(0, 0, 210, 39, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(19);
+    doc.text("ACADEMIA TIBURONES", 105, 15, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.text("ENSENADA", 105, 22, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(
+      "REPORTE DE SEGUIMIENTO Y DESARROLLO DEPORTIVO",
+      105, 30, { align: "center" }
+    );
+
+    estado.y = ctHPTexto(
+      doc,
+      "HISTORIAL DEPORTIVO DEL JUGADOR",
+      margen,
+      estado.y,
+      ancho,
+      { tam: 14, negrita: true, color: [18, 54, 90], espacio: 5 }
+    );
+
+    // FICHA DEL JUGADOR
+    doc.setFillColor(246, 249, 252);
+    doc.setDrawColor(205, 220, 233);
+    doc.roundedRect(margen, estado.y, ancho, 34, 3, 3, "FD");
+
+    estado.y += 7;
+
+    estado.y = ctHPTexto(
+      doc,
+      "JUGADOR: " + (jugador.nombre || "Sin nombre"),
+      20, estado.y, 168,
+      { tam: 11, negrita: true, color: [18, 54, 90] }
+    );
+
+    estado.y = ctHPTexto(
+      doc,
+      "Categoría: " + (horario && horario.categoria ||
+        jugador.categoria || "Sin categoría"),
+      20, estado.y, 168
+    );
+
+    estado.y = ctHPTexto(
+      doc,
+      "Horario: " + (horario && horario.nombre || "Sin horario"),
+      20, estado.y, 168
+    );
+
+    estado.y = ctHPTexto(
+      doc,
+      "Estado: " + (jugador.estado || "Activo"),
+      20, estado.y, 168
+    );
+
+    estado.y += 5;
+
+    // RESUMEN DE ASISTENCIA
+    ctHPSeccion(doc, "RESUMEN DE ASISTENCIA", estado);
+
+    const conteo = {
+      asistio: 0,
+      falta: 0,
+      justificada: 0,
+      retardo: 0
+    };
+
+    registros.forEach(r => {
+      const valor = r.asistencia && r.asistencia.estado;
+      if (Object.prototype.hasOwnProperty.call(conteo, valor)) {
+        conteo[valor]++;
+      }
+    });
+
+    estado.y = ctHPTexto(
+      doc,
+      "Entrenamientos con registro: " + registros.length,
+      margen, estado.y, ancho,
+      { tam: 10, negrita: true }
+    );
+
+    estado.y = ctHPTexto(
+      doc,
+      "Asistencias: " + conteo.asistio +
+      "     Faltas: " + conteo.falta,
+      margen, estado.y, ancho
+    );
+
+    estado.y = ctHPTexto(
+      doc,
+      "Justificadas: " + conteo.justificada +
+      "     Retardos: " + conteo.retardo,
+      margen, estado.y, ancho
+    );
+
+    // HISTORIAL DETALLADO
+    ctHPSeccion(doc, "HISTORIAL DE ENTRENAMIENTOS", estado);
+
+    if (!registros.length) {
+      estado.y = ctHPTexto(
+        doc,
+        "Todavía no hay entrenamientos registrados para este jugador.",
+        margen, estado.y, ancho
+      );
+    }
+
+    registros.forEach((registro, indice) => {
+      const entrenamiento = registro.entrenamiento;
+      const asistencia = registro.asistencia;
+      const evaluacion = registro.evaluacion;
+      const selecciones = evaluacion && evaluacion.seleccionesMVP || {};
+
+      if (estado.y + 34 > 275) {
+        doc.addPage();
+        estado.y = 20;
+      }
+
+      doc.setFillColor(247, 250, 253);
+      doc.setDrawColor(205, 220, 233);
+      doc.roundedRect(margen, estado.y, ancho, 9, 2, 2, "FD");
+
+      estado.y += 6;
+
+      estado.y = ctHPTexto(
+        doc,
+        "ENTRENAMIENTO " + (indice + 1) +
+        "  ·  " + ctHPFecha(entrenamiento.fecha),
+        20, estado.y, 168,
+        { tam: 10, negrita: true, color: [18, 54, 90] }
+      );
+
+      const estadosAsistencia = {
+        asistio: "Asistió",
+        falta: "Falta injustificada",
+        justificada: "Falta justificada",
+        retardo: "Retardo"
+      };
+
+      const estadoAsistencia = asistencia
+        ? estadosAsistencia[asistencia.estado] || asistencia.estado
+        : "Sin asistencia registrada";
+
+      estado.y = ctHPTexto(
+        doc,
+        "Asistencia: " + estadoAsistencia,
+        margen, estado.y, ancho,
+        { tam: 9, negrita: true }
+      );
+
+      if (evaluacion) {
+        let totalSeleccion = 0;
+
+        ["desempeno", "actitud", "esfuerzo", "uniforme"].forEach(grupo => {
+          const valor = selecciones[grupo] ||
+            (grupo === "uniforme" ? evaluacion.uniforme : "");
+
+          if (!valor) {
+            estado.y = ctHPTexto(
+              doc,
+              CT_HP_NOMBRES[grupo] + ": Sin dato",
+              margen + 2, estado.y, ancho - 4,
+              { tam: 8 }
+            );
+            return;
+          }
+
+          const puntos = ctHPPuntos(grupo, valor, evaluacion);
+          totalSeleccion += puntos;
+
+          estado.y = ctHPTexto(
+            doc,
+            CT_HP_NOMBRES[grupo] + ": " + valor +
+            "  (" + ctHPFormatoPuntos(puntos) + " pts)",
+            margen + 2, estado.y, ancho - 4,
+            {
+              tam: 8.5,
+              color: puntos < 0
+                ? [185, 45, 55]
+                : puntos > 0
+                  ? [20, 125, 70]
+                  : [75, 90, 105]
+            }
+          );
+        });
+
+        const ajuste = Number(evaluacion.ajusteExtra || 0);
+
+        if (ajuste !== 0) {
+          estado.y = ctHPTexto(
+            doc,
+            "Ajuste extra del Coach: " + ctHPFormatoPuntos(ajuste) + " pts",
+            margen + 2, estado.y, ancho - 4,
+            { tam: 8.5, negrita: true, color: [185, 45, 55] }
+          );
+
+          if (evaluacion.motivoAjuste) {
+            estado.y = ctHPTexto(
+              doc,
+              "Motivo del ajuste: " + evaluacion.motivoAjuste,
+              margen + 4, estado.y, ancho - 6,
+              { tam: 8 }
+            );
+          }
+        }
+
+        const totalGuardado = Number(evaluacion.puntosMVP);
+        const total = Number.isFinite(totalGuardado)
+          ? totalGuardado
+          : totalSeleccion + ajuste;
+
+        estado.y = ctHPTexto(
+          doc,
+          "PUNTOS DE LA EVALUACIÓN: " + ctHPFormatoPuntos(total) + " pts",
+          margen + 2, estado.y, ancho - 4,
+          { tam: 9, negrita: true, color: [18, 54, 90] }
+        );
+
+        estado.y = ctHPTexto(
+          doc,
+          "Observaciones del Coach: " +
+          (evaluacion.observaciones || "Sin observaciones registradas."),
+          margen + 2, estado.y, ancho - 4,
+          { tam: 8.5 }
+        );
+      } else {
+        estado.y = ctHPTexto(
+          doc,
+          "Evaluación: No registrada.",
+          margen + 2, estado.y, ancho - 4,
+          { tam: 8 }
+        );
+      }
+
+      estado.y += 5;
+    });
+
+    // PIE Y NÚMERO DE PÁGINAS
+    const paginas = doc.internal.getNumberOfPages();
+
+    for (let pagina = 1; pagina <= paginas; pagina++) {
+      doc.setPage(pagina);
+      doc.setDrawColor(205, 220, 233);
+      doc.line(margen, 285, 194, 285);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 117, 138);
+
+      doc.text("ACADEMIA TIBURONES ENSENADA", margen, 290);
+      doc.text(
+        "Página " + pagina + " de " + paginas,
+        194, 290, { align: "right" }
+      );
+    }
+
+    doc.setProperties({
+      title: "Historial deportivo - " + jugador.nombre,
+      subject: "Seguimiento deportivo del jugador",
+      author: "Academia Tiburones Ensenada"
+    });
+
+    return doc;
+  }
+
+  // DESCARGAR Y COMPARTIR PDF
+  window.ctHistorialProDescargar = async function (id) {
+    if (typeof db === "undefined" || !db) {
+      alert("La información de la aplicación no está disponible.");
+      return;
+    }
+
+    const jugador = typeof obtenerJugador === "function"
+      ? obtenerJugador(id)
+      : (db.jugadores || []).find(j => j.id === id);
+
+    if (!jugador) {
+      alert("No se encontró al jugador.");
+      return;
+    }
+
+    const boton = document.getElementById("ct-hp-boton-" + id);
+
+    try {
+      if (boton) {
+        boton.disabled = true;
+        boton.textContent = "Generando PDF...";
+      }
+
+      const JsPDF = await ctHPCargarJsPDF();
+      const documento = ctHPGenerarDocumento(JsPDF, jugador);
+
+      const nombre =
+        "Historial_Profesional_" +
+        String(jugador.nombre || "Jugador").replace(/[^a-z0-9]/gi, "_") +
+        ".pdf";
+
+      const blob = documento.output("blob");
+      const archivo = new File([blob], nombre, {
+        type: "application/pdf"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+
+      enlace.href = url;
+      enlace.download = nombre;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [archivo] })
+      ) {
+        try {
+          await navigator.share({
+            files: [archivo],
+            title: "Historial deportivo - " + jugador.nombre,
+            text: "Historial deportivo de Academia Tiburones Ensenada."
+          });
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            console.warn("No se pudo abrir compartir:", error);
+          }
+        }
+      } else {
+        alert(
+          "El PDF se descargó en tu teléfono. " +
+          "Puedes encontrarlo en Descargas y compartirlo por WhatsApp."
+        );
+      }
+
+    } catch (error) {
+      console.error("Error en historial profesional:", error);
+      alert(
+        "No se pudo generar el PDF. Revisa tu conexión a internet " +
+        "e inténtalo nuevamente."
+      );
+    } finally {
+      if (boton) {
+        boton.disabled = false;
+        boton.textContent = "📄 Descargar historial profesional PDF";
+      }
+    }
+  };
+
+  // AGREGA UN SEGUNDO BOTÓN EN LA PANTALLA DEL HISTORIAL.
+  // No modifica ni sustituye el botón PDF que ya existe.
+  function ctHPAgregarBoton() {
+    const zona = document.querySelector(".ct-reporte-acciones");
+    if (!zona) return;
+
+    if (zona.querySelector(".ct-hp-boton")) return;
+
+    const botonOriginal = zona.querySelector(
+      'button[onclick*="ctDescargarHistorial"]'
+    );
+
+    if (!botonOriginal) return;
+
+    const llamada = botonOriginal.getAttribute("onclick") || "";
+    const coincidencia = llamada.match(
+      /ctDescargarHistorial\(\s*['"]([^'"]+)['"]\s*\)/
+    );
+
+    if (!coincidencia) return;
+
+    const id = coincidencia[1];
+
+    const nuevo = document.createElement("button");
+    nuevo.type = "button";
+    nuevo.id = "ct-hp-boton-" + id;
+    nuevo.className = "btn btn-primary ct-hp-boton";
+    nuevo.textContent = "📄 Descargar historial profesional PDF";
+    nuevo.style.cssText =
+      "margin:8px 0;background:#167b68;border-color:#167b68;" +
+      "width:100%;white-space:normal;";
+
+    nuevo.addEventListener("click", function () {
+      window.ctHistorialProDescargar(id);
+    });
+
+    zona.appendChild(nuevo);
+  }
+
+  // Detecta cuando se abre o cambia la pantalla del historial.
+  function ctHPIniciar() {
+    ctHPAgregarBoton();
+
+    const observador = new MutationObserver(function () {
+      ctHPAgregarBoton();
+    });
+
+    observador.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ctHPIniciar);
+  } else {
+    ctHPIniciar();
+  }
+
+  console.log(
+    "CONTROL TIBURONES: nuevo historial profesional PDF independiente activado."
+  );
+
+})();
+</script>
+<!-- FIN DEL NUEVO HISTORIAL PROFESIONAL PDF -->
+  
 </body>
 </html>
