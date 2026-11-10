@@ -13400,6 +13400,384 @@ console.log(
 })();
 </script>
 <!-- FIN DEL NUEVO HISTORIAL PROFESIONAL PDF -->
+
+<!-- =====================================================
+ CONTROL TIBURONES
+ CORRECCIÓN INDEPENDIENTE DEL EDITOR DE EVALUACIONES
+ UTILIZA LOS MISMOS BOTONES DE LA EVALUACIÓN NORMAL
+===================================================== -->
+<script>
+(function () {
+  "use strict";
+
+  const CT_EDIT_OPCIONES = {
+    desempeno: [
+      { texto: "Excelente trabajo", puntos: 3, color: "verde" },
+      { texto: "Buen desempeño", puntos: 2, color: "verde" },
+      { texto: "Cumplió con la actividad", puntos: 1.5, color: "verde" },
+      { texto: "Buena participación en la práctica", puntos: 0.5, color: "verde" },
+      { texto: "No completó la actividad", puntos: -1, color: "rojo" },
+      { texto: "No siguió el ejercicio", puntos: -2, color: "rojo" },
+      { texto: "Se negó a realizar la actividad", puntos: -3, color: "rojo" }
+    ],
+
+    actitud: [
+      { texto: "Actitud ejemplar", puntos: 2.5, color: "verde" },
+      { texto: "Buena disposición", puntos: 1.5, color: "verde" },
+      { texto: "Colaboró con sus compañeros", puntos: 1, color: "verde" },
+      { texto: "Atendió las indicaciones", puntos: 0.5, color: "verde" },
+      { texto: "Platicó durante la práctica", puntos: -1, color: "rojo" },
+      { texto: "No prestó atención", puntos: -2, color: "rojo" },
+      { texto: "Jugó durante la práctica", puntos: -2, color: "rojo" },
+      { texto: "Persistió después de varias correcciones", puntos: -3, color: "rojo" }
+    ],
+
+    esfuerzo: [
+      { texto: "Dio su máximo", puntos: 3, color: "verde" },
+      { texto: "Gran esfuerzo", puntos: 2.5, color: "verde" },
+      { texto: "Trabajó con constancia", puntos: 1.5, color: "verde" },
+      { texto: "Mostró disposición", puntos: 1, color: "verde" },
+      { texto: "En proceso de superación", puntos: 0.5, color: "verde" },
+      { texto: "No mostró buena actitud durante la práctica", puntos: -1, color: "rojo" },
+      { texto: "Abandonó los ejercicios sin justificación", puntos: -2, color: "rojo" },
+      { texto: "Se negó a trabajar", puntos: -3, color: "rojo" }
+    ],
+
+    uniforme: [
+      { texto: "Completo", puntos: 1, color: "verde" },
+      { texto: "Justificado", puntos: 0, color: "amarillo" },
+      { texto: "No cumple", puntos: -1, color: "rojo" }
+    ]
+  };
+
+  const CT_EDIT_NOMBRES = {
+    desempeno: "DESEMPEÑO",
+    actitud: "ACTITUD Y ATENCIÓN",
+    esfuerzo: "ESFUERZO",
+    uniforme: "UNIFORME"
+  };
+
+  function ctEditEscapar(valor) {
+    return String(valor ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function ctEditCalcular(selecciones) {
+    return Object.entries(CT_EDIT_OPCIONES).reduce(
+      (total, [grupo, opciones]) => {
+        const opcion = opciones.find(
+          o => o.texto === selecciones[grupo]
+        );
+
+        return total + (opcion ? opcion.puntos : 0);
+      },
+      0
+    );
+  }
+
+  // NUEVA PANTALLA DE EDICIÓN CON LOS BOTONES ORIGINALES
+  window.ctAbrirEditor = function (jugadorId, entrenamientoId) {
+
+    const evaluacion = db.evaluaciones.find(e =>
+      e.entrenamientoId === entrenamientoId &&
+      e.jugadorId === jugadorId
+    );
+
+    const jugador = obtenerJugador(jugadorId);
+
+    const entrenamiento = db.entrenamientos.find(
+      t => t.id === entrenamientoId
+    );
+
+    if (!evaluacion || !jugador || !entrenamiento) {
+      alert("No se encontró la evaluación que deseas editar.");
+      return;
+    }
+
+    window.ctEntrenamientoActual = entrenamientoId;
+
+    const selecciones = evaluacion.seleccionesMVP || {};
+    const zona = obtenerZonaEvaluaciones();
+
+    zona.innerHTML = `
+      <div class="modulo" id="ctEditorEvaluacionNuevo">
+
+        <h3>✏️ Editar evaluación</h3>
+
+        <div class="tarjeta">
+          <strong>${ctEditEscapar(jugador.nombre)}</strong>
+
+          <p class="mini-text">
+            ${formatearFecha(entrenamiento.fecha)}
+            · ${ctEditEscapar(
+              obtenerHorario(entrenamiento.horario)?.nombre || ""
+            )}
+          </p>
+
+          <p class="mini-text">
+            Estás modificando la evaluación original.
+          </p>
+        </div>
+
+        ${Object.entries(CT_EDIT_OPCIONES).map(([grupo, opciones]) => `
+          <div class="ct-eval-grupo">
+
+            <span class="ct-eval-titulo">
+              ${CT_EDIT_NOMBRES[grupo]}
+            </span>
+
+            <div class="ct-eval-opciones">
+
+              ${opciones.map(op => `
+                <button
+                  type="button"
+                  class="ct-eval-btn ct-${op.color}
+                    ${selecciones[grupo] === op.texto
+                      ? "ct-seleccionado" : ""}"
+                  data-grupo="${grupo}"
+                  data-texto="${ctEditEscapar(op.texto)}">
+
+                  ${ctEditEscapar(op.texto)}
+
+                  <small>
+                    ${op.puntos > 0 ? "+" : ""}${op.puntos} puntos
+                  </small>
+
+                </button>
+              `).join("")}
+
+            </div>
+          </div>
+        `).join("")}
+
+        <div class="ct-eval-ajuste">
+
+          <strong>Descuento extra del Coach</strong>
+
+          <p class="mini-text">
+            Para restar puntos adicionales.
+          </p>
+
+          <label>Puntos a restar</label>
+
+          <input
+            id="ctEditAjuste"
+            type="number"
+            min="-20"
+            max="0"
+            step="0.5"
+            value="${Number(evaluacion.ajusteExtra || 0)}">
+
+          <label>Motivo del descuento</label>
+
+          <input
+            id="ctEditMotivo"
+            type="text"
+            maxlength="250"
+            value="${ctEditEscapar(evaluacion.motivoAjuste || "")}">
+        </div>
+
+        <div class="ct-eval-grupo">
+
+          <label class="ct-eval-titulo">
+            Observación del Coach
+          </label>
+
+          <textarea
+            id="ctEditObservaciones"
+            rows="3"
+            maxlength="2000">${ctEditEscapar(
+              evaluacion.observaciones || ""
+            )}</textarea>
+
+        </div>
+
+        <div class="ct-eval-total" id="ctEditTotal"></div>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="ctGuardarCambiosEvaluacion">
+
+          💾 Guardar cambios
+
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          id="ctCancelarEdicion">
+
+          Cancelar
+
+        </button>
+
+      </div>
+    `;
+
+    const root = document.getElementById(
+      "ctEditorEvaluacionNuevo"
+    );
+
+    function ctEditLeer() {
+      const seleccionActual = {};
+
+      Object.keys(CT_EDIT_OPCIONES).forEach(grupo => {
+        const activo = root.querySelector(
+          `.ct-eval-btn[data-grupo="${grupo}"].ct-seleccionado`
+        );
+
+        seleccionActual[grupo] = activo
+          ? activo.dataset.texto
+          : "";
+      });
+
+      return {
+        selecciones: seleccionActual,
+        ajuste: Number(root.querySelector("#ctEditAjuste").value),
+        motivo: root.querySelector("#ctEditMotivo").value.trim(),
+        observaciones: root.querySelector(
+          "#ctEditObservaciones"
+        ).value.trim()
+      };
+    }
+
+    function ctEditActualizarTotal() {
+      const datos = ctEditLeer();
+
+      const total =
+        ctEditCalcular(datos.selecciones) + datos.ajuste;
+
+      root.querySelector("#ctEditTotal").textContent =
+        `${total > 0 ? "+" : ""}${total} puntos MVP`;
+    }
+
+    // Seleccionar botones exactamente como en la evaluación normal.
+    root.querySelectorAll(".ct-eval-btn").forEach(boton => {
+
+      boton.addEventListener("click", function () {
+
+        root.querySelectorAll(
+          `.ct-eval-btn[data-grupo="${boton.dataset.grupo}"]`
+        ).forEach(b => {
+          b.classList.remove("ct-seleccionado");
+        });
+
+        boton.classList.add("ct-seleccionado");
+
+        ctEditActualizarTotal();
+      });
+
+    });
+
+    root.querySelector("#ctEditAjuste").addEventListener(
+      "input",
+      ctEditActualizarTotal
+    );
+
+    // CANCELAR SIN MODIFICAR LOS DATOS
+    root.querySelector("#ctCancelarEdicion").onclick = function () {
+      window.verHistorialEvaluacionCT(jugadorId);
+    };
+
+    // GUARDAR CAMBIOS EN LA MISMA EVALUACIÓN
+    root.querySelector("#ctGuardarCambiosEvaluacion").onclick =
+      function () {
+
+        const datos = ctEditLeer();
+
+        if (Object.values(datos.selecciones).some(v => !v)) {
+          alert("Selecciona una opción en los cuatro apartados.");
+          return;
+        }
+
+        if (
+          !Number.isFinite(datos.ajuste) ||
+          datos.ajuste > 0 ||
+          datos.ajuste < -20 ||
+          Math.round(datos.ajuste * 2) !== datos.ajuste * 2
+        ) {
+          alert(
+            "El descuento debe ser de cero a -20, " +
+            "en incrementos de medio punto."
+          );
+          return;
+        }
+
+        if (datos.ajuste < 0 && !datos.motivo) {
+          alert("Escribe el motivo del descuento extra.");
+          return;
+        }
+
+        const copiaAnterior = JSON.parse(
+          JSON.stringify(evaluacion)
+        );
+
+        const puntosBotones = ctEditCalcular(datos.selecciones);
+        const nuevosPuntos = puntosBotones + datos.ajuste;
+        const ahora = new Date().toISOString();
+
+        evaluacion.seleccionesMVP = datos.selecciones;
+        evaluacion.puntosBotonesMVP = puntosBotones;
+        evaluacion.ajusteExtra = datos.ajuste;
+        evaluacion.motivoAjuste = datos.motivo;
+        evaluacion.observaciones = datos.observaciones;
+        evaluacion.puntosMVP = nuevosPuntos;
+
+        evaluacion.uniforme =
+          datos.selecciones.uniforme === "Completo"
+            ? "completo"
+            : datos.selecciones.uniforme === "No cumple"
+              ? "incompleto"
+              : "justificado";
+
+        evaluacion.fechaActualizacion = ahora;
+
+        evaluacion.historialCambios ||= [];
+
+        evaluacion.historialCambios.push({
+          fecha: ahora,
+          anterior: copiaAnterior
+        });
+
+        registrarActividad(
+          "Se corrigió la evaluación de " +
+          jugador.nombre +
+          ". Nuevos puntos MVP: " +
+          nuevosPuntos
+        );
+
+        if (!guardarDB()) {
+          Object.keys(evaluacion).forEach(k => {
+            delete evaluacion[k];
+          });
+
+          Object.assign(evaluacion, copiaAnterior);
+          return;
+        }
+
+        alert(
+          "Evaluación actualizada correctamente. " +
+          "Los puntos MVP también fueron actualizados."
+        );
+
+        window.verHistorialEvaluacionCT(jugadorId);
+      };
+
+    ctEditActualizarTotal();
+  };
+
+  console.log(
+    "CONTROL TIBURONES: editor actualizado con los mismos botones de evaluación."
+  );
+
+})();
+</script>
+<!-- FIN DE LA CORRECCIÓN DEL EDITOR -->
   
 </body>
 </html>
