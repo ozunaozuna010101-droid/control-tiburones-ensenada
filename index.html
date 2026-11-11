@@ -15480,6 +15480,670 @@ console.log(
 })();
 </script>
 <!-- FIN DE LA MEJORA EXCLUSIVA DEL PDF -->
+
+<!-- =========================================================
+ CONTROL TIBURONES
+ CORRECCIÓN DEL PDF: DESGLOSE CLARO DE PUNTOS Y DESCUENTOS
+ Pegar antes de </body>
+ No modifica evaluaciones, asistencias, pagos ni MVP.
+========================================================= -->
+<script>
+(function () {
+  "use strict";
+
+  if (window.ctPDFDesgloseInstalado) return;
+  window.ctPDFDesgloseInstalado = true;
+
+  const AZUL = [17, 48, 78];
+  const ELECTRICO = [41, 167, 255];
+  const CLARO = [235, 243, 250];
+  const GRIS = [91, 108, 125];
+  const VERDE = [24, 145, 105];
+  const ROJO = [210, 65, 78];
+  const BLANCO = [255, 255, 255];
+
+  const OPCIONES = {
+    desempeno: {
+      "Excelente trabajo": 3,
+      "Buen desempeño": 2,
+      "Cumplió con la actividad": 1.5,
+      "Buena participación en la práctica": 0.5,
+      "No completó la actividad": -1,
+      "No siguió el ejercicio": -2,
+      "Se negó a realizar la actividad": -3
+    },
+    actitud: {
+      "Actitud ejemplar": 2.5,
+      "Buena disposición": 1.5,
+      "Colaboró con sus compañeros": 1,
+      "Atendió las indicaciones": 0.5,
+      "Platicó durante la práctica": -1,
+      "No prestó atención": -2,
+      "Jugó durante la práctica": -2,
+      "Persistió después de varias correcciones": -3
+    },
+    esfuerzo: {
+      "Dio su máximo": 3,
+      "Gran esfuerzo": 2.5,
+      "Trabajó con constancia": 1.5,
+      "Mostró disposición": 1,
+      "En proceso de superación": 0.5,
+      "No mostró buena actitud durante la práctica": -1,
+      "Abandonó los ejercicios sin justificación": -2,
+      "Se negó a trabajar": -3
+    },
+    uniforme: {
+      "Completo": 1,
+      "Justificado": 0,
+      "No cumple": -1
+    }
+  };
+
+  const GRUPOS = [
+    ["desempeno", "DESEMPEÑO"],
+    ["actitud", "ACTITUD Y ATENCIÓN"],
+    ["esfuerzo", "ESFUERZO"],
+    ["uniforme", "UNIFORME"]
+  ];
+
+  function txt(v) {
+    return String(v == null ? "" : v).trim();
+  }
+
+  function puntos(v) {
+    const n = Number(v) || 0;
+    return (n > 0 ? "+" : "") +
+      n.toFixed(2).replace(/\.?0+$/, "");
+  }
+
+  function puntosBoton(grupo, seleccion) {
+    const tabla = OPCIONES[grupo] || {};
+    return Object.prototype.hasOwnProperty.call(tabla, seleccion)
+      ? Number(tabla[seleccion])
+      : null;
+  }
+
+  function fechaCompleta(fecha) {
+    if (!fecha) return "Fecha no registrada";
+
+    const p = String(fecha).slice(0, 10).split("-");
+    if (p.length !== 3) return txt(fecha);
+
+    const f = new Date(
+      Number(p[0]), Number(p[1]) - 1, Number(p[2])
+    );
+
+    return f.toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  function mesNombre(periodo) {
+    const p = periodo.split("-").map(Number);
+    return new Date(p[0], p[1] - 1, 1)
+      .toLocaleDateString("es-MX", {
+        month: "long",
+        year: "numeric"
+      });
+  }
+
+  function asistenciaTexto(estado) {
+    return ({
+      asistio: "Asistió",
+      falta: "Falta injustificada",
+      justificada: "Falta justificada",
+      retardo: "Retardo"
+    })[estado] || "Sin registro";
+  }
+
+  function escaparNombre(nombre) {
+    return txt(nombre)
+      .replace(/[^a-z0-9áéíóúñü -]/gi, "")
+      .replace(/\s+/g, "_") || "Jugador";
+  }
+
+  async function cargarJsPDF() {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return window.jspdf.jsPDF;
+    }
+
+    if (window.jsPDF) return window.jsPDF;
+
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return window.jspdf.jsPDF;
+    }
+
+    throw new Error("No se pudo cargar jsPDF.");
+  }
+
+  function generarPDF(JsPDF, jugador) {
+    const doc = new JsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const ancho = 210;
+    const margen = 15;
+    const util = ancho - margen * 2;
+    const limite = 276;
+    let y = 0;
+
+    const entrenamientos = db.entrenamientos || [];
+    const evaluaciones = db.evaluaciones || [];
+    const asistencias = db.asistencias || [];
+    const horario = obtenerHorario(jugador.horario);
+
+    const registros = [];
+
+    entrenamientos.forEach(t => {
+      const asistencia = asistencias.find(a =>
+        a.entrenamientoId === t.id &&
+        a.jugadorId === jugador.id
+      );
+
+      const evaluacion = evaluaciones.find(e =>
+        e.entrenamientoId === t.id &&
+        e.jugadorId === jugador.id
+      );
+
+      if (asistencia || evaluacion) {
+        registros.push({
+          fecha: t.fecha,
+          asistencia,
+          evaluacion
+        });
+      }
+    });
+
+    registros.sort((a, b) =>
+      txt(a.fecha).localeCompare(txt(b.fecha))
+    );
+
+    const meses = {};
+
+    registros.forEach(r => {
+      const periodo = txt(r.fecha).slice(0, 7);
+      if (!periodo) return;
+      if (!meses[periodo]) meses[periodo] = [];
+      meses[periodo].push(r);
+    });
+
+    function encabezado() {
+      doc.setFillColor(...AZUL);
+      doc.rect(0, 0, ancho, 37, "F");
+
+      doc.setFillColor(...ELECTRICO);
+      doc.rect(0, 36, ancho, 2, "F");
+
+      doc.setTextColor(...BLANCO);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(19);
+      doc.text("ACADEMIA TIBURONES", 105, 14, {
+        align: "center"
+      });
+
+      doc.setFontSize(10);
+      doc.setTextColor(160, 215, 255);
+      doc.text("ENSENADA · REPORTE DE RENDIMIENTO", 105, 22, {
+        align: "center"
+      });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...BLANCO);
+      doc.text("SEGUIMIENTO DEPORTIVO INDIVIDUAL", 105, 30, {
+        align: "center"
+      });
+
+      y = 46;
+    }
+
+    function nuevaPagina() {
+      doc.addPage();
+      encabezado();
+    }
+
+    function espacio(alto) {
+      if (y + alto > limite) nuevaPagina();
+    }
+
+    function escribir(contenido, opciones = {}) {
+      const tam = opciones.tam || 9;
+      const color = opciones.color || GRIS;
+      const alto = opciones.alto || 4.5;
+
+      doc.setFont(
+        "helvetica",
+        opciones.negrita ? "bold" : "normal"
+      );
+      doc.setFontSize(tam);
+      doc.setTextColor(...color);
+
+      const lineas = doc.splitTextToSize(
+        txt(contenido),
+        opciones.ancho || util
+      );
+
+      espacio(lineas.length * alto + 3);
+      doc.text(lineas, opciones.x || margen, y);
+      y += lineas.length * alto + (opciones.espacio ?? 2);
+    }
+
+    function seccion(titulo) {
+      espacio(15);
+      doc.setFillColor(...CLARO);
+      doc.roundedRect(margen, y, util, 10, 2, 2, "F");
+      doc.setFillColor(...ELECTRICO);
+      doc.roundedRect(margen, y, 2, 10, 1, 1, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...AZUL);
+      doc.text(titulo, margen + 6, y + 6.5);
+      y += 15;
+    }
+
+    function tarjeta(titulo, valor, x, w, color) {
+      doc.setFillColor(...CLARO);
+      doc.roundedRect(x, y, w, 19, 2, 2, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...color);
+      doc.text(String(valor), x + 4, y + 9);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRIS);
+      doc.text(titulo, x + 4, y + 15);
+    }
+
+    function desglose(e) {
+      const selecciones = e.seleccionesMVP || {};
+      const items = [];
+      let positivos = 0;
+      let negativos = 0;
+
+      GRUPOS.forEach(([clave, etiqueta]) => {
+        const seleccion = txt(selecciones[clave]);
+        if (!seleccion) return;
+
+        const valor = puntosBoton(clave, seleccion);
+
+        if (valor === null) {
+          items.push({
+            etiqueta,
+            nombre: seleccion,
+            valor: null
+          });
+          return;
+        }
+
+        if (valor > 0) positivos += valor;
+        if (valor < 0) negativos += valor;
+
+        items.push({
+          etiqueta,
+          nombre: seleccion,
+          valor
+        });
+      });
+
+      const descuento = Number(e.ajusteExtra) || 0;
+
+      return {
+        items,
+        positivos,
+        negativos,
+        descuento,
+        motivo: txt(e.motivoAjuste),
+        neto: Number.isFinite(Number(e.puntosMVP))
+          ? Number(e.puntosMVP)
+          : positivos + negativos + descuento
+      };
+    }
+
+    encabezado();
+
+    doc.setFillColor(...CLARO);
+    doc.roundedRect(margen, y, util, 29, 3, 3, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(...AZUL);
+    doc.text(
+      doc.splitTextToSize(txt(jugador.nombre), util - 12),
+      margen + 6, y + 10
+    );
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...GRIS);
+    doc.text(
+      "Categoría: " + txt(horario?.categoria || "Sin categoría"),
+      margen + 6, y + 19
+    );
+    doc.text(
+      "Horario: " + txt(horario?.nombre || "Sin horario"),
+      margen + 6, y + 25
+    );
+
+    y += 36;
+
+    escribir("EXPEDIENTE DE RENDIMIENTO DEPORTIVO", {
+      tam: 12, negrita: true, color: AZUL
+    });
+
+    escribir(
+      "Los puntos se muestran según los botones seleccionados y los descuentos extraordinarios registrados por el coach.",
+      { tam: 8 }
+    );
+
+    const evaluadas = registros.filter(r => r.evaluacion);
+    const totalAsistio = registros.filter(r =>
+      r.asistencia?.estado === "asistio"
+    ).length;
+    const totalFaltas = registros.filter(r =>
+      r.asistencia?.estado === "falta"
+    ).length;
+    const totalJustificadas = registros.filter(r =>
+      r.asistencia?.estado === "justificada"
+    ).length;
+    const totalRetardos = registros.filter(r =>
+      r.asistencia?.estado === "retardo"
+    ).length;
+
+    seccion("RESUMEN GENERAL");
+
+    const w = (util - 6) / 2;
+    tarjeta("Evaluaciones", evaluadas.length, margen, w, ELECTRICO);
+    tarjeta("Asistencias", totalAsistio, margen + w + 6, w, VERDE);
+    y += 24;
+
+    tarjeta("Faltas injustificadas", totalFaltas, margen, w, ROJO);
+    tarjeta("Faltas justificadas", totalJustificadas,
+      margen + w + 6, w, AZUL);
+    y += 24;
+
+    tarjeta("Retardos", totalRetardos, margen, w, ELECTRICO);
+    tarjeta("Meses registrados", Object.keys(meses).length,
+      margen + w + 6, w, AZUL);
+    y += 24;
+
+    const periodos = Object.keys(meses).sort();
+
+    periodos.forEach(periodo => {
+      const lista = meses[periodo];
+      const evalMes = lista.filter(r => r.evaluacion);
+
+      let positivosMes = 0;
+      let negativosMes = 0;
+      let descuentosMes = 0;
+      let netoMes = 0;
+
+      evalMes.forEach(r => {
+        const d = desglose(r.evaluacion);
+        positivosMes += d.positivos;
+        negativosMes += d.negativos;
+        descuentosMes += d.descuento;
+        netoMes += d.neto;
+      });
+
+      const asistenciasMes = lista.filter(r =>
+        r.asistencia?.estado === "asistio"
+      ).length;
+      const faltasMes = lista.filter(r =>
+        r.asistencia?.estado === "falta"
+      ).length;
+      const justificadasMes = lista.filter(r =>
+        r.asistencia?.estado === "justificada"
+      ).length;
+      const retardosMes = lista.filter(r =>
+        r.asistencia?.estado === "retardo"
+      ).length;
+
+      espacio(40);
+      seccion("REPORTE MENSUAL · " + mesNombre(periodo).toUpperCase());
+
+      escribir("Evaluaciones realizadas: " + evalMes.length, {
+        tam: 9, negrita: true, color: AZUL
+      });
+
+      escribir("Puntos positivos: " + puntos(positivosMes), {
+        color: VERDE, negrita: true
+      });
+      escribir("Puntos negativos de los botones: " +
+        puntos(negativosMes), {
+        color: ROJO, negrita: true
+      });
+      escribir("Descuentos extraordinarios del coach: " +
+        puntos(descuentosMes), {
+        color: ROJO, negrita: true
+      });
+      escribir("TOTAL NETO DEL MES: " + puntos(netoMes) + " puntos", {
+        tam: 11, negrita: true, color: AZUL
+      });
+
+      escribir(
+        "Asistencias: " + asistenciasMes +
+        " · Faltas injustificadas: " + faltasMes +
+        " · Justificadas: " + justificadasMes +
+        " · Retardos: " + retardosMes,
+        { tam: 8 }
+      );
+
+      escribir("DETALLE DE CADA ENTRENAMIENTO", {
+        tam: 9, negrita: true, color: AZUL
+      });
+
+      lista.forEach((r, indice) => {
+        espacio(35);
+
+        doc.setFillColor(247, 250, 253);
+        doc.setDrawColor(210, 222, 233);
+        doc.roundedRect(margen, y, util, 9, 2, 2, "FD");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...AZUL);
+        doc.text(
+          fechaCompleta(r.fecha),
+          margen + 4, y + 6
+        );
+
+        y += 14;
+
+        const estado = asistenciaTexto(r.asistencia?.estado);
+        escribir("ASISTENCIA: " + estado, {
+          tam: 8.5,
+          negrita: true,
+          color: r.asistencia?.estado === "falta" ? ROJO : GRIS
+        });
+
+        if (!r.evaluacion) {
+          escribir("Evaluación: No registrada.", { tam: 8 });
+          y += 2;
+          return;
+        }
+
+        const d = desglose(r.evaluacion);
+
+        escribir("PUNTOS DE LOS BOTONES", {
+          tam: 8.5, negrita: true, color: AZUL
+        });
+
+        if (!d.items.length) {
+          escribir("No hay opciones de evaluación registradas.", {
+            tam: 8
+          });
+        }
+
+        d.items.forEach(item => {
+          const valor = item.valor === null
+            ? "Puntuación no disponible"
+            : puntos(item.valor) + " puntos";
+
+          escribir(
+            item.etiqueta + ": " + item.nombre + " — " + valor,
+            {
+              tam: 8,
+              color: item.valor < 0 ? ROJO :
+                item.valor > 0 ? VERDE : GRIS
+            }
+          );
+        });
+
+        escribir("Subtotal positivo: " + puntos(d.positivos), {
+          tam: 8, color: VERDE
+        });
+        escribir("Subtotal negativo: " + puntos(d.negativos), {
+          tam: 8, color: ROJO
+        });
+
+        if (d.descuento !== 0) {
+          escribir(
+            "DESCUENTO EXTRAORDINARIO DEL COACH: " +
+            puntos(d.descuento) + " puntos",
+            { tam: 8.5, negrita: true, color: ROJO }
+          );
+
+          escribir(
+            "Motivo del descuento: " +
+            (d.motivo || "No se registró un motivo."),
+            { tam: 8, color: GRIS }
+          );
+        }
+
+        escribir(
+          "TOTAL DE ESTE ENTRENAMIENTO: " +
+          puntos(d.neto) + " puntos",
+          { tam: 10, negrita: true, color: AZUL }
+        );
+
+        escribir(
+          "OBSERVACIONES DEL COACH: " +
+          txt(r.evaluacion.observaciones ||
+            "Sin observaciones registradas."),
+          { tam: 8, color: GRIS }
+        );
+
+        y += 3;
+      });
+    });
+
+    espacio(25);
+    seccion("OBSERVACIONES GENERALES DEL COACH");
+    escribir(
+      txt(jugador.observaciones ||
+        "No hay observaciones generales registradas."),
+      { tam: 9 }
+    );
+
+    const totalPaginas = doc.internal.getNumberOfPages();
+
+    for (let n = 1; n <= totalPaginas; n++) {
+      doc.setPage(n);
+      doc.setDrawColor(210, 222, 233);
+      doc.line(margen, 285, ancho - margen, 285);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRIS);
+      doc.text(
+        "CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA",
+        margen, 290
+      );
+      doc.text(
+        "Página " + n + " de " + totalPaginas,
+        ancho - margen, 290,
+        { align: "right" }
+      );
+    }
+
+    doc.setProperties({
+      title: "Historial deportivo - " + jugador.nombre,
+      author: "Academia Tiburones Ensenada"
+    });
+
+    return doc;
+  }
+
+  async function descargar(id) {
+    const jugador = obtenerJugador(id);
+
+    if (!jugador) {
+      alert("No se encontró al jugador.");
+      return;
+    }
+
+    try {
+      const JsPDF = await cargarJsPDF();
+      const doc = generarPDF(JsPDF, jugador);
+
+      const nombre =
+        "Historial_Tiburones_" +
+        escaparNombre(jugador.nombre) + ".pdf";
+
+      const blob = doc.output("blob");
+      const archivo = new File([blob], nombre, {
+        type: "application/pdf"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = nombre;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [archivo] })
+      ) {
+        try {
+          await navigator.share({
+            files: [archivo],
+            title: "Historial deportivo - " + jugador.nombre,
+            text: "Reporte de rendimiento de Academia Tiburones Ensenada."
+          });
+        } catch (e) {
+          if (e.name !== "AbortError") {
+            alert("El PDF quedó descargado. Puedes compartirlo desde Descargas.");
+          }
+        }
+      } else {
+        alert("Historial descargado. Ya puedes compartirlo por WhatsApp.");
+      }
+    } catch (error) {
+      console.error("Error en PDF de historial:", error);
+      alert("No se pudo generar el PDF. Inténtalo nuevamente.");
+    }
+  }
+
+  // Sustituye únicamente la función que descarga el PDF.
+  window.ctDescargarHistorial = descargar;
+  window.ctHistorialProDescargar = descargar;
+
+  console.log("CONTROL TIBURONES: desglose PDF actualizado.");
+})();
+</script>
+<!-- FIN DE LA CORRECCIÓN DEL PDF -->
   
 </body>
 </html>
