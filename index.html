@@ -17776,7 +17776,7 @@ function ctPDFCrear(JsPDF,j){
   y=top+alto+7;
  }
 
- // PÁGINAS INTERIORES: DOS ENTRENAMIENTOS SI CABEN.
+  // PÁGINAS INTERIORES: HASTA 3 ENTRENAMIENTOS COMPLETOS SI CABEN.
  const preparados=registros.map((r,i)=>preparar(r,i+1));
 
  let indice=0;
@@ -17785,20 +17785,20 @@ function ctPDFCrear(JsPDF,j){
   doc.addPage();
   y=19;
 
-  const primero=preparados[indice];
-  const espacioDisponible=PIE-y-12;
+  let colocados=0;
 
-  dibujarTarjeta(primero);
-  indice++;
-
-  if(indice<preparados.length){
-   const segundo=preparados[indice];
+  while(indice<preparados.length && colocados<3){
+   const siguiente=preparados[indice];
    const espacioRestante=PIE-y-8;
 
-   if(segundo.alto<=espacioRestante){
-    dibujarTarjeta(segundo);
-    indice++;
+   // Si no cabe completo, pasa a la siguiente página.
+   if(colocados>0 && siguiente.alto>espacioRestante){
+    break;
    }
+
+   dibujarTarjeta(siguiente);
+   indice++;
+   colocados++;
   }
  }
 
