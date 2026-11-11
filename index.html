@@ -14828,6 +14828,658 @@ console.log(
 </script>
 
 <!-- FIN DE LA MEJORA DE FECHAS -->
+
+<!-- =====================================================
+ CONTROL TIBURONES
+ MEJORA EXCLUSIVA DEL PDF DEL HISTORIAL
+ DISEÑO PROFESIONAL AZUL MARINO / AZUL ELÉCTRICO
+ NO MODIFICA REGISTROS NI PUNTUACIONES
+===================================================== -->
+<script>
+(function () {
+  "use strict";
+
+  if (window.ctPDFProfesionalV2) return;
+  window.ctPDFProfesionalV2 = true;
+
+  const AZUL = [17, 48, 78];
+  const ELECTRICO = [41, 167, 255];
+  const CLARO = [235, 243, 250];
+  const GRIS = [91, 108, 125];
+  const VERDE = [24, 145, 105];
+  const ROJO = [210, 65, 78];
+  const BLANCO = [255, 255, 255];
+
+  function texto(valor) {
+    return String(valor ?? "").trim();
+  }
+
+  function fechaBonita(fecha) {
+    if (!fecha) return "Sin fecha";
+    if (typeof formatearFecha === "function") {
+      return formatearFecha(fecha);
+    }
+    const p = String(fecha).slice(0, 10).split("-");
+    return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : fecha;
+  }
+
+  function periodoDe(fecha) {
+    return String(fecha || "").slice(0, 7);
+  }
+
+  function nombreMes(periodo) {
+    const [anio, mes] = periodo.split("-").map(Number);
+    const fecha = new Date(anio, mes - 1, 1);
+    return fecha.toLocaleDateString("es-MX", {
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  function puntosFormato(valor) {
+    const n = Number(valor) || 0;
+    return (n > 0 ? "+" : "") + n.toFixed(2).replace(/\.?0+$/, "");
+  }
+
+  function puntosEvaluacion(e) {
+    if (Number.isFinite(Number(e.puntosMVP))) {
+      return Number(e.puntosMVP);
+    }
+
+    const botones = e.puntosBotonesMVP || {};
+    let total = 0;
+
+    Object.values(botones).forEach(v => {
+      if (Number.isFinite(Number(v))) total += Number(v);
+    });
+
+    return total + (Number(e.ajusteExtra) || 0);
+  }
+
+  function estadoAsistencia(estado) {
+    return ({
+      asistio: "Asistió",
+      falta: "Falta injustificada",
+      justificada: "Falta justificada",
+      retardo: "Retardo"
+    })[estado] || "Sin registro";
+  }
+
+  function escaparNombre(nombre) {
+    return texto(nombre)
+      .replace(/[^a-z0-9áéíóúñü -]/gi, "")
+      .replace(/\s+/g, "_") || "Jugador";
+  }
+
+  async function cargarPDF() {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return window.jspdf.jsPDF;
+    }
+
+    if (window.jsPDF) return window.jsPDF;
+
+    await new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
+    if (window.jspdf && window.jspdf.jsPDF) {
+      return window.jspdf.jsPDF;
+    }
+
+    throw new Error("No se pudo cargar el generador PDF.");
+  }
+
+  function generarReporte(JsPDF, jugador) {
+    const doc = new JsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const ancho = 210;
+    const margen = 15;
+    const util = ancho - margen * 2;
+    const limite = 276;
+    let y = 0;
+
+    const horario = obtenerHorario(jugador.horario);
+    const entrenamientos = db.entrenamientos || [];
+    const evaluaciones = db.evaluaciones || [];
+    const asistencias = db.asistencias || [];
+
+    // Unir evaluaciones y asistencias con su entrenamiento.
+    const registros = [];
+
+    entrenamientos.forEach(t => {
+      const asistencia = asistencias.find(a =>
+        a.entrenamientoId === t.id &&
+        a.jugadorId === jugador.id
+      );
+
+      const evaluacion = evaluaciones.find(e =>
+        e.entrenamientoId === t.id &&
+        e.jugadorId === jugador.id
+      );
+
+      if (asistencia || evaluacion) {
+        registros.push({
+          fecha: t.fecha,
+          entrenamiento: t,
+          asistencia,
+          evaluacion
+        });
+      }
+    });
+
+    registros.sort((a, b) =>
+      texto(a.fecha).localeCompare(texto(b.fecha))
+    );
+
+    // Agrupar sin borrar ni modificar información.
+    const meses = {};
+
+    registros.forEach(r => {
+      const periodo = periodoDe(r.fecha);
+      if (!periodo) return;
+
+      if (!meses[periodo]) meses[periodo] = [];
+      meses[periodo].push(r);
+    });
+
+    function encabezado() {
+      doc.setFillColor(...AZUL);
+      doc.rect(0, 0, ancho, 37, "F");
+
+      doc.setFillColor(...ELECTRICO);
+      doc.rect(0, 36, ancho, 2, "F");
+
+      doc.setTextColor(...BLANCO);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(19);
+      doc.text("ACADEMIA TIBURONES", 105, 14, {
+        align: "center"
+      });
+
+      doc.setFontSize(10);
+      doc.setTextColor(160, 215, 255);
+      doc.text("ENSENADA · REPORTE DE RENDIMIENTO", 105, 22, {
+        align: "center"
+      });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...BLANCO);
+      doc.text("SEGUIMIENTO DEPORTIVO INDIVIDUAL", 105, 30, {
+        align: "center"
+      });
+
+      y = 46;
+    }
+
+    function nuevaPagina() {
+      doc.addPage();
+      encabezado();
+    }
+
+    function espacio(alto) {
+      if (y + alto > limite) nuevaPagina();
+    }
+
+    function escribir(contenido, opciones = {}) {
+      const tam = opciones.tam || 9;
+      const color = opciones.color || GRIS;
+      const alto = opciones.alto || 4.5;
+
+      doc.setFont(
+        "helvetica",
+        opciones.negrita ? "bold" : "normal"
+      );
+      doc.setFontSize(tam);
+      doc.setTextColor(...color);
+
+      const lineas = doc.splitTextToSize(
+        texto(contenido),
+        opciones.ancho || util
+      );
+
+      const altura = lineas.length * alto;
+      espacio(altura + 2);
+
+      doc.text(lineas, opciones.x || margen, y);
+      y += altura + (opciones.espacio ?? 2);
+    }
+
+    function seccion(titulo) {
+      espacio(15);
+      doc.setFillColor(...CLARO);
+      doc.roundedRect(margen, y, util, 10, 2, 2, "F");
+
+      doc.setFillColor(...ELECTRICO);
+      doc.roundedRect(margen, y, 2, 10, 1, 1, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...AZUL);
+      doc.text(titulo, margen + 6, y + 6.5);
+      y += 15;
+    }
+
+    function tarjeta(titulo, valor, x, anchoTarjeta, color) {
+      doc.setFillColor(...CLARO);
+      doc.roundedRect(x, y, anchoTarjeta, 19, 2, 2, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.setTextColor(...color);
+      doc.text(String(valor), x + 4, y + 9);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRIS);
+      doc.text(titulo, x + 4, y + 15);
+    }
+
+    function piePaginas() {
+      const total = doc.internal.getNumberOfPages();
+
+      for (let n = 1; n <= total; n++) {
+        doc.setPage(n);
+        doc.setDrawColor(210, 222, 233);
+        doc.line(margen, 285, ancho - margen, 285);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(...GRIS);
+
+        doc.text(
+          "CONTROL TIBURONES · ACADEMIA TIBURONES ENSENADA",
+          margen, 290
+        );
+
+        doc.text(
+          "Página " + n + " de " + total,
+          ancho - margen, 290,
+          { align: "right" }
+        );
+      }
+    }
+
+    // PORTADA / DATOS DEL JUGADOR
+    encabezado();
+
+    doc.setFillColor(...CLARO);
+    doc.roundedRect(margen, y, util, 29, 3, 3, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(...AZUL);
+    doc.text(
+      doc.splitTextToSize(texto(jugador.nombre), util - 12),
+      margen + 6, y + 10
+    );
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...GRIS);
+
+    doc.text(
+      "Categoría: " + texto(horario?.categoria || "Sin categoría"),
+      margen + 6, y + 19
+    );
+
+    doc.text(
+      "Horario: " + texto(horario?.nombre || "Sin horario"),
+      margen + 6, y + 25
+    );
+
+    y += 36;
+
+    escribir(
+      "EXPEDIENTE DE RENDIMIENTO DEPORTIVO",
+      { tam: 12, negrita: true, color: AZUL, espacio: 4 }
+    );
+
+    escribir(
+      "Historial acumulado organizado por mes. Las puntuaciones de cada periodo se muestran por separado.",
+      { tam: 8 }
+    );
+
+    // RESUMEN GENERAL
+    const totalEvaluaciones = registros.filter(r => r.evaluacion).length;
+    const totalAsistio = registros.filter(r =>
+      r.asistencia?.estado === "asistio"
+    ).length;
+    const totalFaltas = registros.filter(r =>
+      r.asistencia?.estado === "falta"
+    ).length;
+    const totalJustificadas = registros.filter(r =>
+      r.asistencia?.estado === "justificada"
+    ).length;
+    const totalRetardos = registros.filter(r =>
+      r.asistencia?.estado === "retardo"
+    ).length;
+
+    seccion("RESUMEN GENERAL DEL HISTORIAL");
+
+    const w = (util - 6) / 2;
+    tarjeta("Evaluaciones", totalEvaluaciones, margen, w, ELECTRICO);
+    tarjeta("Asistencias", totalAsistio, margen + w + 6, w, VERDE);
+    y += 24;
+
+    tarjeta("Faltas injustificadas", totalFaltas, margen, w, ROJO);
+    tarjeta("Faltas justificadas", totalJustificadas,
+      margen + w + 6, w, AZUL);
+    y += 24;
+
+    tarjeta("Retardos", totalRetardos, margen, w, [220, 145, 35]);
+    tarjeta("Meses registrados", Object.keys(meses).length,
+      margen + w + 6, w, ELECTRICO);
+    y += 24;
+
+    // RESUMEN Y DETALLE DE CADA MES
+    const periodos = Object.keys(meses).sort();
+
+    if (!periodos.length) {
+      seccion("HISTORIAL DE EVALUACIONES");
+      escribir("Todavía no hay evaluaciones o asistencias registradas.");
+    }
+
+    periodos.forEach(periodo => {
+      const lista = meses[periodo];
+
+      const evaluadas = lista.filter(r => r.evaluacion);
+      const puntosMes = evaluadas.reduce(
+        (s, r) => s + puntosEvaluacion(r.evaluacion), 0
+      );
+
+      const asistenciasMes = lista.filter(r =>
+        r.asistencia?.estado === "asistio"
+      ).length;
+
+      const faltasMes = lista.filter(r =>
+        r.asistencia?.estado === "falta"
+      ).length;
+
+      const justificadasMes = lista.filter(r =>
+        r.asistencia?.estado === "justificada"
+      ).length;
+
+      const retardosMes = lista.filter(r =>
+        r.asistencia?.estado === "retardo"
+      ).length;
+
+      espacio(35);
+      seccion("REPORTE MENSUAL · " + nombreMes(periodo).toUpperCase());
+
+      escribir(
+        "Evaluaciones realizadas: " + evaluadas.length +
+        "    Puntuación del mes: " + puntosFormato(puntosMes),
+        { tam: 9, negrita: true, color: AZUL }
+      );
+
+      escribir(
+        "Asistencias: " + asistenciasMes +
+        " · Faltas injustificadas: " + faltasMes +
+        " · Justificadas: " + justificadasMes +
+        " · Retardos: " + retardosMes,
+        { tam: 8 }
+      );
+
+      // Barra visual de puntuación mensual.
+      espacio(13);
+      doc.setFillColor(220, 230, 240);
+      doc.roundedRect(margen, y, util, 4, 2, 2, "F");
+
+      const longitud = Math.min(
+        util,
+        Math.abs(puntosMes) * 2
+      );
+
+      doc.setFillColor(
+        ...(puntosMes < 0 ? ROJO : ELECTRICO)
+      );
+
+      if (longitud > 0) {
+        doc.roundedRect(margen, y, longitud, 4, 2, 2, "F");
+      }
+
+      y += 10;
+
+      // Reconocimientos MVP del periodo.
+      const reconocimientos = (db.reconocimientosMVP || []).filter(r =>
+        r.jugadorId === jugador.id &&
+        r.periodo === periodo
+      );
+
+      if (reconocimientos.length) {
+        escribir(
+          "RECONOCIMIENTO MVP: " +
+          reconocimientos.map(r =>
+            texto(r.observacion || "MVP del mes")
+          ).join(" · "),
+          { tam: 8.5, negrita: true, color: [175, 125, 20] }
+        );
+      }
+
+      escribir("DETALLE DE CADA ENTRENAMIENTO", {
+        tam: 9,
+        negrita: true,
+        color: AZUL,
+        espacio: 3
+      });
+
+      lista.forEach((r, indice) => {
+        espacio(25);
+
+        doc.setFillColor(247, 250, 253);
+        doc.setDrawColor(210, 222, 233);
+        doc.roundedRect(margen, y, util, 9, 2, 2, "FD");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...AZUL);
+        doc.text(
+          fechaBonita(r.fecha) + " · ENTRENAMIENTO " + (indice + 1),
+          margen + 4, y + 6
+        );
+
+        y += 14;
+
+        escribir(
+          "ASISTENCIA: " +
+          estadoAsistencia(r.asistencia?.estado),
+          {
+            tam: 8.5,
+            negrita: true,
+            color: r.asistencia?.estado === "falta"
+              ? ROJO : GRIS
+          }
+        );
+
+        if (!r.evaluacion) {
+          escribir("Evaluación: No registrada.", { tam: 8 });
+          y += 2;
+          return;
+        }
+
+        const e = r.evaluacion;
+        const selecciones = e.seleccionesMVP || {};
+        const puntosBotones = e.puntosBotonesMVP || {};
+
+        const grupos = [
+          ["desempeno", "DESEMPEÑO"],
+          ["actitud", "ACTITUD Y ATENCIÓN"],
+          ["esfuerzo", "ESFUERZO"],
+          ["uniforme", "UNIFORME"]
+        ];
+
+        grupos.forEach(([clave, etiqueta]) => {
+          const valor = selecciones[clave] ||
+            (clave === "uniforme" ? e.uniforme : "");
+
+          if (!valor) return;
+
+          let puntos = Number(puntosBotones[clave]);
+
+          if (!Number.isFinite(puntos)) puntos = 0;
+
+          escribir(
+            etiqueta + ": " + texto(valor) +
+            " (" + puntosFormato(puntos) + " pts)",
+            {
+              tam: 8,
+              color: puntos < 0 ? ROJO :
+                puntos > 0 ? VERDE : GRIS
+            }
+          );
+        });
+
+        const ajuste = Number(e.ajusteExtra) || 0;
+
+        if (ajuste !== 0) {
+          escribir(
+            "AJUSTE EXTRA: " + puntosFormato(ajuste) + " pts",
+            { tam: 8, negrita: true, color: ROJO }
+          );
+
+          if (e.motivoAjuste) {
+            escribir(
+              "Motivo: " + texto(e.motivoAjuste),
+              { tam: 8 }
+            );
+          }
+        }
+
+        escribir(
+          "TOTAL DE ESTA EVALUACIÓN: " +
+          puntosFormato(puntosEvaluacion(e)) + " puntos",
+          { tam: 9, negrita: true, color: AZUL }
+        );
+
+        escribir(
+          "OBSERVACIONES DEL COACH: " +
+          texto(e.observaciones || "Sin observaciones registradas."),
+          { tam: 8.5, color: GRIS }
+        );
+
+        y += 3;
+      });
+
+      y += 4;
+    });
+
+    // OBSERVACIONES GENERALES DEL JUGADOR
+    espacio(25);
+    seccion("OBSERVACIONES GENERALES DEL COACH");
+
+    escribir(
+      texto(jugador.observaciones || "No hay observaciones generales registradas."),
+      { tam: 9 }
+    );
+
+    piePaginas();
+
+    doc.setProperties({
+      title: "Historial deportivo - " + jugador.nombre,
+      subject: "Expediente deportivo de Academia Tiburones Ensenada",
+      author: "Academia Tiburones Ensenada"
+    });
+
+    return doc;
+  }
+
+  async function descargar(id) {
+    const jugador = obtenerJugador(id);
+
+    if (!jugador) {
+      alert("No se encontró al jugador.");
+      return;
+    }
+
+    const boton = document.querySelector(
+      ".ct-reporte-acciones button.btn-primary"
+    );
+
+    try {
+      if (boton) {
+        boton.disabled = true;
+        boton.textContent = "Generando historial...";
+      }
+
+      const JsPDF = await cargarPDF();
+      const doc = generarReporte(JsPDF, jugador);
+
+      const nombre =
+        "Historial_Tiburones_" +
+        escaparNombre(jugador.nombre) + ".pdf";
+
+      const blob = doc.output("blob");
+      const archivo = new File([blob], nombre, {
+        type: "application/pdf"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+
+      enlace.href = url;
+      enlace.download = nombre;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [archivo] })
+      ) {
+        try {
+          await navigator.share({
+            files: [archivo],
+            title: "Historial deportivo - " + jugador.nombre,
+            text: "Reporte de rendimiento de Academia Tiburones Ensenada."
+          });
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            alert("El PDF quedó descargado. Puedes compartirlo desde Descargas.");
+          }
+        }
+      } else {
+        alert(
+          "¡Historial descargado! Ya puedes compartirlo por WhatsApp."
+        );
+      }
+
+    } catch (error) {
+      console.error("Error al generar PDF profesional:", error);
+      alert(
+        "No se pudo generar el PDF. Revisa tu conexión e inténtalo nuevamente."
+      );
+    } finally {
+      if (boton) {
+        boton.disabled = false;
+        boton.textContent = "⬇ Descargar historial PDF";
+      }
+    }
+  }
+
+  // Los dos botones existentes utilizan el mismo reporte.
+  window.ctDescargarHistorial = descargar;
+  window.ctHistorialProDescargar = descargar;
+
+  console.log(
+    "CONTROL TIBURONES: nuevo diseño PDF profesional activado."
+  );
+
+})();
+</script>
+<!-- FIN DE LA MEJORA EXCLUSIVA DEL PDF -->
   
 </body>
 </html>
