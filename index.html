@@ -16838,6 +16838,500 @@ console.log(
   console.log("CONTROL TIBURONES: historial PDF actualizado.");
 
 })();
-        </script>  
+        </script> 
+  <script>
+(function(){
+'use strict';
+
+if(window.ctPDFCorreccionFinalInstalada)return;
+window.ctPDFCorreccionFinalInstalada=true;
+
+const C={
+ navy:[13,39,66],blue:[20,104,180],pale:[239,245,250],
+ black:[0,0,0],green:[0,125,75],red:[185,30,40],
+ gray:[35,35,35],white:[255,255,255],gold:[170,120,15]
+};
+
+const OPT={
+ desempeno:{
+  'Excelente trabajo':3,
+  'Buen desempeño':2,
+  'Cumplió con la actividad':1.5,
+  'Buena participación en la práctica':0.5,
+  'No completó la actividad':-1,
+  'No siguió el ejercicio':-2,
+  'Se negó a realizar la actividad':-3
+ },
+ actitud:{
+  'Actitud ejemplar':2.5,
+  'Buena disposición':1.5,
+  'Colaboró con sus compañeros':1,
+  'Atendió las indicaciones':0.5,
+  'Platicó durante la práctica':-1,
+  'No prestó atención':-2,
+  'Jugó durante la práctica':-2,
+  'Persistió después de varias correcciones':-3
+ },
+ esfuerzo:{
+  'Dio su máximo':3,
+  'Gran esfuerzo':2.5,
+  'Trabajó con constancia':1.5,
+  'Mostró disposición':1,
+  'En proceso de superación':0.5,
+  'No mostró buena actitud durante la práctica':-1,
+  'Abandonó los ejercicios sin justificación':-2,
+  'Se negó a trabajar':-3
+ },
+ uniforme:{
+  'Completo':1,
+  'Justificado':0,
+  'No cumple':-1
+ }
+};
+
+const GROUPS=[
+ ['desempeno','DESEMPEÑO'],
+ ['actitud','ACTITUD Y ATENCIÓN'],
+ ['esfuerzo','ESFUERZO'],
+ ['uniforme','UNIFORME']
+];
+
+const txt=v=>String(v==null?'':v).trim();
+const n=v=>Number.isFinite(Number(v))?Number(v):0;
+const fmt=v=>(v>0?'+':'')+
+ Number(v||0).toFixed(2).replace(/\.?0+$/,'');
+
+function period(f){
+ return txt(f).slice(0,7);
+}
+
+function dateLong(f){
+ if(!f)return 'FECHA NO REGISTRADA';
+ const p=txt(f).slice(0,10).split('-').map(Number);
+ if(p.length!==3||p.some(x=>!x))return txt(f);
+ return new Date(p[0],p[1]-1,p[2]).toLocaleDateString(
+  'es-MX',{
+   weekday:'long',
+   day:'2-digit',
+   month:'long',
+   year:'numeric'
+  }
+ ).toUpperCase();
+}
+
+function monthName(k){
+ const p=k.split('-').map(Number);
+ return new Date(p[0],p[1]-1,1).toLocaleDateString(
+  'es-MX',{month:'long',year:'numeric'}
+ ).toUpperCase();
+}
+
+function stateName(s){
+ return ({
+  asistio:'ASISTIÓ',
+  falta:'FALTA INJUSTIFICADA',
+  justificada:'FALTA JUSTIFICADA',
+  retardo:'RETARDO'
+ })[s]||'SIN REGISTRO';
+}
+
+async function getPDF(){
+ if(window.jspdf?.jsPDF)return window.jspdf.jsPDF;
+ if(window.jsPDF)return window.jsPDF;
+
+ await new Promise((ok,no)=>{
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s.onload=ok;
+  s.onerror=no;
+  document.head.appendChild(s);
+ });
+
+ if(window.jspdf?.jsPDF)return window.jspdf.jsPDF;
+ throw Error('No se pudo cargar jsPDF');
+}
+
+function evalData(e){
+ const sel=e.seleccionesMVP||{};
+ let pos=0,neg=0,items=[],unknown=[];
+
+ GROUPS.forEach(([key,label])=>{
+  const value=txt(sel[key]||
+   (key==='uniforme'?(e.uniformeTexto||''):''));
+
+  if(!value)return;
+
+  const table=OPT[key];
+
+  if(Object.prototype.hasOwnProperty.call(table,value)){
+   const pts=table[value];
+
+   if(pts>0)pos+=pts;
+   if(pts<0)neg+=pts;
+
+   items.push({label,value,pts});
+  }else{
+   unknown.push(label);
+  }
+ });
+
+ const saved=Number(e.puntosBotonesMVP);
+ const hasSaved=
+  e.puntosBotonesMVP!==undefined&&
+  e.puntosBotonesMVP!==null&&
+  e.puntosBotonesMVP!==''&&
+  Number.isFinite(saved);
+
+ const known=pos+neg;
+ const subtotal=hasSaved?saved:known;
+ const residual=subtotal-known;
+ const adjustment=n(e.ajusteExtra);
+
+ const total=
+  e.puntosMVP!==undefined&&
+  e.puntosMVP!==null&&
+  e.puntosMVP!==''&&
+  Number.isFinite(Number(e.puntosMVP))
+   ?Number(e.puntosMVP)
+   :subtotal+adjustment;
+
+ return{
+  items,pos,neg,subtotal,residual,
+  adjustment,total,
+  motivo:txt(e.motivoAjuste),
+  unknown
+ };
+}
+
+function makePDF(JsPDF,j){
+ const doc=new JsPDF({
+  orientation:'portrait',
+  unit:'mm',
+  format:'a4'
+ });
+
+ const W=210,M=15,CW=180;
+ const footerY=285;
+ let y=18;
+
+ const ts=(size=10,color=C.black,bold=true)=>{
+  doc.setFont('helvetica',bold?'bold':'normal');
+  doc.setFontSize(size);
+  doc.setTextColor(...color);
+ };
+
+ const write=(s,size=10,color=C.black,bold=true,gap=2)=>{
+  const lines=doc.splitTextToSize(txt(s),CW);
+  const h=lines.length*(size*.43)+gap;
+  ts(size,color,bold);
+  doc.text(lines,M,y);
+  y+=h;
+ };
+
+ const band=s=>{
+  doc.setFillColor(...C.pale);
+  doc.roundedRect(M,y-4,CW,9,1.5,1.5,'F');
+  ts(10,C.blue,true);
+  doc.text(s,M+3,y+2);
+  y+=11;
+ };
+
+ const card=(label,value,x,w,color)=>{
+  doc.setFillColor(...C.pale);
+  doc.roundedRect(x,y,w,19,2,2,'F');
+  doc.setFillColor(...color);
+  doc.rect(x,y,2,19,'F');
+
+  ts(14,C.black,true);
+  doc.text(String(value),x+5,y+8);
+
+  ts(7.3,C.black,true);
+  doc.text(label,x+5,y+15);
+ };
+
+ const horario=obtenerHorario(j.horario);
+ const trainings=db.entrenamientos||[];
+ const evs=db.evaluaciones||[];
+ const ats=db.asistencias||[];
+ let rows=[];
+
+ trainings.forEach(t=>{
+  const a=ats.find(x=>
+   x.entrenamientoId===t.id&&x.jugadorId===j.id
+  );
+
+  const e=evs.find(x=>
+   x.entrenamientoId===t.id&&x.jugadorId===j.id
+  );
+
+  if(a||e)rows.push({fecha:t.fecha,a,e});
+ });
+
+ rows.sort((a,b)=>txt(a.fecha).localeCompare(txt(b.fecha)));
+
+ const buckets={};
+
+ rows.forEach(r=>{
+  const k=period(r.fecha);
+  if(k)(buckets[k]||=[]).push(r);
+ });
+
+ const keys=Object.keys(buckets).sort();
+ const now=new Date();
+
+ const current=
+  now.getFullYear()+'-'+
+  String(now.getMonth()+1).padStart(2,'0');
+
+ const summaryKey=buckets[current]
+  ?current
+  :(keys[keys.length-1]||current);
+
+ const summary=buckets[summaryKey]||[];
+
+ function sums(list){
+  let pos=0,neg=0,unclassified=0,discount=0,net=0;
+
+  list.forEach(r=>{
+   if(!r.e)return;
+
+   const d=evalData(r.e);
+   pos+=d.pos;
+   neg+=d.neg;
+   unclassified+=d.residual;
+   discount+=d.adjustment;
+   net+=d.total;
+  });
+
+  return{pos,neg,unclassified,discount,net};
+ }
+
+ // PRIMERA HOJA: ENCABEZADO Y RESUMEN.
+ doc.setFillColor(...C.navy);
+ doc.rect(0,0,W,40,'F');
+
+ doc.setFillColor(...C.blue);
+ doc.rect(0,39,W,2,'F');
+
+ ts(18,C.white,true);
+ doc.text('ACADEMIA TIBURONES ENSENADA',105,15,{align:'center'});
+
+ ts(10,C.white,true);
+ doc.text('SEGUIMIENTO DEPORTIVO INDIVIDUAL',105,24,{align:'center'});
+
+ ts(8.5,C.white,true);
+ doc.text('HISTORIAL DE RENDIMIENTO',105,32,{align:'center'});
+
+ y=51;
+
+ write(txt(j.nombre).toUpperCase(),15,C.black,true,3);
+ write('Categoría: '+txt(horario?.categoria||'Sin categoría'),10.5,C.black,true);
+ write('Horario: '+txt(horario?.nombre||'Sin horario'),10.5,C.black,true);
+
+ y+=3;
+
+ band('RESUMEN DEL MES · '+monthName(summaryKey));
+
+ const sm=sums(summary);
+ const gap=4;
+ const w=(CW-gap)/2;
+
+ card('PUNTOS POSITIVOS',fmt(sm.pos),M,w,C.green);
+ card('PUNTOS NEGATIVOS',fmt(sm.neg),M+w+gap,w,C.red);
+
+ y+=23;
+
+ card('PUNTOS ANTERIORES SIN DESGLOSE',
+  fmt(sm.unclassified),M,w,C.gold);
+
+ card('DESCUENTOS EXTRAORDINARIOS DEL COACH',
+  fmt(sm.discount),M+w+gap,w,C.red);
+
+ y+=23;
+
+ card('TOTAL NETO DEL MES',fmt(sm.net),M,CW,C.blue);
+
+ y+=24;
+
+ band('ASISTENCIA Y EVALUACIONES');
+
+ const count=s=>summary.filter(r=>
+  r.a&&r.a.estado===s
+ ).length;
+
+ const evCount=summary.filter(r=>r.e).length;
+ const w4=(CW-9)/4;
+
+ card('ASISTENCIAS',count('asistio'),M,w4,C.green);
+ card('FALTAS',count('falta'),M+w4+3,w4,C.red);
+ card('JUSTIFICADAS',count('justificada'),M+2*(w4+3),w4,C.blue);
+ card('RETARDOS',count('retardo'),M+3*(w4+3),w4,C.gold);
+
+ y+=24;
+
+ write('EVALUACIONES REALIZADAS: '+evCount,11.5,C.black,true,3);
+
+ write(
+  'El resumen corresponde al mes indicado. El detalle de entrenamientos aparece en las hojas siguientes.',
+  9,C.gray,true,2
+ );
+
+ // UNA HOJA CONSECUTIVA POR ENTRENAMIENTO.
+ // ASÍ NO SE DIVIDE UNA EVALUACIÓN ENTRE DOS HOJAS.
+ rows.forEach(r=>{
+  doc.addPage();
+  y=19;
+
+  const p=period(r.fecha);
+
+  ts(12,C.blue,true);
+  doc.text('DETALLE DEL ENTRENAMIENTO',M,y);
+  y+=10;
+
+  doc.setFillColor(...C.pale);
+  doc.roundedRect(M,y-5,CW,10,1.5,1.5,'F');
+
+  ts(10.5,C.black,true);
+  doc.text(dateLong(r.fecha),M+3,y+1);
+  y+=13;
+
+  write('ASISTENCIA: '+stateName(r.a?.estado),10,C.black,true,4);
+
+  if(!r.e){
+   write('EVALUACIÓN: No registrada.',10,C.gray,true,4);
+   return;
+  }
+
+  const d=evalData(r.e);
+
+  write('EVALUACIÓN · '+monthName(p),10,C.blue,true,4);
+
+  d.items.forEach(it=>{
+   write(
+    it.label+': '+it.value+' · '+fmt(it.pts)+' puntos',
+    10,
+    it.pts<0?C.red:it.pts>0?C.green:C.black,
+    true,3
+   );
+  });
+
+  if(d.unknown.length){
+   write('SELECCIONES DE UN REGISTRO ANTERIOR',9,C.gold,true,2);
+
+   write(
+    'Este entrenamiento contiene selecciones de una versión anterior. Para no mostrar botones antiguos ni inventar puntuaciones, se conserva únicamente el subtotal que quedó guardado en la aplicación.',
+    8.5,C.gray,true,2
+   );
+
+   write(
+    'Puntos guardados sin desglose: '+fmt(d.residual),
+    10,C.gold,true,3
+   );
+  }
+
+  write('PUNTOS POSITIVOS IDENTIFICADOS: '+fmt(d.pos),
+   9.5,C.green,true,2);
+
+  write('PUNTOS NEGATIVOS IDENTIFICADOS: '+fmt(d.neg),
+   9.5,C.red,true,2);
+
+  if(d.adjustment!==0){
+   write(
+    'DESCUENTO EXTRAORDINARIO DEL COACH: '+
+    fmt(d.adjustment)+' puntos',
+    10,C.red,true,2
+   );
+
+   write(
+    'Motivo: '+(d.motivo||'No se registró motivo.'),
+    9,C.black,true,2
+   );
+  }
+
+  write(
+   'TOTAL DEL ENTRENAMIENTO: '+fmt(d.total)+' PUNTOS',
+   12,C.blue,true,4
+  );
+
+  write(
+   'OBSERVACIONES DEL COACH: '+
+   (txt(r.e.observaciones)||'Sin observaciones registradas.'),
+   9.5,C.black,true,3
+  );
+ });
+
+ if(!rows.length){
+  doc.addPage();
+  y=20;
+  write(
+   'Todavía no hay asistencias ni evaluaciones registradas para este jugador.',
+   11,C.black,true
+  );
+ }
+
+ // PIE DE PÁGINA EN TODAS LAS HOJAS.
+ const pages=doc.internal.getNumberOfPages();
+
+ for(let i=1;i<=pages;i++){
+  doc.setPage(i);
+
+  doc.setDrawColor(150,165,180);
+  doc.line(M,footerY,W-M,footerY);
+
+  ts(8,C.black,true);
+  doc.text('Coach Carlos Meneses',M,291);
+
+  doc.text(
+   'Página '+i+' de '+pages,
+   W-M,291,{align:'right'}
+  );
+ }
+
+ doc.setProperties({
+  title:'Historial deportivo - '+j.nombre,
+  author:'Coach Carlos Meneses',
+  subject:'Academia Tiburones Ensenada'
+ });
+
+ return doc;
+}
+
+async function download(id){
+ const j=obtenerJugador(id);
+
+ if(!j){
+  alert('No se encontró al jugador.');
+  return;
+ }
+
+ try{
+  const PDF=await getPDF();
+  const doc=makePDF(PDF,j);
+
+  const nombre=
+   'Historial_Tiburones_'+
+   txt(j.nombre)
+    .replace(/[^a-z0-9áéíóúñü -]/gi,'')
+    .trim()
+    .replace(/\s+/g,'_')+
+   '.pdf';
+
+  doc.save(nombre);
+
+ }catch(err){
+  console.error(err);
+  alert('No se pudo generar el PDF. Inténtalo nuevamente.');
+ }
+}
+
+window.ctDescargarHistorial=download;
+window.ctHistorialProDescargar=download;
+
+console.log(
+ 'CONTROL TIBURONES: PDF corregido, sin opciones antiguas y entrenamientos en páginas consecutivas.'
+);
+
+})();
+              </script>
 </body>
 </html>
