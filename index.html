@@ -22090,7 +22090,99 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
   window.TP_COLORES_ENTRENAMIENTO_V1 = true;
 
   console.log("TIBURÓN PRO: colores de entrenamiento igualados.");
-})();    
+})();
+/* =====================================================
+   TIBURÓN PRO — ESTADO AUTOMÁTICO DE EVALUACIONES
+   BÁSICO Y COMPETENCIA
+   ===================================================== */
+(function () {
+  "use strict";
+
+  if (window.TP_ESTADO_EVALUACIONES_V1) return;
+
+  const mostrarCategoriaAnterior = window.tpMostrarCategoria;
+
+  if (typeof mostrarCategoriaAnterior !== "function") {
+    console.error("No se encontró la lista de categorías.");
+    return;
+  }
+
+  function tieneEvaluacion(jugadorId, categoria) {
+    const db = window.tpDB;
+    if (!db || !Array.isArray(db.evaluaciones)) return false;
+
+    return db.evaluaciones.some(e => {
+      const mismaPersona =
+        String(e.jugadorId) === String(jugadorId);
+
+      const mismaCategoria =
+        String(e.categoria || "").toUpperCase() === categoria;
+
+      const tieneCalificaciones =
+        e.calificaciones &&
+        Object.keys(e.calificaciones).length > 0;
+
+      return mismaPersona && mismaCategoria && tieneCalificaciones;
+    });
+  }
+
+  window.tpMostrarCategoria = function (categoria) {
+    mostrarCategoriaAnterior.apply(this, arguments);
+
+    const cat = String(categoria || "").toUpperCase();
+    if (!["BASICO", "COMPETENCIA"].includes(cat)) return;
+
+    const db = window.tpDB;
+    const zona = document.getElementById("moduleContent");
+
+    if (!db || !zona) return;
+
+    const jugadores = (window.tpJugadores() || [])
+      .filter(j =>
+        String(db.categorias[j.id] || "").toUpperCase() === cat
+      )
+      .sort((a, b) =>
+        String(a.nombre || "").localeCompare(
+          String(b.nombre || ""), "es"
+        )
+      );
+
+    const filas = zona.querySelectorAll(".tp-fila-jugador");
+
+    filas.forEach((fila, i) => {
+      const jugador = jugadores[i];
+      const boton = fila.querySelector("button");
+
+      if (!jugador || !boton) return;
+
+      const evaluado = tieneEvaluacion(jugador.id, cat);
+
+      if (evaluado) {
+        boton.textContent = "✓ EVALUADO";
+        boton.style.background =
+          "linear-gradient(135deg,#126344,#16865f)";
+        boton.style.border = "2px solid #20d99b";
+        boton.style.color = "#ffffff";
+      } else {
+        boton.textContent = "📝 EVALUAR";
+        boton.style.background =
+          cat === "BASICO" ? "#17699e" : "#a86a16";
+        boton.style.border =
+          "2px solid " +
+          (cat === "BASICO" ? "#39b8ff" : "#f0b449");
+        boton.style.color = "#ffffff";
+      }
+
+      boton.style.fontWeight = "900";
+    });
+  };
+
+  window.TP_ESTADO_EVALUACIONES_V1 = true;
+
+  console.log(
+    "TIBURÓN PRO: estado de evaluaciones básico y competencia activado."
+  );
+})();   
  </script> 
 </body>
 </html>
