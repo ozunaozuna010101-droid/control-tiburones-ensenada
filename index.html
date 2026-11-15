@@ -22183,6 +22183,173 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
     "TIBURÓN PRO: estado de evaluaciones básico y competencia activado."
   );
 })();   
+ /* =====================================================
+   TIBURÓN PRO — ESTADO CORRECTO DE EVALUACIONES V2
+   Distingue Básico, Técnica, Entrenamiento y Partido.
+   No modifica registros ni datos de CONTROL TIBURONES.
+   ===================================================== */
+(function () {
+  "use strict";
+
+  if (window.TP_ESTADO_EVALUACIONES_V2) return;
+
+  const mostrarCategoriaAnterior = window.tpMostrarCategoria;
+
+  if (typeof mostrarCategoriaAnterior !== "function") {
+    console.error("TIBURÓN PRO: no se encontró la pantalla de categorías.");
+    return;
+  }
+
+  const db = window.tpDB;
+
+  if (!db || !Array.isArray(db.evaluaciones)) {
+    console.error("TIBURÓN PRO: no se encontró el historial.");
+    return;
+  }
+
+  function tieneCalificaciones(e) {
+    return e.calificaciones &&
+      Object.keys(e.calificaciones).length > 0;
+  }
+
+  function registrosJugador(id) {
+    return db.evaluaciones.filter(e =>
+      String(e.jugadorId) === String(id) &&
+      tieneCalificaciones(e)
+    );
+  }
+
+  function estadoJugador(id, categoria) {
+    const registros = registrosJugador(id);
+
+    if (categoria === "BASICO") {
+      return {
+        basico: registros.some(e =>
+          String(e.categoria || "").toUpperCase() === "BASICO"
+        )
+      };
+    }
+
+    return {
+      tecnica: registros.some(e =>
+        String(e.categoria || "").toUpperCase() === "COMPETENCIA" &&
+        e.tipo !== "PARTIDO" &&
+        e.contexto !== "DESEMPENO_ENTRENAMIENTO" &&
+        e.tipo !== "DESEMPENO_ENTRENAMIENTO"
+      ),
+
+      entrenamiento: registros.some(e =>
+        e.contexto === "DESEMPENO_ENTRENAMIENTO" ||
+        e.tipo === "DESEMPENO_ENTRENAMIENTO"
+      ),
+
+      partido: registros.some(e =>
+        e.tipo === "PARTIDO"
+      )
+    };
+  }
+
+  function crearEstado(texto, completo, color) {
+    const etiqueta = document.createElement("span");
+
+    etiqueta.textContent = (completo ? "✓ " : "○ ") + texto;
+
+    etiqueta.style.cssText = `
+      display:inline-block;
+      padding:7px 9px;
+      margin:4px 5px 0 0;
+      border-radius:9px;
+      font-size:11px;
+      font-weight:900;
+      color:#ffffff;
+      background:${completo ? "#126344" : "#263b52"};
+      border:1px solid ${completo ? "#20d99b" : color};
+    `;
+
+    return etiqueta;
+  }
+
+  window.tpMostrarCategoria = function (categoria) {
+    mostrarCategoriaAnterior.apply(this, arguments);
+
+    const cat = String(categoria || "").toUpperCase();
+
+    if (cat !== "BASICO" && cat !== "COMPETENCIA") return;
+
+    const zona = document.getElementById("moduleContent");
+    if (!zona) return;
+
+    const lista = (window.tpJugadores() || [])
+      .filter(j =>
+        String(db.categorias[j.id] || "").toUpperCase() === cat
+      )
+      .sort((a, b) =>
+        String(a.nombre || "").localeCompare(
+          String(b.nombre || ""), "es"
+        )
+      );
+
+    const contenedorLista = zona.querySelector("#tp-final-lista");
+
+    if (!contenedorLista) return;
+
+    const filas = Array.from(contenedorLista.children);
+
+    filas.forEach((fila, indice) => {
+      const jugador = lista[indice];
+      if (!jugador) return;
+
+      const boton = fila.querySelector("button");
+      if (!boton) return;
+
+      const estadoAnterior = fila.querySelector(".tp-estado-v2");
+      if (estadoAnterior) estadoAnterior.remove();
+
+      const estado = estadoJugador(jugador.id, cat);
+
+      if (cat === "BASICO") {
+        if (estado.basico) {
+          boton.textContent = "✓ EVALUADO";
+          boton.style.background = "#126344";
+          boton.style.border = "2px solid #20d99b";
+        } else {
+          boton.textContent = "📝 EVALUAR";
+        }
+
+        boton.style.color = "#ffffff";
+        boton.style.fontWeight = "900";
+        return;
+      }
+
+      boton.textContent = "ABRIR EVALUACIONES";
+
+      const etiquetas = document.createElement("div");
+      etiquetas.className = "tp-estado-v2";
+      etiquetas.style.cssText = `
+        width:100%;
+        margin-top:9px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:4px;
+      `;
+
+      etiquetas.append(
+        crearEstado("TÉCNICA", estado.tecnica, "#39b8ff"),
+        crearEstado("ENTRENAMIENTO", estado.entrenamiento, "#39b8ff"),
+        crearEstado("PARTIDO", estado.partido, "#f0b449")
+      );
+
+      fila.style.flexWrap = "wrap";
+      fila.appendChild(etiquetas);
+    });
+  };
+
+  window.TP_ESTADO_EVALUACIONES_V2 = true;
+
+  console.log(
+    "TIBURÓN PRO: estados individuales de evaluación activados."
+  );
+})();  
  </script> 
 </body>
 </html>
