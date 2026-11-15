@@ -18679,15 +18679,22 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
   const abrirModuloOriginal = window.abrirModulo;
 
   window.abrirModulo = function(modulo) {
-    if (modulo === "asistenteCoach" || modulo === "tiburonesPro") {
-      mostrarInicio();
-      return;
+  if (modulo === "asistenteCoach" || modulo === "tiburonesPro") {
+    if (typeof abrirModuloOriginal === "function") {
+      abrirModuloOriginal.call(this, "asistenteCoach");
     }
 
-    if (typeof abrirModuloOriginal === "function") {
-      return abrirModuloOriginal.apply(this, arguments);
-    }
-  };
+    const titulo = document.getElementById("moduleTitle");
+    if (titulo) titulo.textContent = "TIBURONES PRO";
+
+    mostrarInicio();
+    return;
+  }
+
+  if (typeof abrirModuloOriginal === "function") {
+    return abrirModuloOriginal.apply(this, arguments);
+  }
+};
 
   // Crear el botón Tiburones PRO antes de Configuración.
   const menu = document.getElementById("menuPrincipal");
