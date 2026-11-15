@@ -19935,263 +19935,348 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
 
 })();  
 /* =====================================================
-   TIBURÓN PRO - MEJORAS PROFESIONALES
-   INICIO + EVALUACIONES + COLORES + ACCIONES
+   TIBURÓN PRO - CORRECCIÓN VISUAL Y ACCIONES
+   ADAPTADO AL INDEX ACTUAL
    ===================================================== */
-
 (function(){
 
-  const styleId = "tp-pulido-profesional-v2";
-  if (document.getElementById(styleId)) return;
+  if(window.TP_MEJORAS_VISUALES_V3){
+    console.warn("Las mejoras visuales ya están instaladas.");
+    return;
+  }
+  window.TP_MEJORAS_VISUALES_V3 = true;
 
-  const style = document.createElement("style");
-  style.id = styleId;
+  /* =========================================
+     1. ESTILOS PROFESIONALES
+     ========================================= */
 
-  style.textContent = `
+  const estilo = document.createElement("style");
+  estilo.id = "tp-mejoras-visuales-v3";
 
-    /* INICIO PROFESIONAL */
+  estilo.textContent = `
+
+    /* PANTALLA PRINCIPAL */
 
     #moduleContent .tp-home-hero {
-      padding:20px 16px 17px !important;
-      border-radius:19px !important;
-      margin:8px 0 13px !important;
-      background:radial-gradient(circle at 50% 0%,#294c70 0%,#1d344f 48%,#14243a 100%) !important;
-      box-shadow:0 10px 25px #0004,inset 0 1px #ffffff12 !important;
+      background: linear-gradient(145deg,#12365b,#17263b 65%,#203650);
+      border: 1px solid #29a7ff;
+      border-radius: 18px;
+      padding: 22px 15px;
+      text-align: center;
+      box-shadow: 0 10px 25px #0005;
     }
 
-    #moduleContent .tp-home-mark {
-      width:58px !important;
-      height:58px !important;
-      border-radius:17px !important;
-      font-size:34px !important;
-      margin-bottom:8px !important;
+    #moduleContent .tp-home-hero h2 {
+      font-size: 27px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      margin: 8px 0;
+      color: #ffffff;
     }
 
-    #moduleContent .tp-home-title {
-      font-size:clamp(23px,5.6vw,29px) !important;
-      letter-spacing:.9px !important;
-      margin:4px 0 5px !important;
+    #moduleContent .tp-home-hero .tp-home-shark {
+      font-size: 48px;
+      line-height: 1.2;
     }
 
-    #moduleContent .tp-home-subtitle {
-      font-size:13px !important;
-      margin:0 0 13px !important;
-    }
-
-    #moduleContent .tp-home-stats {
-      gap:8px !important;
-      margin-top:13px !important;
-    }
-
-    #moduleContent .tp-home-stat {
-      min-width:0 !important;
-      padding:10px 7px !important;
-      border-radius:11px !important;
-      background:#10243bcc !important;
-    }
-
-    #moduleContent .tp-home-stat strong {
-      font-size:21px !important;
-      line-height:1.15 !important;
-      margin-bottom:3px !important;
-    }
-
-    #moduleContent .tp-home-stat span {
-      display:block !important;
-      font-size:9px !important;
-      line-height:1.25 !important;
-      letter-spacing:.45px !important;
+    #moduleContent .tp-home-hero .tp-home-count {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 9px 15px;
+      border-radius: 10px;
+      background: #0b1c30;
+      border: 1px solid #29a7ff88;
+      color: #ffffff;
+      font-weight: 800;
     }
 
     #moduleContent .tp-home-actions {
-      display:grid !important;
-      grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-      align-items:stretch !important;
-      gap:9px !important;
-      margin-top:2px !important;
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 11px;
+      margin-top: 14px;
     }
 
     #moduleContent .tp-home-actions .tp-btn {
-      min-width:0 !important;
-      min-height:62px !important;
-      height:62px !important;
-      padding:8px 6px !important;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-      flex-direction:column !important;
-      gap:3px !important;
-      text-align:center !important;
-      white-space:normal !important;
-      line-height:1.15 !important;
-      font-size:13px !important;
-      font-weight:800 !important;
-      border-radius:12px !important;
-      box-shadow:0 4px 11px #0003,inset 0 1px #ffffff16 !important;
+      min-height: 76px;
+      padding: 12px 8px;
+      border-radius: 13px;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.35;
+      box-shadow: 0 5px 13px #0003;
+      border: 1px solid #55718f;
     }
 
-    #moduleContent .tp-home-actions .tp-btn:last-child {
-      grid-column:1/-1 !important;
-      min-height:50px !important;
-      height:50px !important;
+    #moduleContent .tp-home-actions .tp-btn:nth-child(1),
+    #moduleContent .tp-home-actions .tp-btn:nth-child(2) {
+      background: linear-gradient(145deg,#12365b,#176eaa);
+      border-color: #29a7ff;
     }
 
-    #moduleContent .tp-home-foot {
-      padding-top:12px !important;
-      font-size:9px !important;
-      letter-spacing:.7px !important;
+    #moduleContent .tp-home-actions .tp-btn:nth-child(3),
+    #moduleContent .tp-home-actions .tp-btn:nth-child(4) {
+      background: linear-gradient(145deg,#62421b,#a96a16);
+      border-color: #ffb547;
     }
 
-    /* CABECERA DE EVALUACIÓN */
-
-    #moduleContent .tp-eval-intro {
-      padding:13px 14px !important;
-      margin:8px 0 10px !important;
-      border-radius:13px !important;
-      background:linear-gradient(145deg,#203852,#192b42) !important;
+    #moduleContent .tp-home-actions .tp-btn:nth-child(5),
+    #moduleContent .tp-home-actions .tp-btn:nth-child(6) {
+      background: linear-gradient(145deg,#17483f,#13856d);
+      border-color: #20d4a1;
     }
 
-    #moduleContent .tp-eval-intro > strong {
-      display:block !important;
-      font-size:15px !important;
-      line-height:1.25 !important;
-      margin:0 0 4px !important;
+    #moduleContent .tp-home-actions .tp-btn:nth-child(n+7) {
+      background: linear-gradient(145deg,#263c59,#344f70);
     }
 
-    #moduleContent .tp-eval-intro > p {
-      font-size:12px !important;
-      line-height:1.35 !important;
-      margin:0 !important;
-    }
+    /* LEYENDA DE CALIFICACIONES */
 
     #moduleContent .tp-scale-legend {
-      display:grid !important;
-      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-      gap:6px !important;
-      margin-top:10px !important;
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 6px;
+      margin: 10px 0 14px;
     }
 
     #moduleContent .tp-scale-item {
-      min-width:0 !important;
-      min-height:35px !important;
-      padding:6px 4px !important;
-      display:flex !important;
-      flex-direction:column !important;
-      gap:4px !important;
-      border-radius:9px !important;
-      font-size:9px !important;
-      line-height:1.15 !important;
-      text-align:center !important;
+      padding: 9px 4px;
+      text-align: center;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #ffffff;
     }
 
-    #moduleContent .tp-scale-item i {
-      width:8px !important;
-      height:8px !important;
-      flex:0 0 8px !important;
-      box-shadow:0 0 0 3px #ffffff10 !important;
+    #moduleContent .tp-scale-red {
+      background: #8f2632;
+      border: 1px solid #ff596b;
     }
 
-    /* CALIFICACIONES DEL 1 AL 10 */
+    #moduleContent .tp-scale-yellow {
+      background: #78551a;
+      border: 1px solid #ffc247;
+    }
+
+    #moduleContent .tp-scale-green {
+      background: #126344;
+      border: 1px solid #20d99b;
+    }
+
+    /* BOTONES DE CALIFICACIÓN */
 
     #moduleContent .tp-score {
-      grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-      gap:6px !important;
-      margin-top:9px !important;
-    }
-
-    #moduleContent .tp-score button.tp-n-red {
-      background:#542833 !important;
-      border:1px solid #b94e60 !important;
-      color:#ffe5e8 !important;
-    }
-
-    #moduleContent .tp-score button.tp-n-yellow {
-      background:#59451f !important;
-      border:1px solid #c18e36 !important;
-      color:#fff0c9 !important;
-    }
-
-    #moduleContent .tp-score button.tp-n-green {
-      background:#17483c !important;
-      border:1px solid #278b6c !important;
-      color:#dcfff3 !important;
-    }
-
-    #moduleContent .tp-score button.tp-n-red.sel {
-      background:#d84459 !important;
-      border:2px solid #ffabb5 !important;
-      color:#fff !important;
-      box-shadow:0 0 0 2px #d8445940 !important;
-    }
-
-    #moduleContent .tp-score button.tp-n-yellow.sel {
-      background:#d49a28 !important;
-      border:2px solid #ffe09a !important;
-      color:#172033 !important;
-      box-shadow:0 0 0 2px #d49a2840 !important;
-    }
-
-    #moduleContent .tp-score button.tp-n-green.sel {
-      background:#15966d !important;
-      border:2px solid #8cf0ca !important;
-      color:#fff !important;
-      box-shadow:0 0 0 2px #15966d40 !important;
+      display: grid !important;
+      grid-template-columns: repeat(5,minmax(0,1fr)) !important;
+      gap: 7px !important;
+      margin-top: 10px !important;
     }
 
     #moduleContent .tp-score button {
-      min-height:42px !important;
-      height:42px !important;
-      border-radius:9px !important;
-      font-size:15px !important;
-      font-weight:800 !important;
+      min-height: 43px !important;
+      border-radius: 9px !important;
+      color: #ffffff !important;
+      font-size: 15px !important;
+      font-weight: 900 !important;
+      transition: transform .12s,filter .12s;
     }
 
-    #moduleContent .tp-wrap > .tp-card:has(.tp-score) {
-      padding:13px !important;
-      margin:9px 0 !important;
-      border-radius:13px !important;
+    #moduleContent .tp-score button.tp-n-red {
+      background: #8f2632 !important;
+      border: 1px solid #ff596b !important;
     }
 
-    #moduleContent .tp-wrap > .tp-card:has(.tp-score) > strong {
-      display:block !important;
-      font-size:15px !important;
-      line-height:1.3 !important;
+    #moduleContent .tp-score button.tp-n-yellow {
+      background: #78551a !important;
+      border: 1px solid #ffc247 !important;
+    }
+
+    #moduleContent .tp-score button.tp-n-green {
+      background: #126344 !important;
+      border: 1px solid #20d99b !important;
+    }
+
+    #moduleContent .tp-score button.sel {
+      outline: 3px solid #ffffff !important;
+      outline-offset: 1px;
+      filter: brightness(1.35);
+      transform: scale(1.04);
+    }
+
+    #moduleContent .tp-eval-intro {
+      border-color: #29a7ff !important;
+      background: linear-gradient(145deg,#172f4b,#142238) !important;
     }
 
     @media(max-width:380px) {
       #moduleContent .tp-home-actions {
-        gap:7px !important;
+        gap: 7px;
       }
 
       #moduleContent .tp-home-actions .tp-btn {
-        min-height:58px !important;
-        height:58px !important;
-        font-size:12px !important;
-      }
-
-      #moduleContent .tp-scale-item {
-        font-size:8px !important;
+        min-height: 68px;
+        font-size: 12px;
       }
 
       #moduleContent .tp-score {
-        gap:4px !important;
+        gap: 5px !important;
       }
 
       #moduleContent .tp-score button {
-        min-height:40px !important;
-        height:40px !important;
+        min-height: 40px !important;
       }
     }
-
   `;
 
-  document.head.appendChild(style);
+  document.head.appendChild(estilo);
 
-  /* ACCIONES DE PARTIDO */
 
-  if (Array.isArray(window.tpAcciones)) {
+  /* =========================================
+     2. DECORAR PANTALLA PRINCIPAL
+     ========================================= */
 
-    const acciones = [
+  function tpAplicarInicio(){
+
+    const zona = document.getElementById("moduleContent");
+    if(!zona)return;
+
+    const tarjetas = zona.querySelectorAll(".tp-wrap > .tp-card");
+    const primera = tarjetas[0];
+
+    if(primera){
+      primera.classList.add("tp-home-hero");
+
+      const icono = primera.querySelector("div[style*='font-size']");
+      if(icono)icono.classList.add("tp-home-shark");
+
+      const titulo = primera.querySelector("h2");
+      if(titulo)titulo.textContent = "TIBURÓN PRO";
+
+      const conteo = primera.querySelector("strong");
+      if(conteo)conteo.classList.add("tp-home-count");
+    }
+
+    const botones = zona.querySelector(".tp-wrap > .tp-grid");
+
+    if(botones){
+      botones.classList.add("tp-home-actions");
+    }
+  }
+
+  const tpInicioAnteriorV3 = window.tpMostrarInicio;
+
+  if(typeof tpInicioAnteriorV3 === "function"){
+    window.tpMostrarInicio = function(){
+      tpInicioAnteriorV3.apply(this,arguments);
+      tpAplicarInicio();
+    };
+  }
+
+
+  /* =========================================
+     3. COLOREAR CALIFICACIONES
+     ========================================= */
+
+  function tpAplicarColoresEvaluacion(){
+
+    const zona = document.getElementById("moduleContent");
+    if(!zona)return;
+
+    zona.querySelectorAll(".tp-score").forEach(grupo=>{
+
+      grupo.querySelectorAll("button").forEach(boton=>{
+
+        const nota = Number(boton.textContent.trim());
+
+        boton.classList.remove(
+          "tp-n-red",
+          "tp-n-yellow",
+          "tp-n-green"
+        );
+
+        if(nota >= 1 && nota <= 4){
+          boton.classList.add("tp-n-red");
+        }else if(nota >= 5 && nota <= 7){
+          boton.classList.add("tp-n-yellow");
+        }else if(nota >= 8 && nota <= 10){
+          boton.classList.add("tp-n-green");
+        }
+      });
+    });
+
+    if(!zona.querySelector(".tp-scale-legend")){
+
+      const tarjetas = zona.querySelectorAll(".tp-wrap > .tp-card");
+      const introduccion = tarjetas.length ? tarjetas[1] : null;
+
+      if(introduccion){
+        introduccion.classList.add("tp-eval-intro");
+
+        const leyenda = document.createElement("div");
+        leyenda.className = "tp-scale-legend";
+
+        leyenda.innerHTML = `
+          <div class="tp-scale-item tp-scale-red">
+            1–4<br>NECESITA TRABAJAR
+          </div>
+          <div class="tp-scale-item tp-scale-yellow">
+            5–7<br>EN DESARROLLO
+          </div>
+          <div class="tp-scale-item tp-scale-green">
+            8–10<br>BUEN DESEMPEÑO
+          </div>
+        `;
+
+        introduccion.insertAdjacentElement("afterend",leyenda);
+      }
+    }
+  }
+
+
+  /* =========================================
+     4. APLICAR MEJORAS A EVALUACIÓN BÁSICA
+     ========================================= */
+
+  const tpEvaluarAnteriorV3 = window.tpEvaluarJugador;
+
+  if(typeof tpEvaluarAnteriorV3 === "function"){
+
+    window.tpEvaluarJugador = function(){
+
+      tpEvaluarAnteriorV3.apply(this,arguments);
+
+      tpAplicarColoresEvaluacion();
+    };
+  }
+
+
+  /* =========================================
+     5. APLICAR MEJORAS A EVALUACIÓN DE PARTIDO
+     ========================================= */
+
+  const tpPartidoAnteriorV3 = window.tpEvaluarPartido;
+
+  if(typeof tpPartidoAnteriorV3 === "function"){
+
+    window.tpEvaluarPartido = function(){
+
+      tpPartidoAnteriorV3.apply(this,arguments);
+
+      tpAplicarColoresEvaluacion();
+    };
+  }
+
+
+  /* =========================================
+     6. ACTUALIZAR DESCRIPCIÓN DE ACCIONES
+     ========================================= */
+
+  if(Array.isArray(window.tpAcciones)){
+
+    window.tpAcciones.splice(
+      0,
+      window.tpAcciones.length,
+
       "Recupera el balón al rival",
       "Ataca el aro",
       "Realiza entradas a canasta",
@@ -20204,20 +20289,13 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
       "Ataca con decisión",
       "Participa constantemente en el juego",
       "Toma buenas decisiones"
-    ];
-
-    window.tpAcciones.splice(
-      0,
-      window.tpAcciones.length,
-      ...acciones
     );
   }
 
-  console.log(
-    "TIBURÓN PRO: mejoras profesionales activadas."
-  );
 
-})();   
+  console.log("TIBURÓN PRO: mejoras visuales y acciones corregidas.");
+
+})();       
  </script> 
 </body>
 </html>
