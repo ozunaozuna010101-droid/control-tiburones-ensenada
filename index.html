@@ -20295,7 +20295,522 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
 
   console.log("TIBURÓN PRO: mejoras visuales y acciones corregidas.");
 
-})();       
+})();    
+
+/* =====================================================
+   TIBURON PRO - CORRECCION DE ACCESOS, OBSERVACIONES
+   E INTEGRACION AL PDF EXISTENTE
+   ===================================================== */
+(function(){
+  if (window.TP_CORRECCION_ACCESOS_PDF_V1) return;
+  window.TP_CORRECCION_ACCESOS_PDF_V1 = true;
+
+  const dbTP = window.tpDB;
+  const cont = () => document.getElementById('moduleContent');
+  const esc = v => typeof window.tpEsc === 'function'
+    ? window.tpEsc(String(v == null ? '' : v))
+    : String(v == null ? '' : v).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+
+  if (!dbTP) {
+    console.error('TIBURON PRO: no se encontro tpDB.');
+    return;
+  }
+
+  /* 1. PANTALLA PRINCIPAL Y NOMBRES */
+
+  const inicioAnterior = window.tpMostrarInicio;
+
+  if (typeof inicioAnterior === 'function') {
+    window.tpMostrarInicio = function(){
+      inicioAnterior();
+
+      const c = cont();
+      if (!c) return;
+
+      const botones = Array.from(c.querySelectorAll('.tp-grid .tp-btn'));
+
+      botones.forEach(b => {
+        const t = (b.textContent || '').trim().toUpperCase();
+
+        if (t.includes('JUGADORES')) {
+          b.textContent = '👥 JUGADORES REGISTRADOS';
+          b.style.background = 'linear-gradient(135deg,#123d68,#176c9e)';
+          b.style.borderColor = '#39b8ff';
+          b.style.color = '#fff';
+        } else if (t.includes('BÁSICO') || t.includes('BASICO')) {
+          b.textContent = '🔵 EVALUACIÓN BÁSICA';
+        } else if (t.includes('COMPETENCIA')) {
+          b.textContent = '🏆 EVALUACIÓN DE COMPETENCIA';
+        } else if (t.includes('EVALUACIONES')) {
+          b.textContent = '⭐ REGISTRO DE EVALUACIONES';
+        }
+      });
+    };
+  }
+
+  /* 2. ACCESO A EVALUACIONES Y SUS DOS CATEGORÍAS */
+
+  window.tpMostrarEvaluaciones = function(){
+    const c = cont();
+    if (!c) return;
+
+    c.innerHTML = `
+      <div class="tp-wrap">
+        <div class="tp-card">
+          <div class="tp-row">
+            <h2>REGISTRO DE EVALUACIONES</h2>
+            <button type="button" class="tp-btn" id="tp-fix-volver">← INICIO</button>
+          </div>
+          <div class="tp-muted">
+            Selecciona el tipo de evaluación que deseas realizar.
+          </div>
+        </div>
+
+        <div class="tp-grid">
+          <button type="button" class="tp-btn tp-blue" id="tp-fix-basico">
+            🔵 EVALUACIÓN BÁSICA
+          </button>
+
+          <button type="button" class="tp-btn tp-gold" id="tp-fix-competencia">
+            🏆 EVALUACIÓN DE COMPETENCIA
+          </button>
+        </div>
+      </div>`;
+
+    c.querySelector('#tp-fix-volver').addEventListener(
+      'click', () => window.tpMostrarInicio()
+    );
+
+    c.querySelector('#tp-fix-basico').addEventListener(
+      'click', () => window.tpMostrarCategoria('BASICO')
+    );
+
+    c.querySelector('#tp-fix-competencia').addEventListener(
+      'click', () => window.tpMostrarCategoria('COMPETENCIA')
+    );
+  };
+
+  window.tpMostrarCategoria = function(categoria){
+    const c = cont();
+    if (!c) return;
+
+    const cat = String(categoria || '').toUpperCase() === 'COMPETENCIA'
+      ? 'COMPETENCIA'
+      : 'BASICO';
+
+    const jugadores = (
+      typeof window.tpJugadores === 'function'
+        ? window.tpJugadores()
+        : []
+    )
+      .filter(j =>
+        String(dbTP.categorias && dbTP.categorias[j.id] || '').toUpperCase() === cat
+      )
+      .sort((a,b) =>
+        String(a.nombre || '').localeCompare(
+          String(b.nombre || ''), 'es'
+        )
+      );
+
+    c.innerHTML = `
+      <div class="tp-wrap">
+        <div class="tp-card">
+          <div class="tp-row">
+            <h2>${cat === 'BASICO'
+              ? 'EVALUACIÓN BÁSICA'
+              : 'EVALUACIÓN DE COMPETENCIA'}</h2>
+
+            <button type="button" class="tp-btn" id="tp-fix-volver-cat">
+              ← EVALUACIONES
+            </button>
+          </div>
+
+          <div class="tp-muted">
+            Selecciona al jugador. Puedes registrar su primera evaluación
+            aunque no tenga historial.
+          </div>
+        </div>
+
+        <div id="tp-fix-lista-jugadores"></div>
+      </div>`;
+
+    c.querySelector('#tp-fix-volver-cat').addEventListener(
+      'click', () => window.tpMostrarEvaluaciones()
+    );
+
+    const lista = c.querySelector('#tp-fix-lista-jugadores');
+
+    if (!jugadores.length) {
+      lista.innerHTML = `
+        <div class="tp-card">
+          No hay jugadores clasificados en
+          ${cat === 'BASICO' ? 'Básico' : 'Competencia'} todavía.
+          Entra a <b>Jugadores registrados</b> para asignarles su categoría.
+          Esta sección ya está disponible y no requiere evaluaciones previas.
+        </div>`;
+      return;
+    }
+
+    jugadores.forEach(j => {
+      const card = document.createElement('div');
+      card.className = 'tp-card';
+
+      const nombre = document.createElement('strong');
+      nombre.textContent = j.nombre || 'Jugador';
+
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'tp-btn ' +
+        (cat === 'BASICO' ? 'tp-blue' : 'tp-gold');
+      boton.textContent = '📝 EVALUAR';
+
+      boton.addEventListener('click', () =>
+        window.tpEvaluarJugador(String(j.id), cat)
+      );
+
+      card.append(nombre, boton);
+      lista.appendChild(card);
+    });
+  };
+
+  /* 3. OBSERVACIONES EN EVALUACIONES */
+
+  const evaluarAnterior = window.tpEvaluarJugador;
+
+  if (typeof evaluarAnterior === 'function') {
+    window.tpEvaluarJugador = function(id, categoria){
+      evaluarAnterior(id, categoria);
+
+      const c = cont();
+      if (!c || c.querySelector('#tp-observaciones-entrenamiento')) return;
+
+      const cards = c.querySelectorAll('.tp-card');
+      const ultima = cards[cards.length - 1];
+      if (!ultima) return;
+
+      const caja = document.createElement('div');
+      caja.className = 'tp-card';
+
+      caja.innerHTML = `
+        <label for="tp-observaciones-entrenamiento">
+          <b>OBSERVACIONES DEL COACH</b>
+        </label>
+
+        <textarea
+          id="tp-observaciones-entrenamiento"
+          rows="3"
+          maxlength="1500"
+          placeholder="Escribe aquí el avance, actitud o aspecto que debe mejorar el jugador..."
+          style="width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border-radius:10px;background:#0c1b2d;color:#fff;border:1px solid #398fc9;font:inherit"
+        ></textarea>`;
+
+      ultima.parentNode.insertBefore(caja, ultima);
+    };
+  }
+
+  window.tpGuardarEvaluacion = function(){
+    const id = window.tpJugadorActual;
+    const categoria = window.tpCategoriaActual;
+    const datos = window.tpSeleccionActual || {};
+
+    const habilidades = categoria === 'BASICO'
+      ? (window.tpSkills || [])
+      : (window.tpTecnica || []);
+
+    const faltantes = habilidades.filter(h => datos[h] === undefined);
+
+    if (faltantes.length) {
+      alert('Faltan ' + faltantes.length + ' calificaciones.');
+      return;
+    }
+
+    if (!confirm(
+      '¿Confirmas guardar la evaluación de ' +
+      (window.tpNombre ? window.tpNombre(id) : 'este jugador') + '?'
+    )) return;
+
+    const observaciones = (
+      document.getElementById('tp-observaciones-entrenamiento')?.value || ''
+    ).trim();
+
+    const registro = {
+      id: window.tpId(),
+      jugadorId: id,
+      categoria: categoria,
+      tipo: 'ENTRENAMIENTO',
+      fecha: window.tpFecha(),
+      calificaciones: {...datos},
+      observaciones: observaciones
+    };
+
+    dbTP.evaluaciones.push(registro);
+
+    if (!window.tpGuardar()) {
+      dbTP.evaluaciones.pop();
+      return;
+    }
+
+    alert('Evaluación guardada correctamente con las observaciones del coach.');
+    window.tpMostrarCategoria(categoria);
+  };
+
+  /* 4. OBSERVACIONES EN PARTIDOS */
+
+  const evaluarPartidoAnterior = window.tpEvaluarPartido;
+
+  if (typeof evaluarPartidoAnterior === 'function') {
+    window.tpEvaluarPartido = function(partidoId, jugadorId){
+      evaluarPartidoAnterior(partidoId, jugadorId);
+
+      const c = cont();
+      if (!c || c.querySelector('#tp-observaciones-partido')) return;
+
+      const cards = c.querySelectorAll('.tp-card');
+      const ultima = cards[cards.length - 1];
+      if (!ultima) return;
+
+      const caja = document.createElement('div');
+      caja.className = 'tp-card';
+
+      caja.innerHTML = `
+        <label for="tp-observaciones-partido">
+          <b>OBSERVACIONES DEL COACH</b>
+        </label>
+
+        <textarea
+          id="tp-observaciones-partido"
+          rows="3"
+          maxlength="1500"
+          placeholder="Anota cómo se desempeñó en el partido..."
+          style="width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border-radius:10px;background:#0c1b2d;color:#fff;border:1px solid #d69a35;font:inherit"
+        ></textarea>`;
+
+      ultima.parentNode.insertBefore(caja, ultima);
+    };
+  }
+
+  window.tpGuardarEvaluacionPartido = function(){
+    const partido = (dbTP.partidos || []).find(p =>
+      String(p.id) === String(window.tpPartidoActual)
+    );
+
+    if (!partido) {
+      alert('No se encontró el partido.');
+      return;
+    }
+
+    const jugadorId = window.tpJugadorPartidoActual;
+    const datos = window.tpSeleccionPartido || {};
+    const acciones = window.tpAcciones || [];
+
+    const faltantes = acciones.filter(a => datos[a] === undefined);
+
+    if (faltantes.length) {
+      alert('Faltan ' + faltantes.length + ' calificaciones.');
+      return;
+    }
+
+    if (!confirm(
+      '¿Confirmas guardar la evaluación del partido de ' +
+      (window.tpNombre ? window.tpNombre(jugadorId) : 'este jugador') + '?'
+    )) return;
+
+    const registro = {
+      id: window.tpId(),
+      jugadorId: jugadorId,
+      partidoId: partido.id,
+      tipo: 'PARTIDO',
+      fecha: partido.fecha,
+      hora: partido.hora,
+      rival: partido.rival || '',
+      calificaciones: {...datos},
+      observaciones: (
+        document.getElementById('tp-observaciones-partido')?.value || ''
+      ).trim()
+    };
+
+    dbTP.evaluaciones.push(registro);
+
+    if (!window.tpGuardar()) {
+      dbTP.evaluaciones.pop();
+      return;
+    }
+
+    alert('Evaluación del partido guardada con las observaciones del coach.');
+    window.tpMostrarPartidos();
+  };
+
+  /* 5. INTEGRAR TIBURÓN PRO AL PDF EXISTENTE */
+
+  if (
+    typeof window.ctPDFCrear === 'function' &&
+    !window.ctPDFCrear.__tpIntegrado
+  ) {
+    const crearPDFAnterior = window.ctPDFCrear;
+
+    const crearPDFIntegrado = function(JsPDF, jugador){
+      const doc = crearPDFAnterior(JsPDF, jugador);
+
+      const registros = (dbTP.evaluaciones || []).filter(e =>
+        String(e.jugadorId) === String(jugador.id)
+      );
+
+      if (!registros.length) return doc;
+
+      const partidos = dbTP.partidos || [];
+      const azul = [20, 85, 135];
+      const gris = [45, 55, 68];
+
+      const wrap = (txt, size=9) => {
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(size);
+        return doc.splitTextToSize(String(txt || ''), 178);
+      };
+
+      registros
+        .slice()
+        .sort((a,b) =>
+          String(a.fecha || '').localeCompare(String(b.fecha || ''))
+        )
+        .forEach(e => {
+          doc.addPage();
+
+          doc.setFillColor(16, 48, 78);
+          doc.rect(0,0,210,30,'F');
+
+          doc.setFont('helvetica','bold');
+          doc.setFontSize(14);
+          doc.setTextColor(255,255,255);
+          doc.text('TIBURÓN PRO · SEGUIMIENTO DEPORTIVO',105,13,{align:'center'});
+
+          doc.setFontSize(10);
+          doc.text(String(jugador.nombre || 'JUGADOR'),105,22,{align:'center'});
+
+          let y = 42;
+
+          const tipo = e.tipo === 'PARTIDO'
+            ? 'EVALUACIÓN DE PARTIDO'
+            : (e.categoria === 'BASICO'
+              ? 'EVALUACIÓN BÁSICA'
+              : 'EVALUACIÓN DE COMPETENCIA');
+
+          doc.setTextColor(...azul);
+          doc.setFontSize(12);
+          doc.setFont('helvetica','bold');
+          doc.text(tipo,16,y);
+          y += 8;
+
+          doc.setTextColor(...gris);
+          doc.setFontSize(9);
+
+          const partido = partidos.find(p =>
+            String(p.id) === String(e.partidoId)
+          );
+
+          const datos = [
+            'Fecha: ' + (e.fecha || 'Sin fecha'),
+            'Categoría: ' + (
+              e.categoria ||
+              (e.tipo === 'PARTIDO' ? 'Competencia' : 'Sin especificar')
+            ),
+            e.tipo === 'PARTIDO'
+              ? 'Partido: ' + (e.rival || partido?.rival || 'Sin rival') +
+                (e.hora ? ' · ' + e.hora : '')
+              : 'Contexto: Entrenamiento'
+          ];
+
+          datos.forEach(t => {
+            doc.text(t,16,y);
+            y += 5;
+          });
+
+          y += 3;
+
+          doc.setFillColor(232,241,249);
+          doc.roundedRect(14,y-4,182,8,1,1,'F');
+
+          doc.setTextColor(...azul);
+          doc.setFont('helvetica','bold');
+          doc.text('CALIFICACIONES (ESCALA 1 A 10)',18,y+1);
+          y += 10;
+
+          Object.entries(e.calificaciones || {}).forEach(([nombre, nota]) => {
+            const lineas = wrap(nombre + ': ' + nota + '/10', 9);
+
+            if (y + lineas.length*4.5 > 265) {
+              doc.addPage();
+              y = 22;
+            }
+
+            doc.setTextColor(...gris);
+            doc.setFont('helvetica','normal');
+            doc.text(lineas,18,y);
+            y += lineas.length*4.5 + 1;
+          });
+
+          y += 4;
+
+          const obs = e.observaciones || 'Sin observaciones registradas.';
+          const lineasObs = wrap(obs,9);
+
+          if (y + lineasObs.length*4.5 > 265) {
+            doc.addPage();
+            y = 22;
+          }
+
+          doc.setFillColor(245,248,251);
+          doc.setDrawColor(80,150,195);
+
+          const alto = Math.max(18,lineasObs.length*4.5+8);
+
+          doc.roundedRect(14,y-5,182,alto,2,2,'FD');
+
+          doc.setTextColor(...gris);
+          doc.setFont('helvetica','bold');
+          doc.text('OBSERVACIONES DEL COACH',18,y+1);
+
+          doc.setFont('helvetica','normal');
+          doc.text(lineasObs,18,y+7);
+
+          y += alto + 8;
+
+          const notas = Object.values(e.calificaciones || {})
+            .map(Number)
+            .filter(n => Number.isFinite(n));
+
+          const promedio = notas.length
+            ? (notas.reduce((a,b)=>a+b,0)/notas.length).toFixed(1)
+            : '—';
+
+          doc.setTextColor(...azul);
+          doc.setFont('helvetica','bold');
+          doc.setFontSize(11);
+
+          if (y < 270) {
+            doc.text(
+              'PROMEDIO DE ESTA EVALUACIÓN: ' + promedio + '/10',
+              16,y
+            );
+          }
+        });
+
+      return doc;
+    };
+
+    crearPDFIntegrado.__tpIntegrado = true;
+    window.ctPDFCrear = crearPDFIntegrado;
+
+    try {
+      ctPDFCrear = crearPDFIntegrado;
+    } catch(e) {}
+  }
+
+  console.log(
+    'TIBURON PRO: accesos, observaciones e integración PDF preparados.'
+  );
+})();  
  </script> 
 </body>
 </html>
