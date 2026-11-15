@@ -19568,6 +19568,371 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
     "TIBURÓN PRO: organización por horarios activada."
   );
 
+})(); 
+/* =====================================================
+   TIBURÓN PRO - ACTUALIZACIÓN UNIFICADA
+   1. TARJETAS BÁSICO Y COMPETENCIA COMPACTAS
+   2. LISTA DE JUGADORES PROFESIONAL
+   3. REGISTRO INDIVIDUAL DE LLEGADAS
+   ===================================================== */
+
+(function(){
+
+  const tp = window.tpDB;
+
+  if (!tp) {
+    alert("No se encontró la base de datos de TIBURÓN PRO.");
+    return;
+  }
+
+  /* =========================================
+     1. TARJETAS BÁSICO Y COMPETENCIA
+     ========================================= */
+
+  const estiloId = "tp-mejoras-unificadas";
+
+  let estilo = document.getElementById(estiloId);
+
+  if (estilo) estilo.remove();
+
+  estilo = document.createElement("style");
+  estilo.id = estiloId;
+
+  estilo.textContent = `
+
+    .tp-wrap .tp-grid > .tp-card {
+      min-height: 105px !important;
+      height: 105px !important;
+      padding: 11px !important;
+      margin: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      gap: 5px !important;
+      border-radius: 11px !important;
+    }
+
+    .tp-wrap .tp-grid > .tp-card h2 {
+      font-size: 25px !important;
+      margin: 3px 0 !important;
+    }
+
+    .tp-wrap .tp-grid {
+      grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+      gap: 9px !important;
+    }
+
+    /* LISTA DE PARTICIPANTES */
+
+    #moduleContent .tp-card:has(.tp-participante) {
+      padding: 10px 13px !important;
+      margin: 7px 0 !important;
+      min-height: 58px !important;
+      border-radius: 11px !important;
+    }
+
+    #moduleContent .tp-participante {
+      appearance: auto !important;
+      -webkit-appearance: checkbox !important;
+      width: 22px !important;
+      height: 22px !important;
+      min-width: 22px !important;
+      min-height: 22px !important;
+      max-width: 22px !important;
+      max-height: 22px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      flex: 0 0 22px !important;
+      accent-color: #29a7ff !important;
+    }
+
+    #moduleContent .tp-card:has(.tp-participante) label {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 12px !important;
+      width: 100% !important;
+      min-height: 38px !important;
+    }
+
+    #moduleContent .tp-card:has(.tp-participante) label strong {
+      flex: 1 !important;
+      font-size: 15px !important;
+      line-height: 1.35 !important;
+      text-align: left !important;
+      overflow-wrap: anywhere !important;
+    }
+
+    /* REGISTRO INDIVIDUAL */
+
+    .tp-llegada-card {
+      padding: 11px 13px !important;
+      margin: 7px 0 !important;
+      border-radius: 11px !important;
+    }
+
+    .tp-llegada-card .tp-btn {
+      min-height: 40px !important;
+      margin-top: 9px !important;
+      width: 100% !important;
+    }
+
+    @media(max-width:360px) {
+      .tp-wrap .tp-grid {
+        gap: 6px !important;
+      }
+    }
+
+  `;
+
+  document.head.appendChild(estilo);
+
+
+  /* =========================================
+     2. FUNCIONES AUXILIARES
+     ========================================= */
+
+  function tpContenedor(){
+    return document.getElementById("moduleContent");
+  }
+
+  function tpTexto(valor){
+    return window.tpEsc(valor);
+  }
+
+  function tpIdSeguro(valor){
+    return encodeURIComponent(String(valor));
+  }
+
+  function tpIdReal(valor){
+    return decodeURIComponent(valor);
+  }
+
+
+  /* =========================================
+     3. REGISTRO INDIVIDUAL DE LLEGADAS
+     ========================================= */
+
+  function tpMostrarLlegadas(partidoId){
+
+    const partido = tp.partidos.find(p =>
+      String(p.id) === String(partidoId)
+    );
+
+    const contenedor = tpContenedor();
+
+    if (!partido || !contenedor) return;
+
+    if (!Array.isArray(partido.jugadores)) {
+      partido.jugadores = [];
+    }
+
+    const jugadores = window.tpJugadores()
+      .filter(j => tp.categorias[j.id] === "COMPETENCIA")
+      .sort((a,b) =>
+        String(a.nombre || "").localeCompare(
+          String(b.nombre || ""),
+          "es"
+        )
+      );
+
+    const participantes = partido.jugadores;
+
+    let html = `
+      <div class="tp-wrap">
+
+        <div class="tp-card">
+
+          <button class="tp-btn"
+            onclick="tpMostrarPartidos()">
+            ← PARTIDOS
+          </button>
+
+          <h2>🏀 REGISTRO DE LLEGADAS</h2>
+
+          <strong>${tpTexto(partido.rival || "Partido")}</strong>
+
+          <p class="tp-muted">
+            ${tpTexto(partido.fecha)} · ${tpTexto(partido.hora)}
+          </p>
+
+          <div class="tp-row">
+            <strong>Jugadores registrados</strong>
+            <strong>${participantes.length} / ${jugadores.length}</strong>
+          </div>
+
+        </div>
+    `;
+
+    if (!jugadores.length) {
+      html += `
+        <div class="tp-card">
+          No hay jugadores clasificados en Competencia.
+        </div>
+      `;
+    }
+
+    jugadores.forEach(j => {
+
+      const registrado = participantes.some(id =>
+        String(id) === String(j.id)
+      );
+
+      const id = tpIdSeguro(j.id);
+
+      html += `
+        <div class="tp-card tp-llegada-card">
+
+          <div class="tp-row">
+
+            <strong>${tpTexto(j.nombre || "Jugador")}</strong>
+
+            <span class="tp-muted">
+              ${registrado ? "✓ REGISTRADO" : "PENDIENTE"}
+            </span>
+
+          </div>
+
+          ${
+            registrado
+            ? `
+              <button class="tp-btn tp-blue" disabled>
+                ✓ LLEGADA GUARDADA
+              </button>
+            `
+            : `
+              <button class="tp-btn tp-gold"
+                onclick="tpRegistrarLlegadaIndividual('${id}')">
+                REGISTRAR LLEGADA
+              </button>
+            `
+          }
+
+          ${
+            registrado
+            ? `
+              <button class="tp-btn"
+                onclick="tpEvaluarPartido('${tpTexto(partido.id)}','${tpTexto(j.id)}')">
+                EVALUAR PARTIDO
+              </button>
+            `
+            : ""
+          }
+
+        </div>
+      `;
+    });
+
+    html += `
+        <div class="tp-card">
+
+          <p class="tp-muted">
+            Puedes registrar a cada jugador conforme vaya llegando.
+            No necesitas esperar a que estén todos.
+          </p>
+
+          <button class="tp-btn tp-blue"
+            onclick="tpMostrarPartidos()">
+            TERMINAR POR AHORA
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+    contenedor.innerHTML = html;
+
+  }
+
+
+  /* =========================================
+     4. GUARDAR LLEGADA DE UN SOLO JUGADOR
+     ========================================= */
+
+  window.tpRegistrarLlegadaIndividual = function(idCodificado){
+
+    const jugadorId = tpIdReal(idCodificado);
+
+    const partido = tp.partidos.find(p =>
+      String(p.id) === String(window.tpPartidoLlegadaActual)
+    );
+
+    if (!partido) {
+      alert("No se encontró el partido.");
+      return;
+    }
+
+    if (!Array.isArray(partido.jugadores)) {
+      partido.jugadores = [];
+    }
+
+    if (partido.jugadores.some(id =>
+      String(id) === String(jugadorId)
+    )) {
+      alert("Este jugador ya tiene registrada su llegada.");
+      return;
+    }
+
+    const jugador = window.tpJugadores().find(j =>
+      String(j.id) === String(jugadorId)
+    );
+
+    if (!jugador) {
+      alert("No se encontró al jugador.");
+      return;
+    }
+
+    if (!confirm(
+      "¿Confirmas registrar la llegada de " +
+      jugador.nombre + "?"
+    )) return;
+
+    partido.jugadores.push(jugadorId);
+
+    if (!window.tpGuardar()) {
+
+      partido.jugadores = partido.jugadores.filter(id =>
+        String(id) !== String(jugadorId)
+      );
+
+      return;
+    }
+
+    alert("Llegada guardada correctamente.");
+
+    tpMostrarLlegadas(partido.id);
+
+  };
+
+
+  /* =========================================
+     5. ABRIR REGISTRO DESDE PARTIDOS
+     ========================================= */
+
+  window.tpSeleccionarJugadorPartido = function(partidoId){
+
+    const partido = tp.partidos.find(p =>
+      String(p.id) === String(partidoId)
+    );
+
+    if (!partido) {
+      alert("No se encontró el partido.");
+      return;
+    }
+
+    window.tpPartidoLlegadaActual = partido.id;
+
+    tpMostrarLlegadas(partido.id);
+
+  };
+
+
+  console.log(
+    "TIBURÓN PRO: tres mejoras unificadas activadas."
+  );
+
 })();   
  </script> 
 </body>
