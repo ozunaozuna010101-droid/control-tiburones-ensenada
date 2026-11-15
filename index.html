@@ -19244,6 +19244,330 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
 
   console.log("TIBURÓN PRO: BLOQUE 3 preparado.");
 
+})(); 
+/* =====================================================
+   TIBURÓN PRO - ORGANIZACIÓN POR HORARIOS
+   ACTUALIZACIÓN DE LA PANTALLA DE JUGADORES
+   ===================================================== */
+
+(function(){
+
+  // Obtener horarios originales de CONTROL TIBURONES
+  function tpHorariosOriginales(){
+    if(
+      typeof db !== "undefined" &&
+      db.ajustes &&
+      Array.isArray(db.ajustes.horarios)
+    ){
+      return db.ajustes.horarios.filter(h=>h.activo!==false);
+    }
+    return [];
+  }
+
+  function tpListaJugadores(){
+    return window.tpJugadores();
+  }
+
+  function tpContenedorHorario(){
+    return document.getElementById("moduleContent");
+  }
+
+  function tpCodificar(valor){
+    return encodeURIComponent(String(valor));
+  }
+
+  function tpDecodificar(valor){
+    return decodeURIComponent(valor);
+  }
+
+  function tpBotonHorario(texto,accion,color=""){
+    return `
+      <button class="tp-btn ${color}" onclick="${accion}">
+        ${texto}
+      </button>`;
+  }
+
+  // PANTALLA PRINCIPAL: TRES HORARIOS
+  window.tpMostrarJugadores=function(){
+
+    const c=tpContenedorHorario();
+    if(!c)return;
+
+    const jugadores=tpListaJugadores();
+    const horarios=tpHorariosOriginales();
+
+    const pendientes=jugadores.filter(j=>
+      !window.tpDB.categorias[j.id]
+    ).length;
+
+    let html=`
+      <div class="tp-wrap">
+
+        <div class="tp-card">
+          <div class="tp-row">
+            <h2>👥 JUGADORES</h2>
+            <button class="tp-btn" onclick="tpMostrarInicio()">
+              ← INICIO
+            </button>
+          </div>
+
+          <p class="tp-muted">
+            Jugadores compartidos con CONTROL TIBURONES.
+          </p>
+
+          <strong>${jugadores.length} jugadores registrados</strong>
+
+          <p class="tp-muted">
+            ${pendientes} pendientes de clasificación.
+          </p>
+        </div>
+    `;
+
+    horarios.forEach(h=>{
+
+      const grupo=jugadores.filter(j=>
+        String(j.horario)===String(h.id)
+      );
+
+      const basico=grupo.filter(j=>
+        window.tpDB.categorias[j.id]==="BASICO"
+      ).length;
+
+      const competencia=grupo.filter(j=>
+        window.tpDB.categorias[j.id]==="COMPETENCIA"
+      ).length;
+
+      const sinClasificar=grupo.filter(j=>
+        !window.tpDB.categorias[j.id]
+      ).length;
+
+      html+=`
+        <div class="tp-card">
+
+          <h3>🏀 ${window.tpEsc(h.categoria)}</h3>
+
+          <strong>${window.tpEsc(h.nombre)}</strong>
+
+          <div class="tp-muted">
+            ${window.tpEsc(h.edades||"")}
+          </div>
+
+          <div class="tp-grid" style="margin-top:12px">
+
+            <div class="tp-card">
+              🔵 Básico
+              <h2>${basico}</h2>
+            </div>
+
+            <div class="tp-card">
+              🏆 Competencia
+              <h2>${competencia}</h2>
+            </div>
+
+          </div>
+
+          <p class="tp-muted">
+            Pendientes: ${sinClasificar}
+          </p>
+
+          ${tpBotonHorario(
+            "VER JUGADORES",
+            `tpMostrarHorario('${tpCodificar(h.id)}')`,
+            "tp-blue"
+          )}
+
+        </div>
+      `;
+    });
+
+    const sinHorario=jugadores.filter(j=>
+      !horarios.some(h=>String(h.id)===String(j.horario))
+    );
+
+    if(sinHorario.length){
+      html+=`
+        <div class="tp-card">
+          <h3>⚠️ SIN HORARIO ASIGNADO</h3>
+          <p>${sinHorario.length} jugadores</p>
+          <p class="tp-muted">
+            Revisa su horario desde CONTROL TIBURONES.
+          </p>
+        </div>`;
+    }
+
+    html+="</div>";
+
+    c.innerHTML=html;
+  };
+
+  // DETALLE DE CADA HORARIO
+  window.tpMostrarHorario=function(idCodificado){
+
+    const horarioId=tpDecodificar(idCodificado);
+    const c=tpContenedorHorario();
+    if(!c)return;
+
+    const horario=tpHorariosOriginales().find(h=>
+      String(h.id)===String(horarioId)
+    );
+
+    if(!horario){
+      alert("No se encontró ese horario.");
+      return;
+    }
+
+    const jugadores=tpListaJugadores()
+      .filter(j=>String(j.horario)===String(horarioId))
+      .sort((a,b)=>
+        String(a.nombre).localeCompare(String(b.nombre),"es")
+      );
+
+    const basico=jugadores.filter(j=>
+      window.tpDB.categorias[j.id]==="BASICO"
+    );
+
+    const competencia=jugadores.filter(j=>
+      window.tpDB.categorias[j.id]==="COMPETENCIA"
+    );
+
+    const pendientes=jugadores.filter(j=>
+      !window.tpDB.categorias[j.id]
+    );
+
+    let html=`
+      <div class="tp-wrap">
+
+        <div class="tp-card">
+          <button class="tp-btn" onclick="tpMostrarJugadores()">
+            ← HORARIOS
+          </button>
+
+          <h2>🏀 ${window.tpEsc(horario.categoria)}</h2>
+
+          <strong>${window.tpEsc(horario.nombre)}</strong>
+
+          <p class="tp-muted">
+            ${jugadores.length} jugadores registrados
+          </p>
+        </div>
+    `;
+
+    function crearGrupo(titulo,lista,color){
+
+      let resultado=`
+        <div class="tp-card">
+          <h3>${titulo} (${lista.length})</h3>
+      `;
+
+      if(!lista.length){
+        resultado+=`
+          <p class="tp-muted">
+            No hay jugadores en este apartado.
+          </p>`;
+      }
+
+      lista.forEach(j=>{
+
+        const id=tpCodificar(j.id);
+
+        resultado+=`
+          <div class="tp-card">
+
+            <strong>${window.tpEsc(j.nombre)}</strong>
+
+            <div class="tp-muted">
+              ${window.tpEsc(window.tpDB.categorias[j.id]||"Sin clasificar")}
+            </div>
+
+            <div class="tp-grid" style="margin-top:10px">
+
+              ${tpBotonHorario(
+                "🔵 BÁSICO",
+                `tpAsignarCategoriaHorario('${id}','BASICO','${tpCodificar(horarioId)}')`,
+                "tp-blue"
+              )}
+
+              ${tpBotonHorario(
+                "🏆 COMPETENCIA",
+                `tpAsignarCategoriaHorario('${id}','COMPETENCIA','${tpCodificar(horarioId)}')`,
+                "tp-gold"
+              )}
+
+            </div>
+          </div>
+        `;
+      });
+
+      resultado+="</div>";
+
+      return resultado;
+    }
+
+    html+=crearGrupo("🔵 BÁSICO",basico);
+    html+=crearGrupo("🏆 COMPETENCIA",competencia);
+    html+=crearGrupo("⏳ SIN CLASIFICAR",pendientes);
+
+    html+="</div>";
+
+    c.innerHTML=html;
+  };
+
+  // ASIGNAR O CAMBIAR CLASIFICACIÓN
+  window.tpAsignarCategoriaHorario=function(
+    idCodificado,
+    categoria,
+    horarioCodificado
+  ){
+
+    const id=tpDecodificar(idCodificado);
+    const horarioId=tpDecodificar(horarioCodificado);
+
+    const jugador=tpListaJugadores().find(j=>
+      String(j.id)===String(id)
+    );
+
+    if(!jugador){
+      alert("No se encontró al jugador.");
+      return;
+    }
+
+    const anterior=window.tpDB.categorias[id];
+
+    if(anterior===categoria){
+      alert("El jugador ya pertenece a esta categoría.");
+      return;
+    }
+
+    const accion=anterior
+      ? "¿Confirmas cambiar a "+jugador.nombre+
+        " de "+anterior+" a "+categoria+"?"
+      : "¿Confirmas asignar a "+jugador.nombre+
+        " a "+categoria+"?";
+
+    if(!confirm(accion))return;
+
+    window.tpDB.categorias[id]=categoria;
+
+    if(!window.tpGuardar()){
+
+      if(anterior===undefined){
+        delete window.tpDB.categorias[id];
+      }else{
+        window.tpDB.categorias[id]=anterior;
+      }
+
+      return;
+    }
+
+    alert("Clasificación guardada correctamente.");
+
+    window.tpMostrarHorario(tpCodificar(horarioId));
+  };
+
+  console.log(
+    "TIBURÓN PRO: organización por horarios activada."
+  );
+
 })();   
  </script> 
 </body>
