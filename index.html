@@ -18870,6 +18870,536 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
 })();
 </script>
 <!-- FIN ASISTENTE DEL COACH -->
-  
+<!-- MEJORA ASISTENTE COACH · PARTE 1 -->
+<script>
+(function(){
+"use strict";
+
+if(window.__ctACMejora) return;
+if(typeof db==="undefined" || typeof guardarDB!=="function") return;
+window.__ctACMejora=true;
+
+const AC=db.asistenteCoach=db.asistenteCoach||{};
+["planes","evaluaciones","desarrollo","partidos","equipo","objetivos","jugadas"].forEach(k=>{
+ if(!Array.isArray(AC[k])) AC[k]=[];
+});
+
+const grupos=[
+ {id:"inicial",nombre:"INICIAL",edad:"4 a 7 años",nivel:"Básico"},
+ {id:"infantil",nombre:"INFANTIL",edad:"8 a 10 años",nivel:"Básico"},
+ {id:"infantil_comp",nombre:"INFANTIL COMPETENCIA",edad:"8 a 10 años",nivel:"Competencia"},
+ {id:"juvenil",nombre:"JUVENIL BÁSICO",edad:"11 a 17 años",nivel:"Básico"},
+ {id:"juvenil_comp",nombre:"JUVENIL COMPETENCIA",edad:"11 a 17 años",nivel:"Competencia"}
+];
+
+const catalogo=[
+ ["Manejo de balón","Bote libre con ambas manos","inicial","Básico"],
+ ["Coordinación","Caminar botando el balón","inicial","Básico"],
+ ["Coordinación","Circuito de equilibrio y balón","inicial","Básico"],
+ ["Manejo de balón","Bote bajo y alto","infantil","Básico"],
+ ["Pases","Pase de pecho en parejas","infantil","Básico"],
+ ["Tiro","Tiro cercano con técnica","infantil","Básico"],
+ ["Defensa","Postura defensiva básica","infantil","Básico"],
+ ["Manejo de balón","Zigzag con cambios de mano","infantil_comp","Competencia"],
+ ["Tiro","Recepción y tiro en movimiento","infantil_comp","Competencia"],
+ ["Defensa","Uno contra uno controlado","infantil_comp","Competencia"],
+ ["Pases","Pase y corte con movimiento","infantil_comp","Competencia"],
+ ["Manejo de balón","Cambios de dirección y velocidad","juvenil","Básico"],
+ ["Tiro","Técnica de tiro y equilibrio","juvenil","Básico"],
+ ["Defensa","Desplazamiento lateral y reacción","juvenil","Básico"],
+ ["Pases","Pases bajo presión","juvenil_comp","Competencia"],
+ ["Tiro","Tiro después de bloqueo","juvenil_comp","Competencia"],
+ ["Defensa","Defensa individual con presión","juvenil_comp","Competencia"],
+ ["Ataque","Lectura de bloqueo directo","juvenil_comp","Competencia"],
+ ["Condición física","Aceleraciones y cambios de ritmo","juvenil_comp","Competencia"]
+];
+
+let grupo="inicial";
+let habilidad="Todas";
+let seleccionados=[];
+let jugador="";
+let nivel=0;
+let modo="plan";
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+const fecha=()=>new Date().toISOString().slice(0,10);
+const guardar=()=>{
+ try{return guardarDB()!==false;}
+ catch(e){console.error(e);alert("No se pudo guardar.");return false;}
+};
+const listaJugadores=()=>(db.jugadores||[])
+ .filter(j=>j.estado==="activo")
+ .sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
+
+function base(titulo,contenido){
+ const z=$("moduleContent");
+ if(!z)return;
+ z.innerHTML=`
+ <div class="modulo ac-wrap">
+ <button class="btn ac-btn ac-secondary" onclick="ctACMejoraInicio()">← Menú del asistente</button>
+ <h2>${titulo}</h2>${contenido}</div>`;
+}
+
+function botonesGrupos(){
+ return `<div class="ac-grid">${grupos.map(g=>`
+ <button class="ac-menu-card" onclick="ctACGrupo('${g.id}')">
+ <span class="ac-menu-icon">🏀</span>
+ <strong>${g.nombre}</strong>
+ <span class="ac-muted">${g.edad} · ${g.nivel}</span>
+ </button>`).join("")}</div>`;
+}
+
+function elegirGrupo(g){
+ grupo=g;
+ habilidad="Todas";
+ seleccionados=[];
+}
+
+window.ctACGrupo=function(g){
+ if(!grupos.some(x=>x.id===g))return;
+ elegirGrupo(g);
+ if(modo==="biblioteca") mostrarBiblioteca();
+ else if(modo==="plan") mostrarPlan();
+ else if(modo==="evaluacion") mostrarEvaluacion();
+ else if(modo==="partidos") mostrarPartidos();
+ else if(modo==="desarrollo") mostrarDesarrollo();
+ else if(modo==="objetivos") mostrarObjetivos();
+};
+
+function selectorGrupo(){
+ return `<div class="ac-card"><strong>Selecciona tu grupo</strong>
+ ${botonesGrupos()}</div>`;
+}
+
+function grupoActual(){
+ return grupos.find(g=>g.id===grupo)||grupos[0];
+}
+
+function ejerciciosGrupo(){
+ return catalogo.filter(e=>e[2]===grupo &&
+ (habilidad==="Todas"||e[0]===habilidad));
+}
+
+function botonesEjercicios(){
+ const lista=ejerciciosGrupo();
+ if(!lista.length)return `<p class="ac-muted">No hay ejercicios para este filtro.</p>`;
+ return lista.map((e,i)=>`
+ <button class="ac-choice ${seleccionados.includes(i)?"ac-verde":"ac-secondary"}"
+ onclick="ctACToggleEjercicio(${i})">
+ ${seleccionados.includes(i)?"✓ ":"＋ "}${esc(e[1])}
+ <small style="display:block">${esc(e[0])}</small>
+ </button>`).join("");
+}
+
+window.ctACToggleEjercicio=function(i){
+ if(seleccionados.includes(i)) seleccionados=seleccionados.filter(x=>x!==i);
+ else seleccionados.push(i);
+ if(modo==="plan")mostrarPlan();
+};
+
+function encabezadoGrupo(){
+ const g=grupoActual();
+ return `<div class="ac-card"><strong>${g.nombre}</strong>
+ <div class="ac-muted">${g.edad} · ${g.nivel}</div></div>`;
+}
+
+function mostrarPlan(){
+ modo="plan";
+ base("📋 Plan de entrenamiento",`
+ ${selectorGrupo()}${encabezadoGrupo()}
+ <div class="ac-card">
+ <strong>Elige los ejercicios</strong>
+ <label class="ac-label">Habilidad</label>
+ <div class="ac-row">
+ ${["Todas","Manejo de balón","Coordinación","Pases","Tiro","Defensa","Ataque","Condición física"].map(h=>`
+ <button class="ac-btn ${habilidad===h?"ac-primary":"ac-secondary"}"
+ onclick="ctACHabilidad('${h}')">${h}</button>`).join("")}
+ </div>
+ <div class="ac-levels">${botonesEjercicios()}</div>
+ <button class="ac-btn ac-primary" onclick="ctACGuardarPlanBotones()">
+ GUARDAR PLAN (${seleccionados.length})
+ </button>
+ </div>
+ <h3>Planes guardados</h3>
+ ${AC.planes.slice().reverse().map(p=>`
+ <div class="ac-item"><strong>${esc(p.grupoNombre||p.grupo)}</strong>
+ <div>${esc(p.fecha)}</div><p>${esc(p.objetivo||"Plan de ejercicios")}</p>
+ <p>${(p.ejercicios||[]).map(esc).join(" · ")}</p></div>`).join("")}
+ `);
+}
+
+window.ctACHabilidad=function(h){
+ habilidad=h;
+ if(modo==="plan")mostrarPlan();
+ else mostrarBiblioteca();
+};
+
+function mostrarBiblioteca(){
+ modo="biblioteca";
+ base("🏀 Biblioteca de ejercicios",`
+ ${selectorGrupo()}${encabezadoGrupo()}
+ <div class="ac-card">
+ <label class="ac-label">Filtrar habilidad</label>
+ <div class="ac-row">
+ ${["Todas","Manejo de balón","Coordinación","Pases","Tiro","Defensa","Ataque","Condición física"].map(h=>`
+ <button class="ac-btn ${habilidad===h?"ac-primary":"ac-secondary"}"
+ onclick="ctACHabilidad('${h}')">${h}</button>`).join("")}
+ </div></div>
+ <div class="ac-card">${ejerciciosGrupo().map(e=>`
+ <div class="ac-item"><strong>${esc(e[1])}</strong>
+ <div class="ac-small">${esc(e[0])} · ${esc(e[3])}</div></div>`).join("")}
+ </div>`);
+}
+
+window.ctACGuardarPlanBotones=function(){
+ const ejerciciosElegidos=seleccionados.map(i=>ejerciciosGrupo()[i]).filter(Boolean);
+ if(!ejerciciosElegidos.length)return alert("Selecciona al menos un ejercicio.");
+ const p={
+ id:"AC-"+Date.now(),grupo,grupoNombre:grupoActual().nombre,
+ objetivo:"Entrenamiento de "+grupoActual().nombre,
+ duracion:"60 minutos",fecha:fecha(),
+ ejercicios:ejerciciosElegidos.map(e=>e[1]),
+ actividades:ejerciciosElegidos.map(e=>e[1]).join(", ")
+ };
+ AC.planes.push(p);
+ if(guardar()){seleccionados=[];mostrarPlan();alert("Plan guardado correctamente.");}
+ else AC.planes.pop();
+};
+
+function mostrarInicioMejora(){
+ modo="inicio";
+ base("🧠 Asistente del Coach",`
+ <p class="ac-muted">Herramientas rápidas para Academia Tiburones Ensenada.</p>
+ <div class="ac-grid">
+ <button class="ac-menu-card" onclick="ctACMejoraAbrir('plan')">📋 Plan de entrenamiento</button>
+ <button class="ac-menu-card" onclick="ctACMejoraAbrir('biblioteca')">🏀 Biblioteca de ejercicios</button>
+ <button class="ac-menu-card" onclick="ctACMejoraAbrir('evaluacion')">⭐ Evaluación técnica</button>
+ <button class="ac-menu-card" onclick="ctACMejoraAbrir('partidos')">🏆 Análisis de partidos</button>
+ <button class="ac-menu-card" onclick="ctACMejoraAbrir('desarrollo')">👤 Desarrollo individual</button>
+ <button class="ac-menu-card" onclick="ctACMejoraAbrir('objetivos')">🎯 Objetivos y retos</button>
+ </div>`);
+}
+
+window.ctACMejoraInicio=mostrarInicioMejora;
+window.ctACMejoraAbrir=function(k){
+ if(k==="plan")mostrarPlan();
+ if(k==="biblioteca")mostrarBiblioteca();
+ if(k==="evaluacion")mostrarEvaluacion();
+ if(k==="partidos")mostrarPartidos();
+ if(k==="desarrollo")mostrarDesarrollo();
+ if(k==="objetivos")mostrarObjetivos();
+};
+  /* MEJORA ASISTENTE COACH · PARTE 2 */
+
+function selectorAlumnos(idhtml){
+ const lista=listaJugadores().filter(j=>
+   grupo==="inicial" ? ["4:30","Inicial"].includes(j.horario) :
+   grupo==="infantil" || grupo==="infantil_comp" ? ["5:30","Infantil"].includes(j.horario) :
+   ["6:30","Juvenil"].includes(j.horario)
+ );
+ return `<select class="ac-select" id="${idhtml}">
+ <option value="">Seleccionar alumno</option>
+ ${lista.map(j=>`<option value="${esc(j.id)}">${esc(j.nombre)}</option>`).join("")}
+ </select>`;
+}
+
+function botonesHabilidades(){
+ const hs=["Manejo de balón","Tiro","Pases","Defensa","Velocidad","Resistencia","Coordinación","Toma de decisiones","Trabajo en equipo"];
+ return `<div class="ac-levels">${hs.map(h=>`
+ <button class="ac-choice ${habilidad===h?"ac-azul":"ac-secondary"}"
+ onclick="ctACHabilidadEvaluacion('${h}')">${h}</button>`).join("")}</div>`;
+}
+
+window.ctACHabilidadEvaluacion=function(h){
+ habilidad=h;
+ if(modo==="evaluacion")mostrarEvaluacion();
+ else if(modo==="partidos")mostrarPartidos();
+ else mostrarDesarrollo();
+};
+
+function botonesDesempeno(){
+ const opciones=[
+ ["Mucho trabajo",1,"ac-rojo"],
+ ["Le falta trabajar",3,"ac-naranja"],
+ ["En desarrollo",5,"ac-amarillo"],
+ ["Buen desempeño",8,"ac-verde"],
+ ["Excelente",10,"ac-azul"]
+ ];
+ return `<div class="ac-levels">${opciones.map((x,i)=>`
+ <button class="ac-choice ${x[2]} ${nivel===x[1]?"seleccionado":""}"
+ onclick="ctACElegirNivel(${x[1]})">${x[0]}</button>`).join("")}</div>`;
+}
+
+window.ctACElegirNivel=function(n){
+ nivel=n;
+ if(modo==="evaluacion")mostrarEvaluacion();
+ else if(modo==="partidos")mostrarPartidos();
+ else mostrarDesarrollo();
+};
+
+function mostrarEvaluacion(){
+ modo="evaluacion";
+ base("⭐ Evaluación técnica",`
+ ${selectorGrupo()}${encabezadoGrupo()}
+ <div class="ac-card">
+ <label class="ac-label">Alumno</label>
+ ${selectorAlumnos("acMejAlumno")}
+ <label class="ac-label">Habilidad evaluada</label>
+ ${botonesHabilidades()}
+ <label class="ac-label">Desempeño</label>
+ ${botonesDesempeno()}
+ <button class="ac-btn ac-primary" onclick="ctACGuardarEvaluacionMejora()">GUARDAR EVALUACIÓN</button>
+ </div>
+ <h3>Evaluaciones recientes</h3>
+ ${AC.evaluaciones.slice().reverse().slice(0,20).map(e=>`
+ <div class="ac-item"><strong>${esc(e.jugadorNombre)}</strong>
+ <div>${esc(e.habilidad)} · ${esc(e.nivel)}</div>
+ <div class="ac-small">${esc(e.fecha)}</div></div>`).join("")}`);
+}
+
+window.ctACGuardarEvaluacionMejora=function(){
+ const jid=$("acMejAlumno").value;
+ if(!jid)return alert("Selecciona un alumno.");
+ if(!habilidad||habilidad==="Todas")return alert("Selecciona una habilidad.");
+ if(!nivel)return alert("Selecciona un desempeño.");
+ const j=listaJugadores().find(x=>x.id===jid);
+ const r={
+ id:"AC-"+Date.now(),tipo:"tecnica",
+ jugadorId:jid,jugadorNombre:j.nombre,
+ habilidad,valor:nivel,
+ nivel:({1:"Mucho trabajo",3:"Le falta trabajar",5:"En desarrollo",8:"Buen desempeño",10:"Excelente"})[nivel],
+ fecha:fecha(),historial:[]
+ };
+ AC.evaluaciones.push(r);
+ if(guardar()){nivel=0;mostrarEvaluacion();alert("Evaluación guardada.");}
+ else AC.evaluaciones.pop();
+};
+
+function mostrarPartidos(){
+ modo="partidos";
+ base("🏆 Análisis de partidos",`
+ ${selectorGrupo()}${encabezadoGrupo()}
+ <div class="ac-card">
+ <label class="ac-label">Equipo rival</label>
+ <div class="ac-row">
+ ${["Defensa","Ataque","Pases","Tiro","Manejo de balón","Trabajo en equipo"].map(h=>`
+ <button class="ac-btn ${habilidad===h?"ac-primary":"ac-secondary"}"
+ onclick="ctACHabilidadEvaluacion('${h}')">${h}</button>`).join("")}
+ </div>
+ <label class="ac-label">Alumno</label>
+ ${selectorAlumnos("acPartMejAlumno")}
+ <label class="ac-label">Desempeño</label>
+ ${botonesDesempeno()}
+ <button class="ac-btn ac-primary" onclick="ctACGuardarPartidoMejora()">GUARDAR DESEMPEÑO</button>
+ <button class="ac-btn ac-secondary" onclick="ctACNoParticipoMejora()">NO PARTICIPÓ</button>
+ </div>
+ <h3>Registros recientes</h3>
+ ${AC.partidos.slice().reverse().slice(0,20).map(p=>`
+ <div class="ac-item"><strong>${esc(p.jugadorNombre)}</strong>
+ <div>${esc(p.estado||p.nivel||"")} · ${esc(p.fecha)}</div></div>`).join("")}`);
+}
+
+window.ctACGuardarPartidoMejora=function(){
+ const jid=$("acPartMejAlumno").value;
+ if(!jid)return alert("Selecciona un alumno.");
+ if(!nivel)return alert("Selecciona el desempeño.");
+ const j=listaJugadores().find(x=>x.id===jid);
+ const p={
+ id:"AC-"+Date.now(),jugadorId:jid,
+ jugadorNombre:j.nombre,grupo,
+ habilidad:habilidad==="Todas"?"Desempeño general":habilidad,
+ valor:nivel,
+ nivel:({1:"Mucho trabajo",3:"Le falta trabajar",5:"En desarrollo",8:"Buen desempeño",10:"Excelente"})[nivel],
+ fecha:fecha(),estado:"Participó"
+ };
+ AC.partidos.push(p);
+ if(guardar()){nivel=0;mostrarPartidos();alert("Registro guardado.");}
+ else AC.partidos.pop();
+};
+
+window.ctACNoParticipoMejora=function(){
+ const jid=$("acPartMejAlumno").value;
+ if(!jid)return alert("Selecciona un alumno.");
+ const j=listaJugadores().find(x=>x.id===jid);
+ AC.partidos.push({
+ id:"AC-"+Date.now(),jugadorId:jid,
+ jugadorNombre:j.nombre,grupo,
+ fecha:fecha(),estado:"No participó"
+ });
+ if(guardar())mostrarPartidos();
+ else AC.partidos.pop();
+};
+
+function mostrarDesarrollo(){
+ modo="desarrollo";
+ base("👤 Desarrollo individual",`
+ ${selectorGrupo()}${encabezadoGrupo()}
+ <div class="ac-card">
+ <label class="ac-label">Alumno</label>
+ ${selectorAlumnos("acDesMejAlumno")}
+ <label class="ac-label">Habilidad a trabajar</label>
+ ${botonesHabilidades()}
+ <label class="ac-label">Avance</label>
+ ${botonesDesempeno()}
+ <button class="ac-btn ac-primary" onclick="ctACGuardarDesarrolloMejora()">GUARDAR AVANCE</button>
+ </div>
+ <h3>Seguimiento reciente</h3>
+ ${AC.desarrollo.slice().reverse().slice(0,20).map(x=>`
+ <div class="ac-item"><strong>${esc(x.jugadorNombre)}</strong>
+ <div>${esc(x.objetivo)} · ${esc(x.fecha)}</div></div>`).join("")}`);
+}
+
+window.ctACGuardarDesarrolloMejora=function(){
+ const jid=$("acDesMejAlumno").value;
+ if(!jid)return alert("Selecciona un alumno.");
+ if(!habilidad||habilidad==="Todas")return alert("Selecciona una habilidad.");
+ if(!nivel)return alert("Selecciona un avance.");
+ const j=listaJugadores().find(x=>x.id===jid);
+ const x={
+ id:"AC-"+Date.now(),jugadorId:jid,
+ jugadorNombre:j.nombre,objetivo:habilidad,
+ nota:"Nivel de avance: "+nivel,
+ valor:nivel,fecha:fecha()
+ };
+ AC.desarrollo.push(x);
+ if(guardar()){nivel=0;mostrarDesarrollo();alert("Seguimiento guardado.");}
+ else AC.desarrollo.pop();
+};
+
+function mostrarObjetivos(){
+ modo="objetivos";
+ const retos=[
+ "Completar 10 pases correctos",
+ "Realizar 10 cambios de mano",
+ "Mejorar la postura defensiva",
+ "Anotar 5 tiros cercanos",
+ "Completar circuito de coordinación",
+ "Comunicarse durante el juego",
+ "Mejorar la velocidad de reacción",
+ "Participar en todos los ejercicios"
+ ];
+ base("🎯 Objetivos y retos",`
+ ${selectorGrupo()}${encabezadoGrupo()}
+ <div class="ac-card">
+ <label class="ac-label">Selecciona un reto</label>
+ <div class="ac-levels">${retos.map((r,i)=>`
+ <button class="ac-choice ac-secondary"
+ onclick="ctACElegirReto(${i})">${r}</button>`).join("")}</div>
+ <label class="ac-label">Alumno (opcional)</label>
+ ${selectorAlumnos("acObjMejAlumno")}
+ </div>
+ <h3>Retos registrados</h3>
+ ${AC.objetivos.slice().reverse().map(o=>`
+ <div class="ac-item"><strong>${esc(o.texto)}</strong>
+ <div class="ac-small">${esc(o.jugadorNombre||"Equipo")} · ${esc(o.fecha)}</div>
+ <span class="ac-pill">${o.completado?"Cumplido":"En proceso"}</span>
+ </div>`).join("")}`);
+}
+
+window.ctACElegirReto=function(i){
+ const retos=[
+ "Completar 10 pases correctos",
+ "Realizar 10 cambios de mano",
+ "Mejorar la postura defensiva",
+ "Anotar 5 tiros cercanos",
+ "Completar circuito de coordinación",
+ "Comunicarse durante el juego",
+ "Mejorar la velocidad de reacción",
+ "Participar en todos los ejercicios"
+ ];
+ const jid=$("acObjMejAlumno").value;
+ const j=listaJugadores().find(x=>x.id===jid);
+ AC.objetivos.push({
+ id:"AC-"+Date.now(),texto:retos[i],
+ tipo:jid?"Individual":"Grupal",
+ jugadorId:jid||"",jugadorNombre:j?j.nombre:"Equipo",
+ fecha:fecha(),completado:false
+ });
+ if(guardar()){mostrarObjetivos();alert("Reto registrado.");}
+ else AC.objetivos.pop();
+};
+
+/* FIN PARTE 2 */
+/* MEJORA ASISTENTE COACH · PARTE 3 */
+
+/* Conservar alumno seleccionado al cambiar botones */
+window.ctACSeleccionarAlumno=function(v){
+ jugador=v;
+};
+
+const selectorAlumnosAnterior=selectorAlumnos;
+
+selectorAlumnos=function(idhtml){
+ const lista=listaJugadores().filter(j=>
+   grupo==="inicial" ? ["4:30","Inicial"].includes(j.horario) :
+   grupo==="infantil" || grupo==="infantil_comp" ? ["5:30","Infantil"].includes(j.horario) :
+   ["6:30","Juvenil"].includes(j.horario)
+ );
+
+ return `<select class="ac-select" id="${idhtml}"
+ onchange="ctACSeleccionarAlumno(this.value)">
+ <option value="">Seleccionar alumno</option>
+ ${lista.map(j=>`
+ <option value="${esc(j.id)}" ${jugador===j.id?"selected":""}>
+ ${esc(j.nombre)}
+ </option>`).join("")}
+ </select>`;
+};
+
+/* Mantener selecciones al cambiar habilidad o desempeño */
+const habilidadAnterior=window.ctACHabilidadEvaluacion;
+window.ctACHabilidadEvaluacion=function(h){
+ const campo=$("acMejAlumno")||$("acPartMejAlumno")||$("acDesMejAlumno");
+ if(campo)jugador=campo.value;
+ habilidad=h;
+ if(modo==="evaluacion")mostrarEvaluacion();
+ else if(modo==="partidos")mostrarPartidos();
+ else mostrarDesarrollo();
+};
+
+window.ctACElegirNivel=function(n){
+ const campo=$("acMejAlumno")||$("acPartMejAlumno")||$("acDesMejAlumno");
+ if(campo)jugador=campo.value;
+ nivel=n;
+ if(modo==="evaluacion")mostrarEvaluacion();
+ else if(modo==="partidos")mostrarPartidos();
+ else mostrarDesarrollo();
+};
+
+/* Restaurar selección de alumno en los registros */
+const guardarEvalAnterior=window.ctACGuardarEvaluacionMejora;
+const guardarPartAnterior=window.ctACGuardarPartidoMejora;
+const guardarDesAnterior=window.ctACGuardarDesarrolloMejora;
+
+/* Acceso directo al menú mejorado */
+const abrirAnterior=window.abrirModulo;
+
+window.abrirModulo=function(nombre){
+ if(nombre==="asistenteCoach"){
+   const d=document.getElementById("dashboard");
+   const m=document.getElementById("menuPrincipal");
+   const c=document.getElementById("moduleContainer");
+   const t=document.getElementById("moduleTitle");
+
+   if(d)d.style.display="none";
+   if(m)m.style.display="none";
+   if(c)c.classList.add("visible");
+   if(t)t.textContent="Asistente del Coach";
+
+   mostrarInicioMejora();
+   return;
+ }
+ return abrirAnterior.apply(this,arguments);
+};
+
+/* Conservar los botones y funciones originales */
+console.log("Asistente del Coach: mejora por grupos activada.");
+
+})();
+</script>
+<!-- FIN MEJORA ASISTENTE DEL COACH -->  
 </body>
 </html>
