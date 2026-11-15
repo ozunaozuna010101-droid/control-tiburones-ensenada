@@ -18728,5 +18728,465 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
 
 })();
 </script>
+<script>
+/* =========================================================
+   TIBURONES PRO · MEJORAS ADICIONALES
+   Pegar completo antes de </body>.
+   No elimina ni sustituye los demás módulos.
+   ========================================================= */
+(function () {
+  "use strict";
+
+  if (window.__ctPROGruposV2) return;
+
+  const DB = (typeof db !== "undefined" && db) ? db : window.db;
+  if (!DB || typeof window.guardarDB !== "function") {
+    console.error("Tiburones PRO: no se encontró la base de datos.");
+    return;
+  }
+
+  window.__ctPROGruposV2 = true;
+
+  const db = DB;
+  db.asistenteCoach = db.asistenteCoach || {};
+  const AC = db.asistenteCoach;
+
+  AC.evaluaciones = Array.isArray(AC.evaluaciones) ? AC.evaluaciones : [];
+  AC.clasificaciones = AC.clasificaciones || {};
+
+  const grupos = {
+    "4:30": [{id:"inicial",nombre:"Inicial",nivel:"basico"}],
+    "5:30": [
+      {id:"infantil_basico",nombre:"Infantil básico",nivel:"basico"},
+      {id:"infantil_competencia",nombre:"Infantil competencia",nivel:"competencia"}
+    ],
+    "6:30": [
+      {id:"juvenil_basico",nombre:"Juvenil básico",nivel:"basico"},
+      {id:"juvenil_competencia",nombre:"Juvenil competencia",nivel:"competencia"}
+    ]
+  };
+
+  const aspectos = {
+    basico: {
+      "Manejo de balón":["Bote con mano derecha","Bote con mano izquierda","Bote bajo","Bote alto","Cambio de mano","Control en movimiento"],
+      "Tiro":["Técnica de tiro","Equilibrio","Coordinación","Fuerza adecuada","Precisión","Tiro en movimiento"],
+      "Pases":["Pase de pecho","Pase picado","Pase sobre la cabeza","Precisión del pase","Fuerza del pase","Recepción"],
+      "Defensa":["Posición defensiva","Desplazamiento lateral","Reacción","Marcación","Presión al balón"],
+      "Velocidad":["Arranque","Aceleración","Velocidad con balón","Cambios de dirección"],
+      "Condición física":["Resistencia","Coordinación","Equilibrio","Fuerza","Salto"],
+      "Juego":["Toma de decisiones","Concentración","Visión de cancha","Trabajo en equipo"]
+    },
+    competencia: {
+      "Manejo de balón":["Bote bajo presión","Cambio de ritmo","Cambio de dirección","Protección del balón","Control a velocidad"],
+      "Tiro":["Tiro estático","Tiro después de bote","Tiro en movimiento","Tiro bajo presión","Media distancia","Triple","Finalización cerca del aro","Recepción y tiro"],
+      "Pases":["Pase bajo presión","Lectura de espacios","Velocidad del pase","Precisión","Recepción en movimiento"],
+      "Defensa":["Defensa individual","Anticipación","Ayuda defensiva","Recuperación","Defensa del balón"],
+      "Condición física":["Velocidad","Resistencia","Fuerza","Salto","Recuperación"],
+      "Juego":["Toma de decisiones","Lectura de juego","Comunicación","Transición","Ejecución bajo presión"]
+    }
+  };
+
+  const niveles = [
+    {v:1,t:"Mucho trabajo",c:"#d94b55"},
+    {v:3,t:"Le falta trabajar",c:"#df8b35"},
+    {v:5,t:"En desarrollo",c:"#d7b83e"},
+    {v:8,t:"Buen desempeño",c:"#36a875"},
+    {v:10,t:"Excelente",c:"#29a7ff"}
+  ];
+
+  const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+
+  const hoy = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  };
+
+  const nuevoId = () => typeof window.generarId === "function"
+    ? window.generarId()
+    : "TP-"+Date.now()+"-"+Math.random().toString(36).slice(2,8);
+
+  function guardarSeguro() {
+    try {
+      const r = window.guardarDB();
+      if (r === false) throw new Error("No se pudo guardar");
+      return true;
+    } catch(e) {
+      console.error(e);
+      alert("No se pudo guardar. Intenta nuevamente.");
+      return false;
+    }
+  }
+
+  function zona() {
+    return document.getElementById("moduleContent");
+  }
+
+  function listaJugadores() {
+    return (db.jugadores || [])
+      .filter(j=>j.estado!=="baja")
+      .sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
+  }
+
+  function horarioJugador(j) {
+    const h = String(j.horario || j.hora || j.horarioEntrenamiento || "");
+    return h.includes("4:30") ? "4:30" :
+           h.includes("5:30") ? "5:30" :
+           h.includes("6:30") ? "6:30" : "";
+  }
+
+  function grupoDe(jid) {
+    return AC.clasificaciones[jid] || null;
+  }
+
+  function grupoValido(jid) {
+    const j = listaJugadores().find(x=>String(x.id)===String(jid));
+    const g = grupoDe(jid);
+    return j && g && g.horario===horarioJugador(j) ? g : null;
+  }
+
+  function pendientes(h) {
+    return listaJugadores().filter(j=>
+      horarioJugador(j)===h && !grupoValido(j.id)
+    );
+  }
+
+  function estilos() {
+    if (document.getElementById("ctPROEstilos")) return;
+    const s=document.createElement("style");
+    s.id="ctPROEstilos";
+    s.textContent=`
+      .ctp-panel{background:#17283e;border:1px solid #36516e;border-radius:13px;padding:13px;margin:12px 0}
+      .ctp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+      .ctp-btn{width:100%;border:1px solid #42617f;border-radius:11px;padding:12px 9px;color:white;font-weight:800;background:#263c55;margin:4px 0}
+      .ctp-basic{background:linear-gradient(145deg,#075ca8,#168de5);border-color:#29a7ff}
+      .ctp-comp{background:linear-gradient(145deg,#75520a,#b88916);border-color:#e0b642}
+      .ctp-player{background:#1b3049;border:1px solid #45617f;border-radius:10px;padding:12px;margin:7px 0;color:white;width:100%;text-align:left;font-weight:700}
+      .ctp-player:disabled{opacity:.55}
+      .ctp-alert{background:#54232c;border:1px solid #ef5965;color:#fff;padding:12px;border-radius:10px;margin:10px 0}
+      .ctp-rating{border:1px solid;border-radius:9px;padding:9px 5px;color:#fff;background:#20354c;font-size:12px;font-weight:800}
+      .ctp-rating.sel{outline:2px solid white}
+      .ctp-muted{color:#afc0d3;font-size:12px}
+      .ctp-action{background:#075ca8;border:1px solid #29a7ff;color:white;padding:12px;border-radius:10px;font-weight:800;width:100%;margin-top:10px}
+      .ctp-aspect{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:#142940;padding:10px;border-radius:9px;margin:7px 0}
+      .ctp-aspect strong{font-size:13px}
+      @media(max-width:430px){.ctp-grid{grid-template-columns:1fr 1fr}}
+    `;
+    document.head.appendChild(s);
+  }
+
+  function botonGrupo(g) {
+    const competencia=g.nivel==="competencia";
+    return `<button class="ctp-btn ${competencia?"ctp-comp":"ctp-basic"}"
+      onclick="ctPROAsignarGrupo('${g.id}')">
+      ${competencia?"🏆 ":"🏀 "}${esc(g.nombre)}
+    </button>`;
+  }
+
+  let horarioAdmin="";
+
+  window.ctPROGestionarGrupos=function() {
+    estilos();
+    const z=zona();
+    if(!z)return;
+
+    const sinGrupo=listaJugadores().filter(j=>!grupoValido(j.id));
+
+    z.innerHTML=`
+      <div class="modulo">
+        <button class="btn" onclick="ctACInicio()">← Menú del asistente</button>
+        <h2>🦈 Tiburones PRO</h2>
+        <h3>Clasificación de jugadores</h3>
+        <div class="ctp-panel">
+          <p>Selecciona el horario para organizar a los jugadores.</p>
+          <div class="ctp-grid">
+            ${["4:30","5:30","6:30"].map(h=>`
+              <button class="ctp-btn ctp-basic" onclick="ctPROHorarioAdmin('${h}')">${h}</button>
+            `).join("")}
+          </div>
+        </div>
+        <div id="ctpAdminLista"></div>
+        <div class="ctp-panel">
+          <strong>Jugadores pendientes de clasificación: ${sinGrupo.length}</strong>
+          ${sinGrupo.map(j=>`<p class="ctp-muted">${esc(j.nombre)} · ${esc(horarioJugador(j))}</p>`).join("")}
+        </div>
+      </div>`;
+  };
+
+  window.ctPROHorarioAdmin=function(h) {
+    horarioAdmin=h;
+    const z=document.getElementById("ctpAdminLista");
+    if(!z)return;
+    const js=pendientes(h);
+    z.innerHTML=`
+      <div class="ctp-panel">
+        <h3>Horario ${h}</h3>
+        ${js.length?js.map(j=>`
+          <button class="ctp-player" onclick="ctPROSeleccionarJugador('${esc(j.id)}')">
+            ${esc(j.nombre)} · Clasificar
+          </button>`).join(""):"<p>Todos los jugadores de este horario están clasificados.</p>"}
+      </div>
+      <div id="ctpElegirGrupo"></div>`;
+  };
+
+  let jugadorPendiente="";
+
+  window.ctPROSeleccionarJugador=function(jid) {
+    jugadorPendiente=jid;
+    const j=listaJugadores().find(x=>String(x.id)===String(jid));
+    const opciones=grupos[horarioAdmin]||[];
+    const z=document.getElementById("ctpElegirGrupo");
+    if(!j||!z)return;
+    z.innerHTML=`
+      <div class="ctp-panel">
+        <h3>Clasificar a ${esc(j.nombre)}</h3>
+        <p>Confirma el grupo correspondiente.</p>
+        <div class="ctp-grid">
+          ${opciones.map(g=>botonGrupo(g)).join("")}
+        </div>
+      </div>`;
+  };
+
+  window.ctPROAsignarGrupo=function(gid) {
+    const j=listaJugadores().find(x=>String(x.id)===String(jugadorPendiente));
+    const g=(grupos[horarioAdmin]||[]).find(x=>x.id===gid);
+    if(!j||!g)return;
+    if(!confirm(`¿Asignar a ${j.nombre} al grupo ${g.nombre}?`))return;
+
+    AC.clasificaciones[j.id]={
+      grupo:g.id,
+      nombre:g.nombre,
+      nivel:g.nivel,
+      horario:horarioAdmin,
+      actualizado:hoy()
+    };
+
+    if(guardarSeguro()) {
+      alert("Jugador clasificado correctamente.");
+      ctPROHorarioAdmin(horarioAdmin);
+    }
+  };
+
+  window.ctPROMoverJugador=function(jid) {
+    const actual=grupoValido(jid);
+    if(!actual)return;
+    const opciones=grupos[actual.horario]||[];
+    const j=listaJugadores().find(x=>String(x.id)===String(jid));
+    const disponibles=opciones.filter(g=>g.id!==actual.grupo);
+    if(!j||!disponibles.length)return;
+
+    const eleccion=prompt(
+      "Escribe el número del nuevo grupo:\n"+
+      disponibles.map((g,i)=>(i+1)+". "+g.nombre).join("\n")
+    );
+    const g=disponibles[Number(eleccion)-1];
+    if(!g)return;
+    if(!confirm(`¿Cambiar a ${j.nombre} a ${g.nombre}?`))return;
+
+    AC.clasificaciones[jid]={
+      grupo:g.id,nombre:g.nombre,nivel:g.nivel,
+      horario:actual.horario,actualizado:hoy()
+    };
+    if(guardarSeguro())ctPROGestionarGrupos();
+  };
+
+  function avisoPendientes() {
+    const js=listaJugadores().filter(j=>!grupoValido(j.id));
+    return js.length?`
+      <div class="ctp-alert" id="ctpAvisoPendientes">
+        <strong>⚠️ Jugadores sin clasificar: ${js.length}</strong>
+        <p>${js.map(j=>esc(j.nombre)+" · "+esc(horarioJugador(j))).join("<br>")}</p>
+        <button class="ctp-action" onclick="ctPROGestionarGrupos()">CLASIFICAR JUGADORES</button>
+      </div>`:"";
+  }
+
+  const inicioOriginal=window.ctACInicio;
+  if(typeof inicioOriginal==="function") {
+    window.ctACInicio=function() {
+      inicioOriginal.apply(this,arguments);
+      const grid=document.querySelector(".ac-wrap .ac-grid");
+      if(!grid)return;
+      if(!document.getElementById("ctpCardGrupos")) {
+        const b=document.createElement("button");
+        b.id="ctpCardGrupos";
+        b.className="ac-menu-card";
+        b.innerHTML='<span class="ac-menu-icon">🦈</span><span>Grupos y jugadores</span><span class="ac-muted">Clasificación Tiburones PRO</span>';
+        b.onclick=window.ctPROGestionarGrupos;
+        grid.appendChild(b);
+      }
+      const wrap=document.querySelector(".ac-wrap");
+      if(wrap&&!document.getElementById("ctpAvisoPendientes")) {
+        wrap.insertAdjacentHTML("afterbegin",avisoPendientes());
+      }
+    };
+  }
+
+  const horarioOriginal=window.ctACHorario;
+  if(typeof horarioOriginal==="function") {
+    window.ctACHorario=function(h) {
+      horarioOriginal.apply(this,arguments);
+      const z=document.getElementById("acGrupoEvaluacion");
+      if(!z)return;
+      const opciones=grupos[h]||[];
+      z.innerHTML=`
+        <label class="ac-label">Selecciona el grupo</label>
+        <div class="ctp-grid">
+          ${opciones.map(g=>`
+            <button class="ctp-btn ${g.nivel==="competencia"?"ctp-comp":"ctp-basic"}"
+              onclick="ctACGrupoEvaluacion('${g.id}')">
+              ${g.nivel==="competencia"?"🏆 ":"🏀 "}${esc(g.nombre)}
+            </button>`).join("")}
+        </div>`;
+    };
+  }
+
+  const grupoOriginal=window.ctACGrupoEvaluacion;
+  if(typeof grupoOriginal==="function") {
+    window.ctACGrupoEvaluacion=function(grupo) {
+      window.__ctACGrupo=grupo;
+      window.__ctACSeleccion=null;
+
+      const h=window.__ctACHorario;
+      const lista=listaJugadores().filter(j=>{
+        const g=grupoValido(j.id);
+        return horarioJugador(j)===h && g && g.grupo===grupo;
+      });
+
+      const z=document.getElementById("acFormularioEvaluacion");
+      if(!z)return;
+
+      z.innerHTML=`
+        <div class="ctp-panel">
+          <h3>Selecciona al jugador</h3>
+          ${lista.map(j=>{
+            const evaluado=AC.evaluaciones.some(r=>
+              r.jugadorId===j.id && r.fecha===hoy() && r.grupo===grupo
+            );
+            return `<button class="ctp-player" ${evaluado?"disabled":""}
+              onclick="ctPROAbrirEvaluacion('${esc(j.id)}')">
+              ${esc(j.nombre)} ${evaluado?"· EVALUADO":""}
+            </button>`;
+          }).join("") || "<p>No hay jugadores clasificados en este grupo.</p>"}
+          <button class="ctp-action" onclick="ctPROGestionarGrupos()">ADMINISTRAR GRUPOS</button>
+        </div>
+        <div id="ctpFormularioJugador"></div>`;
+    };
+  }
+
+  let evaluacion={
+    jugadorId:"",
+    grupo:"",
+    tipo:"Entrenamiento",
+    valores:{},
+    nota:""
+  };
+
+  window.ctPROAbrirEvaluacion=function(jid) {
+    const j=listaJugadores().find(x=>String(x.id)===String(jid));
+    const g=grupoValido(jid);
+    if(!j||!g)return;
+
+    evaluacion={jugadorId:jid,grupo:g.grupo,tipo:"Entrenamiento",valores:{},nota:""};
+
+    const z=document.getElementById("ctpFormularioJugador");
+    if(!z)return;
+
+    const catalogo=aspectos[g.nivel];
+
+    z.innerHTML=`
+      <div class="ctp-panel">
+        <h3>Evaluación · ${esc(j.nombre)}</h3>
+        <p class="ctp-muted">${esc(g.nombre)} · ${esc(g.horario)}</p>
+        <label class="ac-label">Tipo de evaluación</label>
+        <div class="ctp-grid">
+          <button class="ctp-btn ctp-basic" id="ctpTipoEntreno" onclick="ctPROTipo('Entrenamiento')">ENTRENAMIENTO</button>
+          <button class="ctp-btn" id="ctpTipoPartido" onclick="ctPROTipo('Partido')">PARTIDO</button>
+        </div>
+        <p class="ctp-muted">Califica únicamente los aspectos que trabajaste hoy.</p>
+        ${Object.entries(catalogo).map(([habilidad,items],i)=>`
+          <details class="ctp-panel" ${i===0?"open":""}>
+            <summary><strong>${esc(habilidad)}</strong></summary>
+            ${items.map((a,k)=>`
+              <div class="ctp-aspect">
+                <strong>${esc(a)}</strong>
+                <div class="ctp-grid">
+                  ${niveles.map(n=>`
+                    <button type="button" class="ctp-rating"
+                      style="border-color:${n.c}"
+                      onclick="ctPROCalificar('${esc(habilidad)}','${esc(a)}',${n.v},this)">
+                      ${n.t}
+                    </button>`).join("")}
+                </div>
+              </div>`).join("")}
+          </details>`).join("")}
+        <label class="ac-label">Observaciones</label>
+        <textarea id="ctpNota" class="ac-area" placeholder="Observaciones del jugador"></textarea>
+        <button class="ctp-action" onclick="ctPROGuardarEvaluacion()">GUARDAR EVALUACIÓN</button>
+      </div>`;
+  };
+
+  window.ctPROTipo=function(tipo) {
+    evaluacion.tipo=tipo;
+    document.getElementById("ctpTipoEntreno")?.classList.toggle("ctp-comp",tipo==="Entrenamiento");
+    document.getElementById("ctpTipoPartido")?.classList.toggle("ctp-comp",tipo==="Partido");
+  };
+
+  window.ctPROCalificar=function(habilidad,aspecto,valor,boton) {
+    evaluacion.valores[habilidad+"||"+aspecto]={
+      habilidad,aspecto,valor
+    };
+    const grupo=boton.parentElement;
+    grupo.querySelectorAll("button").forEach(b=>b.classList.remove("sel"));
+    boton.classList.add("sel");
+  };
+
+  window.ctPROGuardarEvaluacion=function() {
+    const j=listaJugadores().find(x=>String(x.id)===String(evaluacion.jugadorId));
+    const g=grupoValido(evaluacion.jugadorId);
+    if(!j||!g)return;
+
+    const valores=Object.values(evaluacion.valores);
+    if(!valores.length) {
+      alert("Califica al menos un aspecto antes de guardar.");
+      return;
+    }
+
+    if(AC.evaluaciones.some(r=>
+      r.jugadorId===j.id && r.fecha===hoy() && r.grupo===g.grupo
+    )) {
+      alert("Este jugador ya tiene una evaluación registrada hoy en este grupo.");
+      return;
+    }
+
+    const nota=document.getElementById("ctpNota")?.value.trim()||"";
+    const registros=valores.map(v=>({
+      id:nuevoId(),
+      jugadorId:j.id,
+      jugadorNombre:j.nombre,
+      horario:g.horario,
+      grupo:g.grupo,
+      habilidad:v.habilidad,
+      aspecto:v.aspecto,
+      valor:v.valor,
+      tipo:evaluacion.tipo,
+      nota,
+      fecha:hoy()
+    }));
+
+    AC.evaluaciones.push(...registros);
+
+    if(guardarSeguro()) {
+      alert("Evaluación guardada correctamente.");
+      window.ctACGrupoEvaluacion(g.grupo);
+    } else {
+      AC.evaluaciones.splice(-registros.length,registros.length);
+    }
+  };
+
+  console.log("Tiburones PRO: complemento instalado.");
+})();
+      
+</script>  
 </body>
 </html>
