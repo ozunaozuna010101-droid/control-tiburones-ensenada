@@ -21631,6 +21631,343 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
   console.log("TIBURON PRO: reparacion general final cargada.");
 
 })();
+ /* =====================================================
+   TIBURÓN PRO — ACTUALIZACIÓN DE DESEMPEÑO
+   PARTIDO / ENTRENAMIENTO
+   ===================================================== */
+(function () {
+  "use strict";
+
+  if (window.TP_DESEMPENO_ACTUALIZADO_V1) return;
+
+  const dbTP = window.tpDB;
+  const cont = () => document.getElementById("moduleContent");
+
+  if (!dbTP || !Array.isArray(window.tpAcciones)) {
+    console.error("TIBURÓN PRO: no se encontró la información necesaria.");
+    alert("No se pudo aplicar la actualización de desempeño.");
+    return;
+  }
+
+  /* 1. LAS 12 ACCIONES COMUNES */
+
+  const accionesComunes = [
+    "Recupera el balón al rival",
+    "Ataca el aro",
+    "Realiza entradas a canasta",
+    "Anota canastas de media distancia",
+    "Anota canastas de tres puntos",
+    "Busca y consigue rebotes",
+    "Mantiene una defensa activa",
+    "Se desmarca para recibir el balón",
+    "Busca a sus compañeros para pasar",
+    "Toma buenas decisiones",
+    "Participa constantemente y demuestra iniciativa",
+    "Mantiene buena condición física, resistencia, velocidad y agilidad"
+  ];
+
+  window.tpAcciones.splice(
+    0,
+    window.tpAcciones.length,
+    ...accionesComunes
+  );
+
+  /* 2. CUATRO FUNDAMENTOS EXCLUSIVOS DEL ENTRENAMIENTO */
+
+  const fundamentosEntrenamiento = [
+    "Controla el balón y domina el bote",
+    "Utiliza ambas manos para botar",
+    "Realiza pases y recibe correctamente",
+    "Demuestra coordinación y control corporal"
+  ];
+
+  /* 3. CONSERVAR LA EVALUACIÓN TÉCNICA ORIGINAL */
+
+  const evaluarJugadorAnterior = window.tpEvaluarJugador;
+
+  /* 4. MOSTRAR LOS TRES BOTONES DE EVALUACIÓN */
+
+  window.tpEvaluarJugador = function (id, categoria) {
+
+    if (String(categoria).toUpperCase() !== "COMPETENCIA") {
+      return evaluarJugadorAnterior.apply(this, arguments);
+    }
+
+    const c = cont();
+    if (!c) return;
+
+    window.tpJugadorActual = String(id);
+    window.tpCategoriaActual = "COMPETENCIA";
+
+    c.innerHTML = `
+      <div class="tp-wrap">
+
+        <div class="tp-card">
+          <div class="tp-row">
+            <h2>EVALUACIÓN DEL JUGADOR</h2>
+            <button type="button" class="tp-btn"
+              id="tp-desempeno-volver">
+              ← REGRESAR
+            </button>
+          </div>
+
+          <div class="tp-muted">
+            ${window.tpEsc(window.tpNombre(id))}
+          </div>
+        </div>
+
+        <div class="tp-card">
+          <button type="button"
+            class="tp-btn tp-gold"
+            id="tp-boton-partido"
+            style="width:100%;min-height:55px;
+            background:linear-gradient(135deg,#805016,#d99b32);
+            border:2px solid #f4bd55;color:#fff;font-weight:900;">
+            🏀 DESEMPEÑO EN PARTIDO
+          </button>
+        </div>
+
+        <div class="tp-card">
+          <button type="button"
+            class="tp-btn tp-blue"
+            id="tp-boton-entrenamiento"
+            style="width:100%;min-height:55px;
+            background:linear-gradient(135deg,#12558a,#168bd1);
+            border:2px solid #39b8ff;color:#fff;font-weight:900;">
+            🔵 DESEMPEÑO EN ENTRENAMIENTO
+          </button>
+        </div>
+
+        <div class="tp-card">
+          <button type="button"
+            class="tp-btn"
+            id="tp-boton-tecnica"
+            style="width:100%;min-height:55px;">
+            🏆 EVALUACIÓN TÉCNICA
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    c.querySelector("#tp-desempeno-volver").onclick = () =>
+      window.tpMostrarCategoria("COMPETENCIA");
+
+    c.querySelector("#tp-boton-partido").onclick = () => {
+      window.tpMostrarPartidos();
+    };
+
+    c.querySelector("#tp-boton-entrenamiento").onclick = () => {
+      window.tpMostrarDesempenoEntrenamiento(id);
+    };
+
+    c.querySelector("#tp-boton-tecnica").onclick = () => {
+      evaluarJugadorAnterior.call(window, id, "COMPETENCIA");
+    };
+  };
+
+  /* 5. EVALUACIÓN DE ENTRENAMIENTO: 12 + 4 */
+
+  window.tpMostrarDesempenoEntrenamiento = function (id) {
+
+    const c = cont();
+    if (!c) return;
+
+    window.tpJugadorActual = String(id);
+    window.tpCategoriaActual = "COMPETENCIA";
+    window.tpSeleccionDesempeno = {};
+
+    const todasLasAcciones = [
+      ...accionesComunes,
+      ...fundamentosEntrenamiento
+    ];
+
+    let html = `
+      <div class="tp-wrap">
+
+        <div class="tp-card">
+          <div class="tp-row">
+            <h2>DESEMPEÑO EN ENTRENAMIENTO</h2>
+            <button type="button" class="tp-btn"
+              id="tp-entrenamiento-regresar">
+              ← REGRESAR
+            </button>
+          </div>
+
+          <strong>${window.tpEsc(window.tpNombre(id))}</strong>
+
+          <div class="tp-muted" style="margin-top:10px;">
+            Califica cada aspecto del 1 al 10.
+            <br>
+            1–4: necesita trabajar.
+            <br>
+            5–7: en desarrollo.
+            <br>
+            8–10: buen desempeño.
+          </div>
+        </div>
+
+        <div class="tp-card">
+          <h3>ACCIONES COMUNES</h3>
+          <div class="tp-muted">
+            Los mismos aspectos que se evalúan durante los partidos.
+          </div>
+        </div>
+    `;
+
+    todasLasAcciones.forEach((accion, i) => {
+
+      if (i === 12) {
+        html += `
+          <div class="tp-card">
+            <h3>FUNDAMENTOS BÁSICOS</h3>
+            <div class="tp-muted">
+              Aspectos adicionales que se trabajan durante el entrenamiento.
+            </div>
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="tp-card">
+          <strong>${window.tpEsc(accion)}</strong>
+
+          <div class="tp-score">
+            ${Array.from({length:10}, (_, n) => n + 1).map(n => `
+              <button type="button"
+                id="tp-entrenamiento-${i}-${n}"
+                data-accion="${i}"
+                onclick="tpSeleccionarDesempenoEntrenamiento(
+                  ${i},${n}
+                )">
+                ${n}
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+      <div class="tp-card">
+        <label><strong>OBSERVACIONES DEL COACH</strong></label>
+        <textarea
+          id="tp-desempeno-observaciones"
+          rows="3"
+          maxlength="1500"
+          placeholder="Observaciones sobre el desempeño del jugador..."
+          style="width:100%;margin-top:8px;">
+        </textarea>
+      </div>
+
+      <div class="tp-card">
+        <button type="button"
+          class="tp-btn tp-blue"
+          style="width:100%;min-height:50px;"
+          onclick="tpGuardarDesempenoEntrenamiento()">
+          GUARDAR EVALUACIÓN
+        </button>
+      </div>
+
+      </div>
+    `;
+
+    c.innerHTML = html;
+
+    c.querySelector("#tp-entrenamiento-regresar").onclick = () =>
+      window.tpEvaluarJugador(id, "COMPETENCIA");
+  };
+
+  /* 6. SELECCIÓN DE CALIFICACIONES */
+
+  window.tpSeleccionarDesempenoEntrenamiento = function (i, nota) {
+
+    const accion = [
+      ...accionesComunes,
+      ...fundamentosEntrenamiento
+    ][i];
+
+    if (!accion) return;
+
+    window.tpSeleccionDesempeno[accion] = nota;
+
+    document.querySelectorAll(
+      `[id^="tp-entrenamiento-${i}-"]`
+    ).forEach(b => b.classList.remove("sel"));
+
+    const boton = document.getElementById(
+      `tp-entrenamiento-${i}-${nota}`
+    );
+
+    if (boton) boton.classList.add("sel");
+  };
+
+  /* 7. GUARDAR EVALUACIÓN DE ENTRENAMIENTO */
+
+  window.tpGuardarDesempenoEntrenamiento = function () {
+
+    const id = window.tpJugadorActual;
+    const datos = window.tpSeleccionDesempeno || {};
+
+    const todasLasAcciones = [
+      ...accionesComunes,
+      ...fundamentosEntrenamiento
+    ];
+
+    const faltantes = todasLasAcciones.filter(
+      accion => datos[accion] === undefined
+    );
+
+    if (faltantes.length) {
+      alert("Faltan " + faltantes.length + " calificaciones.");
+      return;
+    }
+
+    if (!confirm(
+      "¿Confirmas guardar el desempeño en entrenamiento de " +
+      window.tpNombre(id) + "?"
+    )) return;
+
+    const observaciones = (
+      document.getElementById("tp-desempeno-observaciones")?.value || ""
+    ).trim();
+
+    const fecha = new Date();
+    const fechaLocal =
+      fecha.getFullYear() + "-" +
+      String(fecha.getMonth() + 1).padStart(2, "0") + "-" +
+      String(fecha.getDate()).padStart(2, "0");
+
+    const registro = {
+      id: window.tpId(),
+      jugadorId: id,
+      categoria: "COMPETENCIA",
+      tipo: "ENTRENAMIENTO",
+      contexto: "DESEMPENO_ENTRENAMIENTO",
+      fecha: fechaLocal,
+      calificaciones: {...datos},
+      observaciones: observaciones
+    };
+
+    dbTP.evaluaciones.push(registro);
+
+    if (!window.tpGuardar()) {
+      dbTP.evaluaciones.pop();
+      return;
+    }
+
+    alert("Desempeño en entrenamiento guardado correctamente.");
+
+    window.tpEvaluarJugador(id, "COMPETENCIA");
+  };
+
+  window.TP_DESEMPENO_ACTUALIZADO_V1 = true;
+
+  console.log(
+    "TIBURÓN PRO: desempeño en partido y entrenamiento actualizado."
+  );
+
+})();  
     
  </script> 
 </body>
