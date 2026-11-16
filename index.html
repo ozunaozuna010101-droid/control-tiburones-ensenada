@@ -20812,6 +20812,118 @@ console.log("CONTROL TIBURONES: historial profesional y compartir activados.");
       ctPDFCrear = crearPDFIntegrado;
     } catch(e) {}
   } 
-</script> 
+
+<script>
+(function(){
+"use strict";
+
+window.ctDescargarHistorial = async function(id){
+  const jugador = obtenerJugador(id);
+
+  if(!jugador){
+    alert("No se encontró al jugador.");
+    return;
+  }
+
+  try{
+    const JsPDF = await ctPDFCargar();
+    const doc = ctPDFCrear(JsPDF,jugador);
+
+    const nombre = "Historial_Tiburones_" +
+      String(jugador.nombre || "Jugador")
+      .replace(/[^a-z0-9áéíóúñü -]/gi,"")
+      .trim().replace(/\s+/g,"_") + ".pdf";
+
+    const blob = doc.output("blob");
+    const archivo = new File(
+      [blob], nombre, {type:"application/pdf"}
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const modal = document.createElement("div");
+    modal.style.cssText =
+      "position:fixed;inset:0;z-index:9999999;" +
+      "background:#000b;display:flex;align-items:center;" +
+      "justify-content:center;padding:20px";
+
+    modal.innerHTML = `
+      <div style="background:#fff;color:#17263b;padding:24px;
+      border-radius:18px;width:100%;max-width:380px;
+      text-align:center;font-family:Arial">
+        <div style="font-size:30px">🦈</div>
+        <h3>¡Historial listo!</h3>
+        <p>¿Qué deseas hacer con el PDF?</p>
+        <button id="tpEnviarWhatsApp" style="
+        width:100%;padding:16px;background:#128c4a;color:white;
+        border:0;border-radius:10px;font-weight:bold;font-size:16px">
+        ENVIAR POR WHATSAPP
+        </button>
+        <button id="tpGuardarPDF" style="
+        width:100%;padding:14px;margin-top:10px;
+        background:#168bd2;color:white;border:0;
+        border-radius:10px;font-weight:bold">
+        DESCARGAR PDF
+        </button>
+        <button id="tpCerrarPDF" style="
+        width:100%;padding:12px;margin-top:8px;
+        background:#eee;border:0;border-radius:10px">
+        CERRAR
+        </button>
+      </div>`;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector("#tpEnviarWhatsApp").onclick =
+      async function(){
+        try{
+          if(!navigator.share ||
+             (navigator.canShare &&
+              !navigator.canShare({files:[archivo]}))){
+            alert("Tu navegador no permite compartir el PDF directamente. Usa Descargar PDF.");
+            return;
+          }
+
+          await navigator.share({
+            files:[archivo],
+            title:"Historial deportivo",
+            text:"Historial de Academia Tiburones Ensenada"
+          });
+
+          modal.remove();
+        }catch(e){
+          if(e.name !== "AbortError"){
+            alert("No se pudo abrir el menú de compartir. Intenta descargar el PDF.");
+          }
+        }
+      };
+
+    modal.querySelector("#tpGuardarPDF").onclick = function(){
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      modal.remove();
+    };
+
+    modal.querySelector("#tpCerrarPDF").onclick = function(){
+      modal.remove();
+    };
+
+    setTimeout(()=>URL.revokeObjectURL(url),600000);
+
+  }catch(error){
+    console.error(error);
+    alert("No se pudo generar el PDF.");
+  }
+};
+
+window.ctHistorialProDescargar = window.ctDescargarHistorial;
+
+})();
+</script>
 </body>
-</html>
+  </html>
+  
