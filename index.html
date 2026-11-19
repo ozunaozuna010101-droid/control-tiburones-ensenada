@@ -19813,10 +19813,21 @@ function tpLlenarPartidosEvaluacion() {
         return;
       }
 
-      if (!partido.participantes.includes(String(jugador.id))) {
+          if (!(partido.participantes || []).map(String).includes(String(jugador.id))) {
         alert("El jugador no está registrado como participante.");
         return;
       }
+
+      const duplicada = tpDB.evaluaciones.find(e =>
+        String(e.jugadorId) === String(jugador.id) &&
+        e.contexto === "partido" &&
+        String(e.partidoId) === String(partidoId)
+      );
+
+      if (!tpEvaluacionEditando && duplicada) {
+        alert("Este jugador ya tiene una evaluación registrada para este partido. Puedes editarla desde su historial.");
+        return;
+      }  
     }
 
     const lista = modalidad === "basico"
