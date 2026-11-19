@@ -20431,6 +20431,29 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
 
 })();
 </script>  
+<style>
+/* Alineación uniforme de jugadores y modalidades */
+.tp-player {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 104px 84px !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.tp-player .tp-tag {
+  width: 104px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  justify-self: center !important;
+}
+
+.tp-player .tp-btn {
+  width: 84px !important;
+  margin: 0 !important;
+  text-align: center !important;
+}
+</style>  
 </body>
   </html>
   
