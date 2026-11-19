@@ -19355,64 +19355,244 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
     `);
   }
 
+  
   /* =====================================================
-     EVALUACIONES
+     EVALUACIONES · SELECCIÓN POR HORARIO Y JUGADOR
      ===================================================== */
 
   function tpMostrarEvaluaciones() {
-    const jugadores = tpJugadoresActivos().filter(j => {
-      const modalidad = tpModalidad(j.id);
-      return modalidad && tpEsValida(j, modalidad);
-    });
+    if (tpEvaluacionEditando) {
+      const evaluacion = tpDB.evaluaciones.find(
+        e => e.id === tpEvaluacionEditando
+      );
+      const jugador = evaluacion && tpJugadoresActivos().find(
+        j => String(j.id) === String(evaluacion.jugadorId)
+      );
 
-    const opciones = jugadores.map(j => `
-      <option value="${tpEsc(j.id)}">
-        ${tpEsc(j.nombre)} · ${tpTituloModalidad(tpModalidad(j.id))}
-      </option>
-    `).join("");
+      if (evaluacion && jugador) {
+        tpAbrirFormularioEval(
+          String(jugador.id),
+          evaluacion.contexto || "entrenamiento",
+          true
+        );
+        return;
+      }
+    }
+
+    tpCalificacion = {};
+
+    const etiquetas = {
+      "4:30": "INICIAL",
+      "5:30": "INFANTIL",
+      "6:30": "JUVENIL"
+    };
+
+    const clases = {
+      "4:30": "tp-blue",
+      "5:30": "tp-teal",
+      "6:30": "tp-purple"
+    };
+
+    const botones = TP_HORARIOS.map(id => {
+      const horario = tpHorario(id);
+      if (!horario || horario.activo === false) return "";
+
+      const cantidad = tpJugadoresActivos().filter(j => {
+        const modalidad = tpModalidad(j.id);
+        return String(j.horario) === String(id) &&
+          modalidad && tpEsValida(j, modalidad);
+      }).length;
+
+      return `
+        <button class="tp-hour ${clases[id]}"
+          onclick="tpSeleccionarHorarioEval('${id}')">
+          <span>
+            ${tpEsc(horario.nombre)}
+            <small>${etiquetas[id]} · ${cantidad} jugadores</small>
+          </span>
+          <span>›</span>
+        </button>
+      `;
+    }).join("");
+
+    tpAbrirVista("Evaluaciones · Tiburón Pro", `
+      ${tpEncabezado("SELECCIONA EL HORARIO", "tpInicio()")}
+      ${botones || '<div class="tp-empty">No hay horarios activos.</div>'}
+    `);
+  }
+
+  function tpSeleccionarHorarioEval(horarioId) {
+    tpHorarioActual = String(horarioId);
+    const horario = tpHorario(tpHorarioActual);
+
+    if (!horario || horario.activo === false) {
+      alert("Este horario no está activo.");
+      return;
+    }
+
+    const jugadores = tpJugadoresActivos()
+      .filter(j => {
+        const modalidad = tpModalidad(j.id);
+        return String(j.horario) === tpHorarioActual &&
+          modalidad && tpEsValida(j, modalidad);
+      })
+      .sort((a, b) =>
+        String(a.nombre).localeCompare(String(b.nombre), "es")
+      );
+
+    const filas = jugadores.map(j => {
+      const modalidad = tpModalidad(j.id);
+      const clase = modalidad === "competencia" ? "tp-comp" : "tp-basic";
+
+      return `
+        <button type="button" class="tp-player"
+          style="width:100%;text-align:left;cursor:pointer"
+          onclick="tpSeleccionarJugadorEval('${tpEsc(j.id)}')">
+          <span class="tp-player-name">${tpEsc(j.nombre)}</span>
+          <span class="tp-tag ${clase}">
+            ${tpTituloModalidad(modalidad)}
+          </span>
+          <span style="margin-left:auto">›</span>
+        </button>
+      `;
+    }).join("");
+
+    tpAbrirVista("Evaluaciones · " + tpNombreHorario(tpHorarioActual), `
+      ${tpEncabezado("SELECCIONA AL JUGADOR", "tpMostrarEvaluaciones()")}
+      ${filas || '<div class="tp-empty">No hay jugadores clasificados en este horario.</div>'}
+    `);
+  }
+
+  function tpSeleccionarJugadorEval(jugadorId) {
+    const jugador = tpJugadoresActivos().find(j =>
+      String(j.id) === String(jugadorId)
+    );
+
+    if (!jugador) {
+      alert("No se encontró al jugador activo.");
+      return;
+    }
+
+    const modalidad = tpModalidad(jugador.id);
+
+    if (!modalidad || !tpEsValida(jugador, modalidad)) {
+      alert("El jugador necesita una clasificación válida.");
+      return;
+    }
+
+    const botonPartido = modalidad === "competencia" ? `
+      <button class="tp-btn tp-warning"
+        style="width:100%;margin-top:10px"
+        onclick="tpAbrirFormularioEval('${tpEsc(jugador.id)}','partido')">
+        🏀 EVALUAR PARTIDO
+      </button>
+    ` : "";
+
+    tpAbrirVista("Evaluaciones · " + jugador.nombre, `
+      ${tpEncabezado(
+        "ELIGE QUÉ VAS A EVALUAR",
+        `tpSeleccionarHorarioEval('${tpEsc(jugador.horario)}')`
+      )}
+
+      <div class="tp-card">
+        <strong>${tpEsc(jugador.nombre)}</strong>
+        <div class="tp-muted">
+          ${tpTituloModalidad(modalidad)} · ${tpEsc(tpNombreHorario(jugador.horario))}
+        </div>
+      </div>
+
+      <button class="tp-btn tp-primary"
+        style="width:100%;margin-top:10px"
+        onclick="tpAbrirFormularioEval('${tpEsc(jugador.id)}','entrenamiento')">
+        📋 EVALUAR ENTRENAMIENTO
+      </button>
+
+      ${botonPartido}
+    `);
+  }
+
+  function tpAbrirFormularioEval(jugadorId, contexto, modoEdicion) {
+    const jugador = tpJugadoresActivos().find(j =>
+      String(j.id) === String(jugadorId)
+    );
+
+    if (!jugador) {
+      alert("No se encontró al jugador activo.");
+      return;
+    }
+
+    const modalidad = tpModalidad(jugador.id);
+
+    if (!modalidad || !tpEsValida(jugador, modalidad)) {
+      alert("El jugador necesita una clasificación válida.");
+      return;
+    }
+
+    if (contexto === "partido" && modalidad !== "competencia") {
+      alert("Solamente los jugadores de Competencia pueden evaluarse en partidos.");
+      return;
+    }
+
+    if (contexto !== "partido" &&
+        contexto !== "entrenamiento" &&
+        contexto !== "tecnica") {
+      contexto = "entrenamiento";
+    }
 
     tpCalificacion = {};
 
     tpAbrirVista("Evaluaciones · Tiburón Pro", `
-      ${tpEncabezado("REGISTRO DE EVALUACIONES", "tpInicio()")}
+      ${tpEncabezado(
+        contexto === "partido"
+          ? "EVALUACIÓN DE PARTIDO"
+          : "EVALUACIÓN DE ENTRENAMIENTO",
+        modoEdicion
+          ? "tpMostrarEvaluaciones()"
+          : `tpSeleccionarJugadorEval('${tpEsc(jugador.id)}')`
+      )}
 
       <div class="tp-card">
-        <label class="tp-label">Jugador</label>
-        <select id="tpEvalJugador" class="tp-field"
-          onchange="tpCambiarJugadorEval()">
-          <option value="">Selecciona un jugador</option>
-          ${opciones}
+        <strong>${tpEsc(jugador.nombre)}</strong>
+
+        <div class="tp-muted">
+          ${tpTituloModalidad(modalidad)} · ${tpEsc(tpNombreHorario(jugador.horario))}
+        </div>
+
+        <select id="tpEvalJugador" class="tp-field" style="display:none">
+          <option value="${tpEsc(jugador.id)}" selected>
+            ${tpEsc(jugador.nombre)}
+          </option>
         </select>
 
-        <label class="tp-label">Contexto de evaluación</label>
-        <select id="tpEvalContexto" class="tp-field"
-          onchange="tpCambiarContextoEval()">
-          <option value="entrenamiento">Desempeño en entrenamiento</option>
-          <option value="partido">Desempeño en partido</option>
-          <option value="tecnica">Evaluación técnica</option>
+        <select id="tpEvalContexto" class="tp-field" style="display:none">
+          <option value="entrenamiento" ${contexto === "entrenamiento" ? "selected" : ""}>Entrenamiento</option>
+          <option value="partido" ${contexto === "partido" ? "selected" : ""}>Partido</option>
+          <option value="tecnica" ${contexto === "tecnica" ? "selected" : ""}>Técnica</option>
         </select>
 
-        <div id="tpEvalPartidoWrap" style="display:none">
+        <div id="tpEvalPartidoWrap"
+          style="display:${contexto === "partido" ? "block" : "none"}">
+
           <label class="tp-label">Partido jugado</label>
+
           <select id="tpEvalPartido" class="tp-field">
             <option value="">Selecciona un partido</option>
           </select>
         </div>
 
         <div id="tpEvalHabilidades" style="margin-top:12px">
-          <div class="tp-empty">
-            Selecciona un jugador para mostrar sus aspectos.
-          </div>
+          <div class="tp-empty">Preparando evaluación...</div>
         </div>
 
         <label class="tp-label">Observaciones del Coach</label>
+
         <textarea id="tpEvalObservacion" class="tp-field"
           rows="3" placeholder="Observaciones del desempeño..."></textarea>
 
         <button class="tp-btn tp-primary"
           style="width:100%;margin-top:12px"
           onclick="tpGuardarEvaluacion()">
-          GUARDAR EVALUACIÓN
+          ${modoEdicion ? "GUARDAR CAMBIOS" : "GUARDAR EVALUACIÓN"}
         </button>
       </div>
 
@@ -19420,7 +19600,17 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
         Escala de 1 a 10. Rojo: 1–4 · Amarillo: 5–7 · Verde: 8–10.
       </div>
     `);
+
+    if (contexto === "partido") {
+      tpLlenarPartidosEvaluacion();
+    }
+
+    tpCambiarJugadorEval();
   }
+
+  window.tpSeleccionarHorarioEval = tpSeleccionarHorarioEval;
+  window.tpSeleccionarJugadorEval = tpSeleccionarJugadorEval;
+  window.tpAbrirFormularioEval = tpAbrirFormularioEval;
 
   function tpCambiarContextoEval() {
     const contexto = document.getElementById("tpEvalContexto");
@@ -19442,8 +19632,13 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
     const select = document.getElementById("tpEvalPartido");
     if (!select) return;
 
-    const jugados = tpDB.partidos.filter(
-      p => p.estado === "Jugado"
+    const jugadorSelect = document.getElementById("tpEvalJugador");
+    const jugadorId = jugadorSelect ? String(jugadorSelect.value) : "";
+
+    const jugados = tpDB.partidos.filter(p =>
+      p.estado === "Jugado" &&
+      Array.isArray(p.participantes) &&
+      p.participantes.includes(jugadorId)
     );
 
     select.innerHTML =
@@ -19454,6 +19649,7 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
         </option>
       `).join("");
   }
+  
 
   function tpCambiarJugadorEval() {
     const jugadorSelect = document.getElementById("tpEvalJugador");
