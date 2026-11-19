@@ -19864,9 +19864,11 @@ function tpLlenarPartidosEvaluacion() {
       modalidad,
       contexto,
       partidoId,
-      fecha: anterior
+            fecha: anterior
         ? anterior.fecha
-        : new Date().toISOString().slice(0, 10),
+        : contexto === "partido"
+          ? ((tpDB.partidos.find(p => String(p.id) === String(partidoId)) || {}).fecha || new Date().toISOString().slice(0, 10))
+          : new Date().toISOString().slice(0, 10),
       puntajes,
       observacion: observacion ? observacion.value.trim() : "",
       actualizado: new Date().toISOString()
