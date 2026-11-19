@@ -20633,13 +20633,56 @@ if (botonConfiguracion) {
 
 })();
 </script>  
+
 <style>
-/* Alineación uniforme de jugadores y modalidades */
+/* BOTONES DE SELECCIÓN DE JUGADORES - TIBURÓN PRO */
+
 .tp-player {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 104px 84px !important;
+  grid-template-columns: minmax(0, 1fr) 104px 18px !important;
   align-items: center !important;
   gap: 8px !important;
+  width: 100% !important;
+  min-height: 76px !important;
+  padding: 14px 12px !important;
+  margin: 9px 0 !important;
+
+  background: linear-gradient(145deg, #294765, #19344f) !important;
+  border: 1px solid #4b7195 !important;
+  border-radius: 14px !important;
+
+  color: #ffffff !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  text-align: left !important;
+
+  cursor: pointer !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  box-shadow: 0 5px 13px #0004 !important;
+  transition: .15s ease !important;
+}
+
+.tp-player:active {
+  transform: scale(.98) !important;
+  filter: brightness(1.2) !important;
+}
+
+.tp-player:focus-visible {
+  outline: 2px solid #29a7ff !important;
+  outline-offset: 3px !important;
+}
+
+.tp-player .tp-player-name {
+  display: block !important;
+  min-width: 0 !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
 }
 
 .tp-player .tp-tag {
@@ -20650,12 +20693,14 @@ if (botonConfiguracion) {
   justify-self: center !important;
 }
 
-.tp-player .tp-btn {
-  width: 84px !important;
-  margin: 0 !important;
+.tp-player > span:last-child {
+  color: #ffffff !important;
+  font-size: 23px !important;
+  font-weight: 900 !important;
   text-align: center !important;
 }
-</style>  
+</style>
+  
 </body>
   </html>
   
