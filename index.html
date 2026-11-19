@@ -19925,17 +19925,29 @@ function tpLlenarPartidosEvaluacion() {
                 ${p.estado === "Jugado" ? "Se realizó" : "Se canceló"}
               </span>
             </div>
+
             <div class="tp-muted">
               ${tpEsc(p.fecha)} · ${tpEsc(p.hora || "Hora no indicada")}
             </div>
+
             <div class="tp-muted">
               Asistieron: ${(p.participantes || []).length}
               · No asistieron: ${(p.ausentes || []).length}
             </div>
+
             <button class="tp-btn"
               onclick="tpEditarPartido('${tpEsc(p.id)}')">
               EDITAR PARTIDO
             </button>
+
+            ${p.estado === "Jugado" && (p.participantes || []).length > 0 ? `
+              <button type="button"
+                class="tp-btn tp-primary"
+                style="width:100%;min-height:60px;margin-top:10px;padding:14px 12px;font-size:15px;font-weight:900;letter-spacing:.3px;white-space:normal;line-height:1.25"
+                onclick="tpMostrarAsistentesParaEvaluar('${tpEsc(p.id)}')">
+                🏀 EVALUAR JUGADORES ASISTENTES
+              </button>
+            ` : ""}
           </div>
         `;
       }).join("");
