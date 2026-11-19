@@ -20924,6 +20924,383 @@ window.ctHistorialProDescargar = window.ctDescargarHistorial;
 
 })();
 </script>
+
+<!-- =====================================================
+ CONTROL TIBURONES
+ MEJORA VISUAL DE EVALUACIONES
+ LISTA ORDENADA, FILTROS Y PROGRESO
+===================================================== -->
+
+<style>
+.ct-eval-selector{margin-bottom:14px}
+.ct-eval-resumen{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:7px;
+ margin:10px 0
+}
+.ct-eval-contador{
+ background:#0e1b2d;
+ border:1px solid #3a506c;
+ border-radius:11px;
+ padding:10px 6px;
+ text-align:center
+}
+.ct-eval-contador strong{
+ display:block;
+ font-size:20px
+}
+.ct-eval-contador span{
+ display:block;
+ color:#b8c6d8;
+ font-size:11px;
+ margin-top:4px
+}
+.ct-eval-filtros{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:7px;
+ margin:12px 0
+}
+.ct-eval-filtro{
+ min-height:42px;
+ border:1px solid #526985;
+ border-radius:10px;
+ background:#203650;
+ color:#fff;
+ font-weight:800;
+ font-size:12px;
+ padding:8px 4px
+}
+.ct-eval-filtro.activo{
+ background:#176eaa;
+ border-color:#45b3ff
+}
+.ct-eval-entrenamiento{
+ width:100%;
+ display:block;
+ text-align:left;
+ background:#17263b;
+ border:1px solid #405875;
+ border-radius:13px;
+ padding:13px;
+ margin:9px 0;
+ color:#f7f9fd;
+ cursor:pointer
+}
+.ct-eval-entrenamiento.seleccionado{
+ border:2px solid #29a7ff;
+ background:#193653
+}
+.ct-eval-entrenamiento-top{
+ display:flex;
+ justify-content:space-between;
+ align-items:flex-start;
+ gap:8px
+}
+.ct-eval-fecha{
+ font-size:16px;
+ font-weight:900
+}
+.ct-eval-horario{
+ font-size:13px;
+ color:#b8c6d8;
+ margin-top:4px
+}
+.ct-eval-badge{
+ display:inline-block;
+ border-radius:20px;
+ padding:5px 8px;
+ font-size:10px;
+ font-weight:900
+}
+.ct-eval-badge.pendiente{
+ background:#573f16;
+ color:#ffd27a;
+ border:1px solid #a87922
+}
+.ct-eval-badge.completo{
+ background:#124b3a;
+ color:#7ff0c1;
+ border:1px solid #1b9b70
+}
+.ct-eval-badge.programado{
+ background:#263d63;
+ color:#a9c9ff;
+ border:1px solid #507cba
+}
+.ct-eval-progreso{
+ margin-top:10px;
+ height:8px;
+ background:#304158;
+ border-radius:20px;
+ overflow:hidden
+}
+.ct-eval-progreso>span{
+ display:block;
+ height:100%;
+ background:linear-gradient(90deg,#29a7ff,#18d69a);
+ border-radius:20px
+}
+.ct-eval-detalle{
+ font-size:12px;
+ color:#c4d1df;
+ margin-top:7px
+}
+.ct-eval-ayuda{
+ font-size:12px;
+ color:#b8c6d8;
+ line-height:1.45;
+ margin:6px 0
+}
+@media(max-width:380px){
+ .ct-eval-fecha{font-size:14px}
+ .ct-eval-badge{font-size:9px}
+ .ct-eval-filtro{font-size:11px}
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.ctEvaluacionesOrdenadasInstalado)return;
+window.ctEvaluacionesOrdenadasInstalado=true;
+
+const mostrarOriginal=window.mostrarEvaluaciones;
+const cargarOriginal=window.cargarJugadoresEvaluacion;
+
+let filtro="pendientes";
+
+function datosEntrenamiento(t){
+
+ const asistencias=db.asistencias.filter(a=>
+  a.entrenamientoId===t.id &&
+  a.estado==="asistio"
+ );
+
+ const evaluaciones=db.evaluaciones.filter(e=>
+  e.entrenamientoId===t.id &&
+  asistencias.some(a=>a.jugadorId===e.jugadorId)
+ );
+
+ const ids=new Set(evaluaciones.map(e=>e.jugadorId));
+
+ const pendientes=asistencias.filter(a=>
+  !ids.has(a.jugadorId)
+ ).length;
+
+ return{
+  asistieron:asistencias.length,
+  evaluadas:ids.size,
+  pendientes:pendientes,
+  completo:asistencias.length>0 && pendientes===0
+ };
+}
+
+function render(){
+
+ const contenedor=document.getElementById(
+  "ctListaEntrenamientosEvaluacion"
+ );
+
+ if(!contenedor)return;
+
+ const hoy=obtenerFechaLocal();
+
+ const entrenamientos=[...db.entrenamientos].sort((a,b)=>
+  b.fecha.localeCompare(a.fecha)
+ );
+
+ const programados=entrenamientos.filter(t=>t.fecha>hoy);
+
+ const pendientes=entrenamientos.filter(t=>
+  t.fecha<=hoy && !datosEntrenamiento(t).completo
+ );
+
+ const completados=entrenamientos.filter(t=>
+  datosEntrenamiento(t).completo
+ );
+
+ const lista=
+  filtro==="completados"?completados:
+  filtro==="todos"?entrenamientos:
+  pendientes;
+
+ contenedor.innerHTML=`
+
+ <div class="ct-eval-resumen">
+
+  <div class="ct-eval-contador">
+   <strong style="color:#ffbd59">${pendientes.length}</strong>
+   <span>Por revisar</span>
+  </div>
+
+  <div class="ct-eval-contador">
+   <strong style="color:#6af0b9">${completados.length}</strong>
+   <span>Completos</span>
+  </div>
+
+  <div class="ct-eval-contador">
+   <strong style="color:#8ec5ff">${programados.length}</strong>
+   <span>Programados</span>
+  </div>
+
+ </div>
+
+ <p class="ct-eval-ayuda">
+ Selecciona un entrenamiento para consultar
+ qué jugadores faltan de evaluar.
+ </p>
+
+ <div class="ct-eval-filtros">
+
+  <button class="ct-eval-filtro ${filtro==="pendientes"?"activo":""}"
+   data-filtro="pendientes">
+   Pendientes (${pendientes.length})
+  </button>
+
+  <button class="ct-eval-filtro ${filtro==="completados"?"activo":""}"
+   data-filtro="completados">
+   Completados (${completados.length})
+  </button>
+
+  <button class="ct-eval-filtro ${filtro==="todos"?"activo":""}"
+   data-filtro="todos">
+   Todos (${entrenamientos.length})
+  </button>
+
+ </div>
+
+ ${lista.length?lista.map(t=>{
+
+  const datos=datosEntrenamiento(t);
+  const futuro=t.fecha>hoy;
+
+  const badge=futuro?"programado":
+   datos.completo?"completo":"pendiente";
+
+  const texto=futuro?"PROGRAMADO":
+   datos.completo?"✓ EVALUACIONES COMPLETAS":
+   datos.asistieron===0?"SIN ASISTENCIAS":
+   "FALTAN EVALUACIONES";
+
+  const porcentaje=datos.asistieron?
+   Math.round(datos.evaluadas/datos.asistieron*100):0;
+
+  return`
+
+  <button type="button"
+   class="ct-eval-entrenamiento ${t.id===window.ctEntrenamientoActual?"seleccionado":""}"
+   data-entrenamiento="${textoSeguro(t.id)}">
+
+   <div class="ct-eval-entrenamiento-top">
+
+    <div>
+     <div class="ct-eval-fecha">
+      ${formatearFecha(t.fecha)}
+     </div>
+
+     <div class="ct-eval-horario">
+      ${textoSeguro(obtenerHorario(t.horario)?.nombre||"Horario anterior")}
+     </div>
+    </div>
+
+    <span class="ct-eval-badge ${badge}">
+     ${texto}
+    </span>
+
+   </div>
+
+   ${!futuro?`
+
+    <div class="ct-eval-progreso">
+     <span style="width:${porcentaje}%"></span>
+    </div>
+
+    <div class="ct-eval-detalle">
+     Evaluados: ${datos.evaluadas} de ${datos.asistieron}
+     · Pendientes: ${datos.pendientes}
+    </div>
+
+   `:`
+    <div class="ct-eval-detalle">
+     Entrenamiento futuro
+    </div>
+   `}
+
+  </button>
+
+  `;
+
+ }).join(""):`
+  <div class="empty-state">
+   No hay entrenamientos en esta categoría.
+  </div>
+ `}
+
+ `;
+
+ contenedor.querySelectorAll("[data-filtro]").forEach(b=>{
+  b.addEventListener("click",()=>{
+   filtro=b.dataset.filtro;
+   render();
+  });
+ });
+
+ contenedor.querySelectorAll("[data-entrenamiento]").forEach(b=>{
+  b.addEventListener("click",()=>{
+   window.ctEntrenamientoActual=b.dataset.entrenamiento;
+   render();
+   window.cargarJugadoresEvaluacion();
+  });
+ });
+
+}
+
+window.mostrarEvaluaciones=function(){
+
+ mostrarOriginal.apply(this,arguments);
+
+ const selector=document.getElementById(
+  "ctSeleccionEntrenamiento"
+ );
+
+ if(!selector)return;
+
+ const tarjeta=selector.closest(".tarjeta");
+
+ if(!tarjeta)return;
+
+ tarjeta.innerHTML=`
+  <div id="ctListaEntrenamientosEvaluacion"
+   class="ct-eval-selector">
+  </div>
+ `;
+
+ render();
+
+};
+
+window.cargarJugadoresEvaluacion=function(){
+
+ if(typeof cargarOriginal==="function"){
+  cargarOriginal.apply(this,arguments);
+ }
+
+ render();
+
+};
+
+console.log(
+ "CONTROL TIBURONES: evaluaciones ordenadas activadas."
+);
+
+})();
+</script>
+
+<!-- FIN DE LA MEJORA DE EVALUACIONES -->
+  
 </body>
   </html>
   
