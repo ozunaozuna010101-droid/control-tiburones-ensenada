@@ -19628,27 +19628,29 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
     tpCambiarJugadorEval();
   }
 
-  function tpLlenarPartidosEvaluacion() {
-    const select = document.getElementById("tpEvalPartido");
-    if (!select) return;
+  
+function tpLlenarPartidosEvaluacion() {
+  const select = document.getElementById("tpEvalPartido");
+  if (!select) return;
 
-    const jugadorSelect = document.getElementById("tpEvalJugador");
-    const jugadorId = jugadorSelect ? String(jugadorSelect.value) : "";
+  const jugadorSelect = document.getElementById("tpEvalJugador");
+  const jugadorId = jugadorSelect ? String(jugadorSelect.value) : "";
 
-    const jugados = tpDB.partidos.filter(p =>
-      p.estado === "Jugado" &&
-      Array.isArray(p.participantes) &&
-      p.participantes.includes(jugadorId)
-    );
+  const jugados = tpDB.partidos.filter(p =>
+    p.estado === "Jugado" &&
+    Array.isArray(p.participantes) &&
+    p.participantes.includes(jugadorId)
+  );
 
-    select.innerHTML =
-      '<option value="">Selecciona un partido</option>' +
-      jugados.map(p => `
-        <option value="${tpEsc(p.id)}">
-          ${tpEsc(p.fecha)} · vs. ${tpEsc(p.rival)}
-        </option>
-      `).join("");
-  }
+  select.innerHTML =
+    '<option value="">Selecciona un partido</option>' +
+    jugados.map(p => `
+      <option value="${tpEsc(p.id)}">
+        ${tpEsc(p.fecha)} · ${tpEsc(p.categoria || "Partido")}
+      </option>
+    `).join("");
+}  
+  
   
 
   function tpCambiarJugadorEval() {
@@ -19879,32 +19881,60 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
      PARTIDOS
      ===================================================== */
 
+  
+  /* =====================================================
+     PARTIDOS · CONTROL POR CATEGORÍA Y ASISTENCIA
+     ===================================================== */
+
+  function tpCategoriaHorario(id) {
+    const categorias = {
+      "4:30": "Inicial",
+      "5:30": "Infantil",
+      "6:30": "Juvenil"
+    };
+    return categorias[String(id)] || "";
+  }
+
+  function tpJugadoresCompetencia(categoria) {
+    return tpJugadoresActivos()
+      .filter(j =>
+        String(j.horario) === String(categoria) &&
+        tpModalidad(j.id) === "competencia" &&
+        tpEsValida(j, "competencia")
+      )
+      .sort((a, b) =>
+        String(a.nombre).localeCompare(String(b.nombre), "es")
+      );
+  }
+
   function tpMostrarPartidos() {
+    window.tpAsistenciaPartido = {};
+
     const filas = tpDB.partidos
       .slice()
       .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
       .map(p => {
         const clase = p.estado === "Jugado"
-          ? "tp-basic"
-          : p.estado === "Cancelado"
-            ? "tp-pending"
-            : "tp-comp";
+          ? "tp-basic" : "tp-pending";
 
         return `
           <div class="tp-card">
             <div style="display:flex;justify-content:space-between;gap:8px">
-              <strong>vs. ${tpEsc(p.rival)}</strong>
-              <span class="tp-tag ${clase}">${tpEsc(p.estado)}</span>
+              <strong>${tpEsc(p.categoria || tpCategoriaHorario(p.horarioId) || "Categoría pendiente")}</strong>
+              <span class="tp-tag ${clase}">
+                ${p.estado === "Jugado" ? "Se realizó" : "Se canceló"}
+              </span>
             </div>
             <div class="tp-muted">
               ${tpEsc(p.fecha)} · ${tpEsc(p.hora || "Hora no indicada")}
             </div>
             <div class="tp-muted">
-              Participantes: ${p.participantes.length}
+              Asistieron: ${(p.participantes || []).length}
+              · No asistieron: ${(p.ausentes || []).length}
             </div>
             <button class="tp-btn"
               onclick="tpEditarPartido('${tpEsc(p.id)}')">
-              Editar
+              EDITAR PARTIDO
             </button>
           </div>
         `;
@@ -19914,42 +19944,40 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
       ${tpEncabezado("PROGRAMACIÓN Y RESULTADOS", "tpInicio()")}
 
       <div class="tp-card">
-        <label class="tp-label">Fecha</label>
+
+        <label class="tp-label">Fecha del partido</label>
         <input id="tpPartidoFecha" type="date" class="tp-field">
 
-        <label class="tp-label">Hora</label>
+        <label class="tp-label">Hora del partido</label>
         <input id="tpPartidoHora" type="time" class="tp-field">
 
-        <label class="tp-label">Rival</label>
-        <input id="tpPartidoRival" class="tp-field"
-          placeholder="Nombre del equipo rival">
-
-        <label class="tp-label">Estado</label>
-        <select id="tpPartidoEstado" class="tp-field">
-          <option>Programado</option>
-          <option>Jugado</option>
-          <option>Cancelado</option>
+        <label class="tp-label">Categoría</label>
+        <select id="tpPartidoCategoria" class="tp-field"
+          onchange="tpCambiarCategoriaPartido()">
+          <option value="">Selecciona una categoría</option>
+          <option value="4:30">Inicial</option>
+          <option value="5:30">Infantil</option>
+          <option value="6:30">Juvenil</option>
         </select>
 
-        <label class="tp-label">Jugadores participantes</label>
+        <label class="tp-label">Estado del partido</label>
+        <select id="tpPartidoEstado" class="tp-field">
+          <option value="Jugado">Se realizó</option>
+          <option value="Cancelado">Se canceló</option>
+        </select>
 
-        <div style="max-height:240px;overflow:auto">
-          ${tpJugadoresActivos().map(j => `
-            <label style="display:flex;gap:8px;align-items:center;padding:6px 0;font-size:12px">
-              <input type="checkbox" class="tp-participante"
-                value="${tpEsc(j.id)}">
-              ${tpEsc(j.nombre)}
-              <span class="tp-muted">
-                (${tpEsc(tpNombreHorario(j.horario))})
-              </span>
-            </label>
-          `).join("")}
+        <label class="tp-label">Asistencia de jugadores</label>
+
+        <div id="tpListaAsistenciaPartido">
+          <div class="tp-empty">
+            Primero selecciona la categoría.
+          </div>
         </div>
 
         <button class="tp-btn tp-primary"
           style="width:100%;margin-top:12px"
           onclick="tpGuardarPartido()">
-          GUARDAR PARTIDO
+          GUARDAR PARTIDO Y ASISTENCIA
         </button>
 
         <button class="tp-btn" onclick="tpLimpiarPartido()">
@@ -19962,8 +19990,82 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
     `);
   }
 
+  function tpCambiarCategoriaPartido() {
+    window.tpAsistenciaPartido = {};
+    tpRenderAsistenciaPartido();
+  }
+
+  function tpRenderAsistenciaPartido() {
+    const categoria = document.getElementById("tpPartidoCategoria");
+    const zona = document.getElementById("tpListaAsistenciaPartido");
+
+    if (!categoria || !zona) return;
+
+    if (!categoria.value) {
+      zona.innerHTML = '<div class="tp-empty">Primero selecciona la categoría.</div>';
+      return;
+    }
+
+    const jugadores = tpJugadoresCompetencia(categoria.value);
+
+    if (!jugadores.length) {
+      zona.innerHTML = `
+        <div class="tp-empty">
+          No hay jugadores de COMPETENCIA en esta categoría.
+        </div>
+      `;
+      return;
+    }
+
+    const asistencia = window.tpAsistenciaPartido || {};
+
+    zona.innerHTML = jugadores.map(j => {
+      const valor = asistencia[String(j.id)] || "";
+
+      return `
+        <div class="tp-card" style="padding:12px">
+          <strong style="color:#fff">
+            ${tpEsc(j.nombre)}
+          </strong>
+
+          <div class="tp-muted" style="margin:5px 0 9px">
+            ${tpEsc(tpNombreHorario(j.horario))}
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button type="button"
+              class="tp-btn ${valor === "si" ? "tp-primary" : ""}"
+              style="flex:1;min-height:43px;border:1px solid #39d69a;
+              background:${valor === "si" ? "#087a53" : "#193b39"}"
+              onclick="tpMarcarAsistenciaPartido('${tpEsc(j.id)}','si')">
+              ✓ ASISTIÓ
+            </button>
+
+            <button type="button"
+              class="tp-btn"
+              style="flex:1;min-height:43px;border:1px solid #ed7180;
+              background:${valor === "no" ? "#9b3446" : "#49303b"}"
+              onclick="tpMarcarAsistenciaPartido('${tpEsc(j.id)}','no')">
+              ✕ NO ASISTIÓ
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function tpMarcarAsistenciaPartido(jugadorId, valor) {
+    if (!window.tpAsistenciaPartido) {
+      window.tpAsistenciaPartido = {};
+    }
+
+    window.tpAsistenciaPartido[String(jugadorId)] = valor;
+    tpRenderAsistenciaPartido();
+  }
+
   function tpLimpiarPartido() {
     tpPartidoActual = "";
+    window.tpAsistenciaPartido = {};
     tpMostrarPartidos();
   }
 
@@ -19976,46 +20078,84 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
 
     const fecha = document.getElementById("tpPartidoFecha");
     const hora = document.getElementById("tpPartidoHora");
-    const rival = document.getElementById("tpPartidoRival");
+    const categoria = document.getElementById("tpPartidoCategoria");
     const estado = document.getElementById("tpPartidoEstado");
 
     if (fecha) fecha.value = partido.fecha;
     if (hora) hora.value = partido.hora || "";
-    if (rival) rival.value = partido.rival;
-    if (estado) estado.value = partido.estado;
 
-    document.querySelectorAll(".tp-participante").forEach(c => {
-      c.checked = partido.participantes.includes(String(c.value));
+    if (categoria) {
+      categoria.value = partido.horarioId ||
+        (partido.categoria === "Inicial" ? "4:30" :
+         partido.categoria === "Infantil" ? "5:30" :
+         partido.categoria === "Juvenil" ? "6:30" : "");
+    }
+
+    if (estado) estado.value = partido.estado || "Jugado";
+
+    window.tpAsistenciaPartido = {};
+
+    (partido.participantes || []).forEach(id => {
+      window.tpAsistenciaPartido[String(id)] = "si";
     });
+
+    (partido.ausentes || []).forEach(id => {
+      window.tpAsistenciaPartido[String(id)] = "no";
+    });
+
+    tpRenderAsistenciaPartido();
   }
 
   function tpGuardarPartido() {
     const fecha = document.getElementById("tpPartidoFecha");
     const hora = document.getElementById("tpPartidoHora");
-    const rival = document.getElementById("tpPartidoRival");
+    const categoria = document.getElementById("tpPartidoCategoria");
     const estado = document.getElementById("tpPartidoEstado");
 
-    if (!fecha || !fecha.value || !rival || !rival.value.trim()) {
-      alert("Captura la fecha y el nombre del rival.");
+    if (!fecha || !fecha.value || !hora || !hora.value || !categoria || !categoria.value) {
+      alert("Completa la fecha, hora y categoría del partido.");
       return;
     }
 
-    const participantes = Array.from(
-      document.querySelectorAll(".tp-participante:checked")
-    ).map(c => String(c.value));
+    const jugadores = tpJugadoresCompetencia(categoria.value);
+    const asistencia = window.tpAsistenciaPartido || {};
 
-    if (!participantes.length && estado.value !== "Cancelado") {
-      alert("Selecciona al menos un jugador participante.");
+    if (estado.value === "Jugado" && !jugadores.length) {
+      alert("No hay jugadores de Competencia en esta categoría.");
       return;
     }
+
+    if (estado.value === "Jugado") {
+      const pendientes = jugadores.filter(j =>
+        !Object.prototype.hasOwnProperty.call(asistencia, String(j.id))
+      );
+
+      if (pendientes.length) {
+        alert("Marca ASISTIÓ o NO ASISTIÓ para cada jugador.");
+        return;
+      }
+    }
+
+    const participantes = estado.value === "Cancelado"
+      ? []
+      : jugadores.filter(j => asistencia[String(j.id)] === "si")
+          .map(j => String(j.id));
+
+    const ausentes = estado.value === "Cancelado"
+      ? []
+      : jugadores.filter(j => asistencia[String(j.id)] === "no")
+          .map(j => String(j.id));
 
     const registro = {
       id: tpPartidoActual || tpId(),
       fecha: fecha.value,
-      hora: hora ? hora.value : "",
-      rival: rival.value.trim(),
+      hora: hora.value,
+      categoria: tpCategoriaHorario(categoria.value),
+      horarioId: String(categoria.value),
+      rival: "",
       estado: estado.value,
-      participantes: estado.value === "Cancelado" ? [] : participantes
+      participantes,
+      ausentes
     };
 
     const indice = tpDB.partidos.findIndex(
@@ -20028,19 +20168,18 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
       tpDB.partidos.push(registro);
     }
 
-    if (registro.estado === "Cancelado") {
-      tpDB.evaluaciones = tpDB.evaluaciones.filter(
-        e => e.partidoId !== registro.id
-      );
-    }
-
     tpPartidoActual = "";
+    window.tpAsistenciaPartido = {};
 
     if (tpGuardar()) {
-      alert("Partido guardado.");
+      alert("Partido y asistencia guardados correctamente.");
       tpMostrarPartidos();
     }
   }
+
+  window.tpCambiarCategoriaPartido = tpCambiarCategoriaPartido;
+  window.tpMarcarAsistenciaPartido = tpMarcarAsistenciaPartido;
+ 
 
   /* =====================================================
      RESUMEN SEMANAL
