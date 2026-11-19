@@ -20393,7 +20393,13 @@ console.log("CONTROL TIBURONES: horarios y evaluaciones restaurados.");
 
     boton.addEventListener("click", tpAbrir);
 
-    menu.appendChild(boton);
+const botonConfiguracion = document.getElementById("btnConfiguracionAcademia");
+
+if (botonConfiguracion) {
+  menu.insertBefore(boton, botonConfiguracion);
+} else {
+  menu.appendChild(boton);
+  }
   }
 
   /* =====================================================
