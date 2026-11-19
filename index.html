@@ -20012,7 +20012,114 @@ function tpLlenarPartidosEvaluacion() {
       ${filas || '<div class="tp-empty">Todavía no hay partidos registrados.</div>'}
     `);
   }
+  function tpMostrarAsistentesParaEvaluar(partidoId) {
+    const partido = tpDB.partidos.find(
+      p => String(p.id) === String(partidoId)
+    );
 
+    if (!partido || partido.estado !== "Jugado") {
+      alert("No se encontró un partido realizado.");
+      return;
+    }
+
+    const participantes = (partido.participantes || []).map(String);
+
+    const jugadores = participantes
+      .map(id => tpJugadoresActivos().find(
+        j => String(j.id) === id
+      ))
+      .filter(Boolean)
+      .sort((a, b) =>
+        String(a.nombre).localeCompare(String(b.nombre), "es")
+      );
+
+    const filas = jugadores.map(j => {
+      const evaluacion = tpDB.evaluaciones.find(e =>
+        String(e.jugadorId) === String(j.id) &&
+        e.contexto === "partido" &&
+        String(e.partidoId) === String(partido.id)
+      );
+
+      return `
+        <div class="tp-card">
+          <strong>${tpEsc(j.nombre)}</strong>
+
+          <div class="tp-muted">
+            ${tpEsc(tpNombreHorario(j.horario))}
+          </div>
+
+          ${evaluacion ? `
+            <button class="tp-btn"
+              style="width:100%;min-height:54px;font-size:15px;margin-top:10px"
+              onclick="tpFichaJugador('${tpEsc(j.id)}')">
+              ✓ EVALUACIÓN GUARDADA · VER HISTORIAL
+            </button>
+          ` : `
+            <button class="tp-btn tp-primary"
+              style="width:100%;min-height:58px;font-size:16px;font-weight:900;margin-top:10px"
+              onclick="tpAbrirEvalPartidoSeleccionado('${tpEsc(partido.id)}','${tpEsc(j.id)}')">
+              🏀 EVALUAR JUGADOR
+            </button>
+          `}
+        </div>
+      `;
+    }).join("");
+
+    tpAbrirVista("Evaluación de partido · Tiburón Pro", `
+      ${tpEncabezado("JUGADORES QUE ASISTIERON", "tpMostrarPartidos()")}
+
+      <div class="tp-card">
+        <strong>${tpEsc(partido.categoria || tpCategoriaHorario(partido.horarioId))}</strong>
+
+        <div class="tp-muted">
+          ${tpEsc(partido.fecha)} · ${tpEsc(partido.hora || "Hora no indicada")}
+        </div>
+
+        <div class="tp-muted">
+          ${jugadores.length} jugador(es) asistentes
+        </div>
+      </div>
+
+      ${filas || '<div class="tp-empty">No hay jugadores asistentes activos registrados para este partido.</div>'}
+    `);
+  }
+
+
+  function tpAbrirEvalPartidoSeleccionado(partidoId, jugadorId) {
+    const partido = tpDB.partidos.find(p =>
+      String(p.id) === String(partidoId) &&
+      p.estado === "Jugado" &&
+      Array.isArray(p.participantes) &&
+      p.participantes.map(String).includes(String(jugadorId))
+    );
+
+    if (!partido) {
+      alert("No se encontró el partido o el jugador no aparece como asistente.");
+      return;
+    }
+
+    const existente = tpDB.evaluaciones.find(e =>
+      String(e.jugadorId) === String(jugadorId) &&
+      e.contexto === "partido" &&
+      String(e.partidoId) === String(partidoId)
+    );
+
+    if (existente) {
+      alert("Este jugador ya tiene una evaluación registrada para este partido. Puedes revisarla desde su historial.");
+      tpFichaJugador(jugadorId);
+      return;
+    }
+
+    tpEvaluacionEditando = "";
+
+    tpAbrirFormularioEval(String(jugadorId), "partido");
+
+    const select = document.getElementById("tpEvalPartido");
+
+    if (select) {
+      select.value = String(partidoId);
+    }
+  }
   function tpCambiarCategoriaPartido() {
     window.tpAsistenciaPartido = {};
     tpRenderAsistenciaPartido();
