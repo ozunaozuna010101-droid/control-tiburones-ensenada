@@ -20403,39 +20403,89 @@ function tpLlenarPartidosEvaluacion() {
      HISTORIAL INDIVIDUAL
      ===================================================== */
 
-  function tpHistorialInicio() {
-    const jugadores = tpJugadoresActivos().sort((a, b) =>
-      String(a.nombre).localeCompare(String(b.nombre), "es")
-    );
+    function tpHistorialInicio() {
+    const horarios = [
+      { id: "4:30", nombre: "INICIAL" },
+      { id: "5:30", nombre: "INFANTIL" },
+      { id: "6:30", nombre: "JUVENIL" }
+    ];
+
+    const botones = horarios.map(h => {
+      const total = tpJugadoresActivos().filter(
+        j => String(j.horario) === h.id
+      ).length;
+
+      return `
+        <button class="tp-btn tp-primary"
+          style="width:100%;min-height:75px;font-size:19px;margin:8px 0"
+          onclick="tpMostrarJugadoresHistorial('${h.id}')">
+          🏀 ${h.id} · ${h.nombre}
+          <div style="font-size:14px;font-weight:600;margin-top:5px">
+            ${total} jugadores
+          </div>
+        </button>
+      `;
+    }).join("");
 
     tpAbrirVista("Historial individual · Tiburón Pro", `
-      ${tpEncabezado("SEGUIMIENTO DEL JUGADOR", "tpInicio()")}
+      ${tpEncabezado("EXPEDIENTE DEPORTIVO", "tpInicio()")}
+
       <div class="tp-card">
-        <label class="tp-label">Selecciona un jugador</label>
-        <select id="tpHistJugador" class="tp-field">
-          <option value="">Selecciona...</option>
-          ${jugadores.map(j => `
-            <option value="${tpEsc(j.id)}">${tpEsc(j.nombre)}</option>
-          `).join("")}
-        </select>
-        <button class="tp-btn tp-primary" style="width:100%;margin-top:10px"
-          onclick="tpAbrirHistorialSeleccionado()">
-          CONSULTAR HISTORIAL
-        </button>
+        <h3>Selecciona un horario</h3>
+        <div class="tp-muted">
+          Consulta el expediente deportivo de cada jugador.
+        </div>
+        ${botones}
       </div>
     `);
   }
 
-  function tpAbrirHistorialSeleccionado() {
-    const select = document.getElementById("tpHistJugador");
 
-    if (!select || !select.value) {
-      alert("Selecciona un jugador.");
-      return;
-    }
+  function tpMostrarJugadoresHistorial(horarioId) {
+    const jugadores = tpJugadoresActivos()
+      .filter(j => String(j.horario) === String(horarioId))
+      .sort((a, b) =>
+        String(a.nombre).localeCompare(String(b.nombre), "es")
+      );
 
-    tpFichaJugador(select.value);
+    const filas = jugadores.map(j => {
+      const cantidad = tpDB.evaluaciones.filter(e =>
+        String(e.jugadorId) === String(j.id)
+      ).length;
+
+      return `
+        <div class="tp-card">
+          <strong style="font-size:19px">
+            ${tpEsc(j.nombre)}
+          </strong>
+
+          <div class="tp-muted" style="margin:7px 0">
+            ${cantidad} evaluaciones registradas
+          </div>
+
+          <button class="tp-btn tp-primary"
+            style="width:100%;min-height:55px;font-size:17px"
+            onclick="tpFichaJugador('${tpEsc(j.id)}')">
+            CONSULTAR EXPEDIENTE
+          </button>
+        </div>
+      `;
+    }).join("");
+
+    tpAbrirVista("Jugadores · Historial individual", `
+      ${tpEncabezado(
+        "JUGADORES DEL HORARIO " + horarioId,
+        "tpHistorialInicio()"
+      )}
+
+      ${filas || `
+        <div class="tp-empty">
+          No hay jugadores activos registrados en este horario.
+        </div>
+      `}
+    `);
   }
+
 
   function tpFichaJugador(id) {
     const jugador = tpJugadoresActivos().find(
@@ -20449,156 +20499,233 @@ function tpLlenarPartidosEvaluacion() {
 
     tpJugadorActual = String(jugador.id);
 
-    const modalidad = tpModalidad(jugador.id);
-
     const registros = tpDB.evaluaciones
       .filter(e => String(e.jugadorId) === String(jugador.id))
-      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+      .sort((a, b) =>
+        String(a.fecha).localeCompare(String(b.fecha))
+      );
 
-    const promedios = registros
-      .map(e => tpPromedio(e.puntajes))
-      .filter(n => n !== null);
-
-    const promedioGeneral = promedios.length
-      ? promedios.reduce((a, b) => a + b, 0) / promedios.length
-      : null;
-
-    const porHabilidad = {};
+    const habilidades = {};
 
     registros.forEach(e => {
       Object.entries(e.puntajes || {}).forEach(([nombre, valor]) => {
-        if (!porHabilidad[nombre]) {
-          porHabilidad[nombre] = [];
+        const numero = Number(valor);
+
+        if (!Number.isFinite(numero)) return;
+
+        if (!habilidades[nombre]) {
+          habilidades[nombre] = [];
         }
 
-        porHabilidad[nombre].push(Number(valor));
+        habilidades[nombre].push(numero);
       });
     });
 
-    const tablaHabilidades = Object.entries(porHabilidad)
-      .map(([nombre, valores]) => {
+    const aspectos = Object.entries(habilidades).map(
+      ([nombre, valores]) => {
         const promedio =
           valores.reduce((a, b) => a + b, 0) / valores.length;
 
-        return `
-          <tr>
-            <td>${tpEsc(nombre)}</td>
-            <td>${promedio.toFixed(1)} / 10</td>
-            <td>${valores.length}</td>
-          </tr>
-        `;
-      }).join("");
+        const mitad = Math.floor(valores.length / 2);
 
-    const historial = registros.map(e => {
-      const promedio = tpPromedio(e.puntajes);
+        let tendencia = "sin datos suficientes";
 
-      const contexto = e.contexto === "partido"
-        ? "Partido"
-        : e.contexto === "tecnica"
-          ? "Evaluación técnica"
-          : "Entrenamiento";
+        if (valores.length >= 2) {
+          const anteriores = valores.slice(0, mitad);
+          const recientes = valores.slice(mitad);
 
-      const partido = e.partidoId
-        ? tpDB.partidos.find(p => p.id === e.partidoId)
-        : null;
+          const promedioAnterior =
+            anteriores.reduce((a, b) => a + b, 0) /
+            anteriores.length;
 
-      return `
-        <div class="tp-card">
-          <div style="display:flex;justify-content:space-between;gap:8px">
-            <strong>${tpEsc(e.fecha)}</strong>
-            <span class="tp-tag tp-basic">
-              ${promedio === null ? "—" : promedio.toFixed(1) + " / 10"}
-            </span>
+          const promedioReciente =
+            recientes.reduce((a, b) => a + b, 0) /
+            recientes.length;
+
+          if (promedioReciente - promedioAnterior >= 0.5) {
+            tendencia = "mejoró";
+          } else if (promedioAnterior - promedioReciente >= 0.5) {
+            tendencia = "necesita atención";
+          } else {
+            tendencia = "se mantiene";
+          }
+        }
+
+        return {
+          nombre,
+          promedio,
+          tendencia,
+          cantidad: valores.length
+        };
+      }
+    );
+
+    const mejorar = aspectos.filter(
+      a => a.promedio < 7 || a.tendencia === "necesita atención"
+    );
+
+    const fortalezas = aspectos.filter(
+      a => a.promedio >= 8 && a.tendencia !== "necesita atención"
+    );
+
+    const avances = aspectos.filter(
+      a => a.tendencia === "mejoró"
+    );
+
+    const promedioGeneral = aspectos.length
+      ? aspectos.reduce((s, a) => s + s.promedio, 0) /
+        aspectos.length
+      : null;
+
+    const listaMejorar = mejorar.length
+      ? mejorar.map(a => `
+          <div class="tp-card">
+            <strong style="font-size:17px">
+              ${tpEsc(a.nombre)}
+            </strong>
+            <div class="tp-muted" style="margin-top:6px">
+              Necesita más práctica y seguimiento en este aspecto.
+            </div>
           </div>
-
-          <div class="tp-muted">
-            ${contexto}
-            ${partido ? " · vs. " + tpEsc(partido.rival) : ""}
-          </div>
-
-          <table class="tp-table" style="margin-top:8px">
-            ${Object.entries(e.puntajes || {}).map(([nombre, valor]) => `
-              <tr>
-                <td>${tpEsc(nombre)}</td>
-                <td>${tpEsc(valor)} / 10</td>
-              </tr>
-            `).join("")}
-          </table>
-
-          ${e.observacion ? `
-            <p class="tp-muted">
-              <strong>Observación:</strong>
-              ${tpEsc(e.observacion)}
-            </p>
-          ` : ""}
-
-          <button class="tp-btn"
-            onclick="tpEditarEvaluacion('${tpEsc(e.id)}')">
-            EDITAR EVALUACIÓN
-          </button>
+        `).join("")
+      : `
+        <div class="tp-muted">
+          No se identifican aspectos pendientes con los datos actuales.
         </div>
       `;
-    }).join("");
 
-    tpAbrirVista("Historial individual · " + jugador.nombre, `
-      ${tpEncabezado("EXPEDIENTE DEPORTIVO", "tpHistorialInicio()")}
+    const listaAvances = avances.length
+      ? avances.map(a => `
+          <div class="tp-card">
+            <strong style="font-size:17px">
+              ${tpEsc(a.nombre)}
+            </strong>
+            <div class="tp-muted" style="margin-top:6px">
+              Se observa una mejora respecto a sus evaluaciones anteriores.
+              Conviene seguir reforzando este avance.
+            </div>
+          </div>
+        `).join("")
+      : `
+        <div class="tp-muted">
+          Aún no hay suficientes evaluaciones comparables para identificar
+          mejoras.
+        </div>
+      `;
+
+    const listaFortalezas = fortalezas.length
+      ? fortalezas.map(a => `
+          <div class="tp-card">
+            <strong style="font-size:17px">
+              ${tpEsc(a.nombre)}
+            </strong>
+            <div class="tp-muted" style="margin-top:6px">
+              Es una fortaleza observada. Hay que mantenerla y seguir
+              desarrollándola.
+            </div>
+          </div>
+        `).join("")
+      : `
+        <div class="tp-muted">
+          Todavía no hay fortalezas consolidadas según las evaluaciones.
+        </div>
+      `;
+
+    const observaciones = [
+      ...new Set(
+        registros
+          .map(e => String(e.observacion || "").trim())
+          .filter(Boolean)
+      )
+    ];
+
+    tpAbrirVista("Expediente deportivo · " + jugador.nombre, `
+      ${tpEncabezado("EXPEDIENTE DEPORTIVO", "tpMostrarJugadoresHistorial('${tpEsc(jugador.horario)}')")}
 
       <div class="tp-card">
-        <h3 style="margin:0 0 7px">${tpEsc(jugador.nombre)}</h3>
+        <h2 style="font-size:25px;margin:0 0 10px">
+          ${tpEsc(jugador.nombre)}
+        </h2>
 
-        <div class="tp-muted">
+        <div class="tp-muted" style="font-size:16px">
           ${tpEsc(tpNombreHorario(jugador.horario))}
-          · ${tpTituloModalidad(modalidad)}
+          · ${tpTituloModalidad(tpModalidad(jugador.id))}
         </div>
 
-        <div class="tp-stat-grid" style="margin-top:12px">
+        <div class="tp-stat-grid" style="margin-top:14px">
           <div class="tp-stat">
-            <b>${registros.length}</b>
+            <b style="font-size:24px">${registros.length}</b>
             <span class="tp-muted">Evaluaciones</span>
           </div>
 
           <div class="tp-stat">
-            <b>${promedioGeneral === null ? "—" : promedioGeneral.toFixed(1)}</b>
-            <span class="tp-muted">Promedio / 10</span>
+            <b style="font-size:24px">
+              ${promedioGeneral === null
+                ? "—"
+                : promedioGeneral.toFixed(1)}
+            </b>
+            <span class="tp-muted">Promedio general</span>
           </div>
         </div>
       </div>
 
       <div class="tp-card">
-        <strong>Promedio por aspecto evaluado</strong>
+        <h3 style="font-size:21px">📌 OPORTUNIDADES DE MEJORA</h3>
+        <div class="tp-muted" style="font-size:15px;margin-bottom:12px">
+          Aspectos que requieren mayor atención durante los entrenamientos.
+        </div>
+        ${listaMejorar}
+      </div>
 
-        ${tablaHabilidades
-          ? `
-            <table class="tp-table">
-              <thead>
-                <tr>
-                  <th>Aspecto</th>
-                  <th>Promedio</th>
-                  <th>Registros</th>
-                </tr>
-              </thead>
-              <tbody>${tablaHabilidades}</tbody>
-            </table>
+      <div class="tp-card">
+        <h3 style="font-size:21px">📈 AVANCES OBSERVADOS</h3>
+        <div class="tp-muted" style="font-size:15px;margin-bottom:12px">
+          Habilidades en las que el jugador muestra progreso.
+        </div>
+        ${listaAvances}
+      </div>
+
+      <div class="tp-card">
+        <h3 style="font-size:21px">⭐ FORTALEZAS</h3>
+        ${listaFortalezas}
+      </div>
+
+      <div class="tp-card">
+        <h3 style="font-size:21px">📝 OBSERVACIONES DEL COACH</h3>
+
+        ${observaciones.length
+          ? observaciones.map(o => `
+              <div class="tp-card">
+                ${tpEsc(o)}
+              </div>
+            `).join("")
+          : `
+            <div class="tp-muted">
+              No hay observaciones escritas en las evaluaciones.
+            </div>
           `
-          : '<div class="tp-empty">Todavía no hay aspectos evaluados.</div>'
         }
       </div>
 
-      <h3>Evaluaciones registradas</h3>
+      <div class="tp-card">
+        <h3 style="font-size:21px">📋 RESUMEN PARA EL ENTRENADOR</h3>
 
-      ${historial || `
-        <div class="tp-empty">
-          No hay evaluaciones guardadas para este jugador.
+        <div class="tp-muted" style="font-size:16px;line-height:1.6">
+          ${registros.length
+            ? "Utiliza las oportunidades de mejora para planificar ejercicios específicos. Refuerza los avances observados y continúa trabajando las habilidades que necesitan atención."
+            : "Este jugador todavía no cuenta con evaluaciones. Registra sus primeras evaluaciones para comenzar a generar su expediente deportivo."
+          }
         </div>
-      `}
+      </div>
 
       <button class="tp-btn tp-primary"
-        style="width:100%;margin-top:12px"
+        style="width:100%;min-height:58px;font-size:17px"
         onclick="tpImprimirHistorial()">
         IMPRIMIR / GUARDAR PDF
       </button>
     `);
-  }
+    }
+
 
   /* =====================================================
      EDITAR EVALUACIONES
