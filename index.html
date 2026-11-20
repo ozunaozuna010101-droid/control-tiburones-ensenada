@@ -20486,232 +20486,211 @@ function tpLlenarPartidosEvaluacion() {
     `);
   }
 
+function tpFichaJugador(id) {
+  const jugador = tpJugadoresActivos().find(
+    j => String(j.id) === String(id)
+  );
 
-  function tpFichaJugador(id) {
-    const jugador = tpJugadoresActivos().find(
-      j => String(j.id) === String(id)
+  if (!jugador) {
+    alert("No se encontró al jugador activo.");
+    return;
+  }
+
+  tpJugadorActual = String(jugador.id);
+
+  const registros = tpDB.evaluaciones
+    .filter(e => String(e.jugadorId) === String(jugador.id))
+    .sort((a, b) =>
+      String(a.fecha || "").localeCompare(String(b.fecha || ""))
     );
 
-    if (!jugador) {
-      alert("No se encontró al jugador activo.");
-      return;
-    }
+  const modalidad = tpModalidad(jugador.id);
+  const esCompetencia = modalidad === "competencia";
+  const entrenamientos = registros.filter(e => e.contexto === "entrenamiento");
+  const partidos = registros.filter(e => e.contexto === "partido");
 
-    tpJugadorActual = String(jugador.id);
+  const promedioRegistros = lista => {
+    const promedios = lista
+      .map(e => tpPromedio(e.puntajes || {}))
+      .filter(n => Number.isFinite(n));
 
-    const registros = tpDB.evaluaciones
-      .filter(e => String(e.jugadorId) === String(jugador.id))
-      .sort((a, b) =>
-        String(a.fecha).localeCompare(String(b.fecha))
-      );
+    return promedios.length
+      ? promedios.reduce((a, b) => a + b, 0) / promedios.length
+      : null;
+  };
 
-    const habilidades = {};
+  const promedioEntrenamiento = promedioRegistros(entrenamientos);
+  const promedioPartido = promedioRegistros(partidos);
 
-    registros.forEach(e => {
-      Object.entries(e.puntajes || {}).forEach(([nombre, valor]) => {
-        const numero = Number(valor);
+  const habilidades = {};
 
-        if (!Number.isFinite(numero)) return;
+  registros.forEach(e => {
+    Object.entries(e.puntajes || {}).forEach(([nombre, valor]) => {
+      const numero = Number(valor);
+      if (!Number.isFinite(numero) || numero < 1 || numero > 10) return;
 
-        if (!habilidades[nombre]) {
-          habilidades[nombre] = [];
-        }
-
-        habilidades[nombre].push(numero);
-      });
-    });
-
-    const aspectos = Object.entries(habilidades).map(
-      ([nombre, valores]) => {
-        const promedio =
-          valores.reduce((a, b) => a + b, 0) / valores.length;
-
-        const mitad = Math.floor(valores.length / 2);
-
-        let tendencia = "sin datos suficientes";
-
-        if (valores.length >= 2) {
-          const anteriores = valores.slice(0, mitad);
-          const recientes = valores.slice(mitad);
-
-          const promedioAnterior =
-            anteriores.reduce((a, b) => a + b, 0) /
-            anteriores.length;
-
-          const promedioReciente =
-            recientes.reduce((a, b) => a + b, 0) /
-            recientes.length;
-
-          if (promedioReciente - promedioAnterior >= 0.5) {
-            tendencia = "mejoró";
-          } else if (promedioAnterior - promedioReciente >= 0.5) {
-            tendencia = "necesita atención";
-          } else {
-            tendencia = "se mantiene";
-          }
-        }
-
-        return {
-          nombre,
-          promedio,
-          tendencia,
-          cantidad: valores.length
+      if (!habilidades[nombre]) {
+        habilidades[nombre] = {
+          entrenamiento: [],
+          partido: [],
+          total: []
         };
       }
-    );
 
-    const mejorar = aspectos.filter(
-      a => a.promedio < 7 || a.tendencia === "necesita atención"
-    );
+      const contexto = e.contexto === "partido"
+        ? "partido"
+        : "entrenamiento";
 
-    const fortalezas = aspectos.filter(
-      a => a.promedio >= 8 && a.tendencia !== "necesita atención"
-    );
+      habilidades[nombre][contexto].push(numero);
+      habilidades[nombre].total.push(numero);
+    });
+  });
 
-    const avances = aspectos.filter(
-      a => a.tendencia === "mejoró"
-    );
+  const promedioLista = valores => valores.length
+    ? valores.reduce((a, b) => a + b, 0) / valores.length
+    : null;
 
+  const aspectos = Object.entries(habilidades).map(([nombre, datos]) => ({
+    nombre,
+    entrenamiento: promedioLista(datos.entrenamiento),
+    partido: promedioLista(datos.partido),
+    promedio: promedioLista(datos.total),
+    cantidad: datos.total.length
+  })).sort((a, b) => a.promedio - b.promedio);
+
+  const mejorar = aspectos.filter(a => a.promedio < 7);
+  const fortalezas = aspectos.filter(a => a.promedio >= 8);
+
+  const listaMejorar = mejorar.length
+    ? mejorar.slice(0, 5).map(a => `
+        <span class="tp-tag tp-pending" style="display:inline-block;margin:3px">
+          ${tpEsc(a.nombre)} · ${a.promedio.toFixed(1)}
+        </span>
+      `).join("")
+    : `<div class="tp-muted">No se detectan aspectos por debajo de 7 con los registros actuales.</div>`;
+
+  const listaFortalezas = fortalezas.length
+    ? fortalezas.slice(-5).reverse().map(a => `
+        <span class="tp-tag tp-basic" style="display:inline-block;margin:3px">
+          ${tpEsc(a.nombre)} · ${a.promedio.toFixed(1)}
+        </span>
+      `).join("")
+    : `<div class="tp-muted">Aún no hay fortalezas consolidadas con promedio de 8 o más.</div>`;
+
+  const observacionesEntrenamiento = entrenamientos
+    .map(e => ({ fecha: e.fecha, texto: String(e.observacion || "").trim() }))
+    .filter(x => x.texto);
+
+  const observacionesPartido = partidos
+    .map(e => ({ fecha: e.fecha, texto: String(e.observacion || "").trim() }))
+    .filter(x => x.texto);
+
+  const resumenComparativo = esCompetencia
+    ? (entrenamientos.length && partidos.length
+        ? (promedioEntrenamiento > promedioPartido + 0.4
+            ? "En los entrenamientos obtiene mejores resultados que en los partidos. Conviene reforzar la aplicación de lo practicado durante situaciones reales de juego."
+            : promedioPartido > promedioEntrenamiento + 0.4
+              ? "En los partidos está obteniendo mejores resultados que en los entrenamientos. Conviene revisar la consistencia de su trabajo durante las prácticas."
+              : "Sus resultados de entrenamiento y partido son similares. Conviene mantener el trabajo y observar su aplicación en distintas situaciones de juego.")
+        : "Se necesitan evaluaciones tanto de entrenamiento como de partido para generar una comparación confiable.")
+    : "El seguimiento de Básico muestra sus avances, fortalezas y aspectos que necesita continuar practicando.";
+
+  const comparativaHabilidades = esCompetencia
+    ? aspectos
+        .filter(a => a.entrenamiento !== null && a.partido !== null)
+        .sort((a, b) =>
+          Math.abs(b.entrenamiento - b.partido) -
+          Math.abs(a.entrenamiento - a.partido)
+        )
+        .slice(0, 5)
+        .map(a => `
+          <div class="tp-card" style="margin:7px 0">
+            <strong>${tpEsc(a.nombre)}</strong>
+            <div class="tp-stat-grid" style="margin-top:7px">
+              <div class="tp-stat"><b>${a.entrenamiento.toFixed(1)}</b><span class="tp-muted">Entrenamiento</span></div>
+              <div class="tp-stat"><b>${a.partido.toFixed(1)}</b><span class="tp-muted">Partido</span></div>
+            </div>
+            <div class="tp-muted" style="margin-top:5px">${a.entrenamiento > a.partido + 0.4 ? "Lo realiza mejor en entrenamiento; necesita aplicarlo en partido." : a.partido > a.entrenamiento + 0.4 ? "Su resultado es mejor en partido; revisar consistencia en prácticas." : "Rendimiento parecido en ambos contextos."}</div>
+          </div>
+        `).join("")
+    : "";
+
+  const historialCronologico = registros.slice().reverse().map(e => {
+    const promedio = tpPromedio(e.puntajes || {});
+    const contexto = e.contexto === "partido" ? "PARTIDO" : "ENTRENAMIENTO";
+    const observacion = String(e.observacion || "").trim();
+
+    const puntos = Object.entries(e.puntajes || {})
+      .filter(([,v]) => Number.isFinite(Number(v)))
+      .map(([k,v]) => `${tpEsc(k)}: ${Number(v)}/10`)
+      .join(" · ");
+
+    return `
+      <div class="tp-card" style="margin:8px 0">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+          <strong>${contexto}</strong>
+          <span class="tp-muted">${tpEsc(e.fecha || "Fecha no registrada")}</span>
+        </div>
+        <div style="font-size:22px;font-weight:900;margin:5px 0">${promedio === null ? "—" : promedio.toFixed(1) + "/10"}</div>
+        ${puntos ? `<div class="tp-muted">${puntos}</div>` : ""}
+        ${observacion ? `<div style="margin-top:7px">${tpEsc(observacion)}</div>` : ""}
+      </div>
+    `;
+  }).join("");
+
+  const renderObservaciones = lista => lista.length
+    ? lista.slice().reverse().map(o => `
+        <div class="tp-card" style="margin:6px 0">
+          <div class="tp-muted">${tpEsc(o.fecha || "Fecha no registrada")}</div>
+          ${tpEsc(o.texto)}
+        </div>
+      `).join("")
+    : `<div class="tp-muted">Todavía no hay observaciones registradas.</div>`;
+
+  tpAbrirVista("Expediente deportivo · " + jugador.nombre, `
+    ${tpEncabezado("EXPEDIENTE DEPORTIVO", "tpMostrarJugadoresHistorial('${tpEsc(jugador.horario)}')")}
+
+    <div class="tp-card">
+      <h2 style="font-size:25px;margin:0 0 10px">${tpEsc(jugador.nombre)}</h2>
+      <div class="tp-muted" style="font-size:16px">${tpEsc(tpNombreHorario(jugador.horario))} · ${tpTituloModalidad(modalidad)}</div>
+      <div class="tp-stat-grid" style="margin-top:14px">
+        <div class="tp-stat"><b style="font-size:24px">${registros.length}</b><span class="tp-muted">Evaluaciones</span></div>
+        <div class="tp-stat"><b style="font-size:24px">${aspectos.length}</b><span class="tp-muted">Habilidades revisadas</span></div>
+      </div>
+    </div>
+
+    ${esCompetencia ? `
+      <h3 style="font-size:20px">📊 COMPARATIVA GENERAL</h3>
+      <div class="tp-stat-grid">
+        <div class="tp-stat"><b style="font-size:25px">${promedioEntrenamiento === null ? "—" : promedioEntrenamiento.toFixed(1)}</b><span class="tp-muted">Entrenamiento / 10</span><small>${entrenamientos.length} evaluaciones</small></div>
+        <div class="tp-stat"><b style="font-size:25px">${promedioPartido === null ? "—" : promedioPartido.toFixed(1)}</b><span class="tp-muted">Partido / 10</span><small>${partidos.length} evaluaciones</small></div>
+      </div>
+      <div class="tp-card" style="margin-top:10px"><strong>RESUMEN DEL JUGADOR</strong><div class="tp-muted" style="font-size:15px;line-height:1.5;margin-top:6px">${resumenComparativo}</div></div>
+      ${comparativaHabilidades ? `<h3 style="font-size:19px">DIFERENCIAS POR HABILIDAD</h3>${comparativaHabilidades}` : `<div class="tp-muted">Cuando existan evaluaciones de entrenamiento y partido, aquí aparecerán las diferencias por habilidad.</div>`}
+    ` : `
+      <div class="tp-card"><strong>SEGUIMIENTO DE BÁSICO</strong><div class="tp-muted" style="margin-top:6px">${resumenComparativo}</div></div>
+    `}
+
+    <h3 style="font-size:20px">📌 ASPECTOS POR TRABAJAR</h3>
+    <div class="tp-card">${listaMejorar}</div>
+
+    <h3 style="font-size:20px">⭐ FORTALEZAS</h3>
+    <div class="tp-card">${listaFortalezas}</div>
+
+    ${esCompetencia ? `
+      <div class="tp-card"><h3 style="font-size:19px">📝 OBSERVACIONES DE ENTRENAMIENTO</h3>${renderObservaciones(observacionesEntrenamiento)}</div>
+      <div class="tp-card"><h3 style="font-size:19px">🏀 OBSERVACIONES DE PARTIDO</h3>${renderObservaciones(observacionesPartido)}</div>
+    ` : `
+      <div class="tp-card"><h3 style="font-size:19px">📝 OBSERVACIONES DEL COACH</h3>${renderObservaciones(observacionesEntrenamiento.concat(observacionesPartido))}</div>
+    `}
+
+    <h3 style="font-size:20px">📅 HISTORIAL DE CADA EVALUACIÓN</h3>
+    ${historialCronologico || `<div class="tp-empty">Este jugador todavía no cuenta con evaluaciones.</div>`}
+
+    <button class="tp-btn tp-primary" style="width:100%;min-height:58px;font-size:17px" onclick="tpImprimirHistorial()">IMPRIMIR / GUARDAR PDF</button>
+  `);
+  }
     
-
-    const listaMejorar = mejorar.length
-      ? mejorar.map(a => `
-          <div class="tp-card">
-            <strong style="font-size:17px">
-              ${tpEsc(a.nombre)}
-            </strong>
-            <div class="tp-muted" style="margin-top:6px">
-              Necesita más práctica y seguimiento en este aspecto.
-            </div>
-          </div>
-        `).join("")
-      : `
-        <div class="tp-muted">
-          No se identifican aspectos pendientes con los datos actuales.
-        </div>
-      `;
-
-    const listaAvances = avances.length
-      ? avances.map(a => `
-          <div class="tp-card">
-            <strong style="font-size:17px">
-              ${tpEsc(a.nombre)}
-            </strong>
-            <div class="tp-muted" style="margin-top:6px">
-              Se observa una mejora respecto a sus evaluaciones anteriores.
-              Conviene seguir reforzando este avance.
-            </div>
-          </div>
-        `).join("")
-      : `
-        <div class="tp-muted">
-          Aún no hay suficientes evaluaciones comparables para identificar
-          mejoras.
-        </div>
-      `;
-
-    const listaFortalezas = fortalezas.length
-      ? fortalezas.map(a => `
-          <div class="tp-card">
-            <strong style="font-size:17px">
-              ${tpEsc(a.nombre)}
-            </strong>
-            <div class="tp-muted" style="margin-top:6px">
-              Es una fortaleza observada. Hay que mantenerla y seguir
-              desarrollándola.
-            </div>
-          </div>
-        `).join("")
-      : `
-        <div class="tp-muted">
-          Todavía no hay fortalezas consolidadas según las evaluaciones.
-        </div>
-      `;
-
-    const observaciones = [
-      ...new Set(
-        registros
-          .map(e => String(e.observacion || "").trim())
-          .filter(Boolean)
-      )
-    ];
-
-    tpAbrirVista("Expediente deportivo · " + jugador.nombre, `
-      ${tpEncabezado("EXPEDIENTE DEPORTIVO", "tpMostrarJugadoresHistorial('${tpEsc(jugador.horario)}')")}
-
-      <div class="tp-card">
-        <h2 style="font-size:25px;margin:0 0 10px">
-          ${tpEsc(jugador.nombre)}
-        </h2>
-
-        <div class="tp-muted" style="font-size:16px">
-          ${tpEsc(tpNombreHorario(jugador.horario))}
-          · ${tpTituloModalidad(tpModalidad(jugador.id))}
-        </div>
-
-                <div class="tp-stat-grid" style="margin-top:14px">
-          <div class="tp-stat">
-            <b style="font-size:24px">${registros.length}</b>
-            <span class="tp-muted">Evaluaciones revisadas</span>
-          </div>
-        </div>
-      </div>
-              <h3 style="font-size:21px">📌 OPORTUNIDADES DE MEJORA</h3>
-        <div class="tp-muted" style="font-size:15px;margin-bottom:12px">
-          Aspectos que requieren mayor atención durante los entrenamientos.
-        ${listaMejorar}
-      </div>
-
-      <div class="tp-card">
-        <h3 style="font-size:21px">📈 AVANCES OBSERVADOS</h3>
-        <div class="tp-muted" style="font-size:15px;margin-bottom:12px">
-          Habilidades en las que el jugador muestra progreso.
-        </div>
-        ${listaAvances}
-      </div>
-
-      <div class="tp-card">
-        <h3 style="font-size:21px">⭐ FORTALEZAS</h3>
-        ${listaFortalezas}
-      </div>
-
-      <div class="tp-card">
-        <h3 style="font-size:21px">📝 OBSERVACIONES DEL COACH</h3>
-
-        ${observaciones.length
-          ? observaciones.map(o => `
-              <div class="tp-card">
-                ${tpEsc(o)}
-              </div>
-            `).join("")
-          : `
-            <div class="tp-muted">
-              No hay observaciones escritas en las evaluaciones.
-            </div>
-          `
-        }
-      </div>
-
-      <div class="tp-card">
-        <h3 style="font-size:21px">📋 RESUMEN PARA EL ENTRENADOR</h3>
-
-        <div class="tp-muted" style="font-size:16px;line-height:1.6">
-          ${registros.length
-            ? "Utiliza las oportunidades de mejora para planificar ejercicios específicos. Refuerza los avances observados y continúa trabajando las habilidades que necesitan atención."
-            : "Este jugador todavía no cuenta con evaluaciones. Registra sus primeras evaluaciones para comenzar a generar su expediente deportivo."
-          }
-        </div>
-      </div>
-
-      <button class="tp-btn tp-primary"
-        style="width:100%;min-height:58px;font-size:17px"
-        onclick="tpImprimirHistorial()">
-        IMPRIMIR / GUARDAR PDF
-      </button>
-    `);
-    }
-
-
   /* =====================================================
      EDITAR EVALUACIONES
      ===================================================== */
@@ -20811,117 +20790,157 @@ function tpLlenarPartidosEvaluacion() {
      ANÁLISIS DEL COACH
      ===================================================== */
 
-  function tpAnalisisCoach() {
-    const jugadores = tpJugadoresActivos();
 
-    const bloques = jugadores.map(jugador => {
-      const registros = tpDB.evaluaciones.filter(
-        e => String(e.jugadorId) === String(jugador.id)
-      );
+function tpAnalisisCoach() {
+  const jugadores = tpJugadoresActivos();
+  const jugadoresCompetencia = jugadores.filter(j => tpModalidad(j.id) === "competencia");
+  const evaluacionesCompetencia = tpDB.evaluaciones.filter(e =>
+    jugadoresCompetencia.some(j => String(j.id) === String(e.jugadorId))
+  );
 
-      const valores = {};
+  const analizarEquipo = contexto => {
+    const registros = evaluacionesCompetencia.filter(e => e.contexto === contexto);
+    const valores = {};
 
-      registros.forEach(e => {
-        Object.entries(e.puntajes || {}).forEach(([nombre, valor]) => {
-          if (!valores[nombre]) {
-            valores[nombre] = [];
-          }
-
-          valores[nombre].push(Number(valor));
-        });
+    registros.forEach(e => {
+      Object.entries(e.puntajes || {}).forEach(([nombre, valor]) => {
+        const n = Number(valor);
+        if (!Number.isFinite(n) || n < 1 || n > 10) return;
+        if (!valores[nombre]) valores[nombre] = [];
+        valores[nombre].push(n);
       });
+    });
 
-      const aspectos = Object.entries(valores).map(([nombre, arr]) => ({
-        nombre,
-        promedio: arr.reduce((a, b) => a + b, 0) / arr.length
-      })).sort((a, b) => b.promedio - a.promedio);
+    return Object.entries(valores).map(([nombre, arr]) => ({
+      nombre,
+      promedio: arr.reduce((a, b) => a + b, 0) / arr.length,
+      cantidad: arr.length
+    })).sort((a, b) => a.promedio - b.promedio);
+  };
 
-      const fortalezas = aspectos.filter(x => x.promedio >= 8);
-      const mejorar = aspectos.filter(x => x.promedio < 6);
+  const equipoEntrenamiento = analizarEquipo("entrenamiento");
+  const equipoPartido = analizarEquipo("partido");
 
-      const promedios = registros
-        .map(e => tpPromedio(e.puntajes))
-        .filter(n => n !== null);
+  const promedioEquipo = contexto => {
+    const arr = evaluacionesCompetencia
+      .filter(e => e.contexto === contexto)
+      .map(e => tpPromedio(e.puntajes || {}))
+      .filter(n => Number.isFinite(n));
 
-      const general = promedios.length
-        ? promedios.reduce((a, b) => a + b, 0) / promedios.length
-        : null;
+    return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+  };
 
-      return `
-        <div class="tp-card">
-          <strong>${tpEsc(jugador.nombre)}</strong>
+  const promEntrenamiento = promedioEquipo("entrenamiento");
+  const promPartido = promedioEquipo("partido");
 
-          <div class="tp-muted">
-            ${tpEsc(tpNombreHorario(jugador.horario))}
-            · ${registros.length} evaluación(es)
+  const resumenEquipo = promEntrenamiento !== null && promPartido !== null
+    ? (promEntrenamiento > promPartido + 0.4
+        ? "Como equipo, los resultados son mejores en entrenamiento que en partido. Conviene reforzar la transferencia de lo practicado a situaciones reales de juego."
+        : promPartido > promEntrenamiento + 0.4
+          ? "Como equipo, los resultados de partido superan los de entrenamiento. Conviene revisar la consistencia y ejecución durante las prácticas."
+          : "Los resultados generales de entrenamiento y partido son parecidos. Mantengan el trabajo y revisen las habilidades específicas que aparecen abajo.")
+    : "Se necesitan evaluaciones tanto de entrenamiento como de partido para comparar el rendimiento colectivo.";
+
+  const diferencias = equipoEntrenamiento.map(a => {
+    const p = equipoPartido.find(x => x.nombre === a.nombre);
+    return p ? {
+      nombre: a.nombre,
+      entrenamiento: a.promedio,
+      partido: p.promedio
+    } : null;
+  }).filter(Boolean).sort((a, b) =>
+    Math.abs(b.entrenamiento - b.partido) -
+    Math.abs(a.entrenamiento - a.partido)
+  );
+
+  const diagnosticoHabilidades = (lista, etiqueta) => lista.length
+    ? `<div class="tp-card"><strong>${etiqueta}</strong><div class="tp-muted" style="margin-top:7px">${lista.slice(0, 4).map(x => `${tpEsc(x.nombre)} (${x.promedio.toFixed(1)})`).join(" · ")}</div></div>`
+    : `<div class="tp-muted">Todavía no hay suficientes evaluaciones para este apartado.</div>`;
+
+  const comparacionEquipo = diferencias.length
+    ? diferencias.slice(0, 5).map(x => `
+        <div class="tp-card" style="margin:7px 0">
+          <strong>${tpEsc(x.nombre)}</strong>
+          <div class="tp-stat-grid" style="margin-top:7px">
+            <div class="tp-stat"><b>${x.entrenamiento.toFixed(1)}</b><span class="tp-muted">Entrenamiento</span></div>
+            <div class="tp-stat"><b>${x.partido.toFixed(1)}</b><span class="tp-muted">Partido</span></div>
           </div>
-
-          <div class="tp-stat-grid" style="margin-top:9px">
-            <div class="tp-stat">
-              <b>${general === null ? "—" : general.toFixed(1)}</b>
-              <span class="tp-muted">Promedio / 10</span>
-            </div>
-
-            <div class="tp-stat">
-              <b>${aspectos.length}</b>
-              <span class="tp-muted">Aspectos evaluados</span>
-            </div>
-          </div>
-
-          ${registros.length ? `
-            <div style="margin-top:10px">
-              <strong>Fortalezas registradas</strong>
-              <div class="tp-muted">
-                ${fortalezas.length
-                  ? fortalezas.map(x =>
-                      `${tpEsc(x.nombre)} (${x.promedio.toFixed(1)})`
-                    ).join(" · ")
-                  : "Aún no hay aspectos con promedio de 8 o más."
-                }
-              </div>
-            </div>
-
-            <div style="margin-top:10px">
-              <strong>Aspectos por trabajar</strong>
-              <div class="tp-muted">
-                ${mejorar.length
-                  ? mejorar.map(x =>
-                      `${tpEsc(x.nombre)} (${x.promedio.toFixed(1)})`
-                    ).join(" · ")
-                  : "No hay aspectos con promedio menor a 6."
-                }
-              </div>
-            </div>
-          ` : `
-            <div class="tp-muted" style="margin-top:8px">
-              Sin datos suficientes para generar un análisis.
-            </div>
-          `}
-
-          <button class="tp-btn"
-            onclick="tpFichaJugador('${tpEsc(jugador.id)}')">
-            VER HISTORIAL
-          </button>
+          <div class="tp-muted" style="margin-top:5px">${x.entrenamiento > x.partido + 0.4 ? "El equipo lo ejecuta mejor en entrenamiento; reforzar su aplicación en partido." : x.partido > x.entrenamiento + 0.4 ? "El resultado es mejor en partido; revisar la consistencia en entrenamiento." : "El resultado es parecido en ambos contextos."}</div>
         </div>
-      `;
-    }).join("");
+      `).join("")
+    : `<div class="tp-muted">Se mostrarán comparaciones cuando existan evaluaciones de ambos contextos.</div>`;
 
-    tpAbrirVista("Análisis del Coach · Tiburón Pro", `
-      ${tpEncabezado(
-        "ANÁLISIS BASADO EN EVALUACIONES GUARDADAS",
-        "tpInicio()"
-      )}
+  const bloques = jugadores.map(jugador => {
+    const registros = tpDB.evaluaciones.filter(
+      e => String(e.jugadorId) === String(jugador.id)
+    );
 
-      <div class="tp-alert">
-        El análisis utiliza exclusivamente las evaluaciones registradas.
-        No genera conclusiones cuando no hay datos suficientes.
+    const valores = {};
+
+    registros.forEach(e => {
+      Object.entries(e.puntajes || {}).forEach(([nombre, valor]) => {
+        const n = Number(valor);
+        if (!Number.isFinite(n) || n < 1 || n > 10) return;
+        if (!valores[nombre]) valores[nombre] = [];
+        valores[nombre].push(n);
+      });
+    });
+
+    const aspectos = Object.entries(valores).map(([nombre, arr]) => ({
+      nombre,
+      promedio: arr.reduce((a, b) => a + b, 0) / arr.length
+    })).sort((a, b) => b.promedio - a.promedio);
+
+    const fortalezas = aspectos.filter(x => x.promedio >= 8);
+    const mejorar = aspectos.filter(x => x.promedio < 7);
+    const promedios = registros
+      .map(e => tpPromedio(e.puntajes || {}))
+      .filter(n => Number.isFinite(n));
+
+    const general = promedios.length
+      ? promedios.reduce((a, b) => a + b, 0) / promedios.length
+      : null;
+
+    return `
+      <div class="tp-card">
+        <strong>${tpEsc(jugador.nombre)}</strong>
+        <div class="tp-muted">${tpEsc(tpNombreHorario(jugador.horario))} · ${tpTituloModalidad(tpModalidad(jugador.id))} · ${registros.length} evaluación(es)</div>
+        <div class="tp-stat-grid" style="margin-top:9px">
+          <div class="tp-stat"><b>${general === null ? "—" : general.toFixed(1)}</b><span class="tp-muted">Promedio / 10</span></div>
+          <div class="tp-stat"><b>${aspectos.length}</b><span class="tp-muted">Aspectos evaluados</span></div>
+        </div>
+        ${registros.length ? `
+          <div style="margin-top:10px"><strong>Fortalezas</strong><div class="tp-muted">${fortalezas.length ? fortalezas.map(x => `${tpEsc(x.nombre)} (${x.promedio.toFixed(1)})`).join(" · ") : "Aún no hay aspectos con promedio de 8 o más."}</div></div>
+          <div style="margin-top:10px"><strong>Por trabajar</strong><div class="tp-muted">${mejorar.length ? mejorar.map(x => `${tpEsc(x.nombre)} (${x.promedio.toFixed(1)})`).join(" · ") : "No hay aspectos por debajo de 7."}</div></div>
+        ` : `<div class="tp-muted" style="margin-top:8px">Sin datos suficientes para generar un análisis.</div>`}
+        <button class="tp-btn" onclick="tpFichaJugador('${tpEsc(jugador.id)}')">VER HISTORIAL</button>
       </div>
+    `;
+  }).join("");
 
-      ${bloques || `
-        <div class="tp-empty">No hay jugadores activos.</div>
-      `}
-    `);
-  }
+  tpAbrirVista("Análisis del Coach · Tiburón Pro", `
+    ${tpEncabezado("ANÁLISIS BASADO EN EVALUACIONES GUARDADAS", "tpInicio()")}
+    <div class="tp-alert">El análisis utiliza exclusivamente las evaluaciones registradas. No genera conclusiones cuando no hay datos suficientes.</div>
+    <h3 style="font-size:20px">🏀 DIAGNÓSTICO DEL EQUIPO DE COMPETENCIA</h3>
+    <div class="tp-card">
+      <div class="tp-stat-grid">
+        <div class="tp-stat"><b>${promEntrenamiento === null ? "—" : promEntrenamiento.toFixed(1)}</b><span class="tp-muted">Entrenamiento / 10</span></div>
+        <div class="tp-stat"><b>${promPartido === null ? "—" : promPartido.toFixed(1)}</b><span class="tp-muted">Partido / 10</span></div>
+      </div>
+      <div class="tp-muted" style="margin-top:9px">${resumenEquipo}</div>
+    </div>
+    <h3 style="font-size:19px">ASPECTOS MÁS BAJOS EN ENTRENAMIENTO</h3>
+    ${diagnosticoHabilidades(equipoEntrenamiento, "Habilidades que requieren atención")}
+    <h3 style="font-size:19px">ASPECTOS MÁS BAJOS EN PARTIDO</h3>
+    ${diagnosticoHabilidades(equipoPartido, "Habilidades que requieren atención")}
+    <h3 style="font-size:19px">DIFERENCIAS ENTRE ENTRENAMIENTO Y PARTIDO</h3>
+    ${comparacionEquipo}
+    <h3 style="font-size:20px">SEGUIMIENTO INDIVIDUAL</h3>
+    ${bloques || `<div class="tp-empty">No hay jugadores activos.</div>`}
+  `);
+    }
+      
+
 
   /* =====================================================
      APERTURA DE TIBURÓN PRO
