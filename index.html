@@ -20572,10 +20572,7 @@ function tpLlenarPartidosEvaluacion() {
       a => a.tendencia === "mejoró"
     );
 
-    const promedioGeneral = aspectos.length
-      ? aspectos.reduce((s, a) => s + s.promedio, 0) /
-        aspectos.length
-      : null;
+    
 
     const listaMejorar = mejorar.length
       ? mejorar.map(a => `
@@ -20655,21 +20652,12 @@ function tpLlenarPartidosEvaluacion() {
         <div class="tp-stat-grid" style="margin-top:14px">
           <div class="tp-stat">
             <b style="font-size:24px">${registros.length}</b>
-            <span class="tp-muted">Evaluaciones</span>
-          </div>
-
-          <div class="tp-stat">
-            <b style="font-size:24px">
-              ${promedioGeneral === null
-                ? "—"
-                : promedioGeneral.toFixed(1)}
-            </b>
-            <span class="tp-muted">Promedio general</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="tp-card">
+        <div class="tp-stat-grid" style="margin-top:14px">
+  <div class="tp-stat">
+    <b style="font-size:24px">${registros.length}</b>
+    <span class="tp-muted">Evaluaciones revisadas</span>
+  </div>
+</div>    
         <h3 style="font-size:21px">📌 OPORTUNIDADES DE MEJORA</h3>
         <div class="tp-muted" style="font-size:15px;margin-bottom:12px">
           Aspectos que requieren mayor atención durante los entrenamientos.
@@ -21023,7 +21011,7 @@ window.tpAbrirEvalPartidoSeleccionado = tpAbrirEvalPartidoSeleccionado;
 
   window.tpHistorialInicio = tpHistorialInicio;
   window.tpMostrarJugadoresHistorial = tpMostrarJugadoresHistorial;
-  window.tpAbrirHistorialSeleccionado = tpAbrirHistorialSeleccionado;
+  
   window.tpEditarEvaluacion = tpEditarEvaluacion;
   window.tpImprimirHistorial = tpImprimirHistorial;
 
