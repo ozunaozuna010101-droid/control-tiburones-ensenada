@@ -22072,6 +22072,227 @@ if (document.readyState === "loading") {
 })();
 </script>
 <!-- FIN DE LA CORRECCION -->
+ 
+<!-- ==========================================
+ CONTROL TIBURONES
+ RECORDATORIOS INDIVIDUALES POR WHATSAPP
+ DIAS 1, 6 Y 10
+========================================== -->
+<script>
+(function () {
+  "use strict";
+
+  function ctwrTexto(valor) {
+    return typeof textoSeguro === "function"
+      ? textoSeguro(String(valor ?? ""))
+      : String(valor ?? "").replace(/[&<>"']/g, c => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;",
+          '"': "&quot;", "'": "&#39;"
+        })[c]);
+  }
+
+  function ctwrNumero(valor) {
+    let numero = String(valor || "").replace(/\D/g, "");
+    if (numero.length === 10) numero = "52" + numero;
+    return numero.length >= 12 && numero.length <= 15
+      ? numero : "";
+  }
+
+  function ctwrPendientes() {
+    const periodo = obtenerMesFinanciero();
+    const grupos = {};
+
+    db.cargos.forEach(cargo => {
+      if (cargo.periodo !== periodo ||
+          cargo.concepto !== "Mensualidad") return;
+
+      const saldo = obtenerSaldoCargo(cargo);
+      if (saldo <= 0) return;
+
+      const jugador = obtenerJugador(cargo.jugadorId);
+      if (!jugador || jugador.estado === "baja") return;
+
+      const familiaId = jugador.familiaId || cargo.familiaId || "";
+      const familia = familiaId ? obtenerFamilia(familiaId) : null;
+      const clave = familiaId || "jugador_" + jugador.id;
+
+      if (!grupos[clave]) {
+        const telefonoFamilia = familia
+          ? (familia.mismoWhatsapp === false
+              ? familia.whatsappTelefono
+              : familia.telefono)
+          : "";
+
+        const telefonoJugador = jugador.mismoWhatsapp === false
+          ? jugador.whatsappTelefono
+          : jugador.telefono;
+
+        grupos[clave] = {
+          clave,
+          responsable: familia?.responsable || jugador.nombre,
+          alumnos: [],
+          saldo: 0,
+          telefono: telefonoFamilia || telefonoJugador || ""
+        };
+      }
+
+      grupos[clave].alumnos.push(jugador.nombre);
+      grupos[clave].saldo += saldo;
+
+      // Si la familia no tiene WhatsApp, intentar con el alumno.
+      if (!grupos[clave].telefono) {
+        grupos[clave].telefono = jugador.mismoWhatsapp === false
+          ? jugador.whatsappTelefono
+          : jugador.telefono;
+      }
+    });
+
+    return Object.values(grupos);
+  }
+
+  function ctwrDinero(valor) {
+    return Number(valor || 0).toLocaleString("es-MX", {
+      style: "currency",
+      currency: "MXN"
+    });
+  }
+
+  function ctwrActualizarLista() {
+    const lista = document.getElementById("ctwLista");
+    const dia = document.getElementById("ctwDia")?.value || "1";
+    if (!lista) return;
+
+    if (dia === "1") {
+      lista.innerHTML = `
+        <div class="tarjeta">
+          <strong>📢 Aviso general del día 1</strong>
+          <p>Utiliza el botón «Compartir aviso general» para enviar el mensaje al grupo de WhatsApp de la academia.</p>
+          <p>Los recordatorios individuales estarán disponibles los días 6 y 10.</p>
+        </div>`;
+      return;
+    }
+
+    const pendientes = ctwrPendientes();
+
+    if (!pendientes.length) {
+      lista.innerHTML = `
+        <div class="tarjeta">
+          No hay mensualidades pendientes en este periodo. ¡Excelente!
+        </div>`;
+      return;
+    }
+
+    lista.innerHTML = pendientes.map(f => `
+      <div class="tarjeta">
+        <h3>${ctwrTexto(f.responsable)}</h3>
+        <p>Alumnos: ${f.alumnos.map(ctwrTexto).join(", ")}</p>
+        <p>Saldo pendiente: <strong>${ctwrDinero(f.saldo)}</strong></p>
+        <button class="btn btn-primary"
+          type="button"
+          data-ctwr-clave="${ctwrTexto(f.clave)}">
+          💬 Preparar recordatorio individual
+        </button>
+      </div>
+    `).join("");
+
+    lista.onclick = function(event) {
+      const boton = event.target.closest("[data-ctwr-clave]");
+      if (!boton) return;
+      ctwrEnviar(boton.getAttribute("data-ctwr-clave"));
+    };
+  }
+
+  function ctwrEnviar(clave) {
+    // Consultar nuevamente los saldos antes de preparar el mensaje.
+    const familia = ctwrPendientes().find(f => f.clave === clave);
+
+    if (!familia) {
+      alert("Esta mensualidad ya no aparece pendiente. Actualiza la lista.");
+      ctwrActualizarLista();
+      return;
+    }
+
+    const numero = ctwrNumero(familia.telefono);
+
+    if (!numero) {
+      alert(
+        "No hay un WhatsApp válido registrado para " +
+        familia.responsable +
+        ". Revisa el teléfono de la familia o del jugador."
+      );
+      return;
+    }
+
+    let config = {};
+    try {
+      config = JSON.parse(
+        localStorage.getItem("CTW_CONFIG_V1")
+      ) || {};
+    } catch (e) {}
+
+    const dia = document.getElementById("ctwDia")?.value || "6";
+
+    let mensaje =
+      "Buenas tardes, " + familia.responsable + ". 👋\n\n" +
+      "Le compartimos un recordatorio de mensualidad de Academia Tiburones Ensenada. 🦈\n\n" +
+      "Alumnos: " + familia.alumnos.join(", ") + "\n" +
+      "Saldo pendiente: " + ctwrDinero(familia.saldo) + "\n\n";
+
+    if (config.cuenta) {
+      mensaje += "Cuenta o tarjeta: " + config.cuenta + "\n";
+    }
+
+    if (config.beneficiario) {
+      mensaje += "Beneficiario: " + config.beneficiario + "\n";
+    }
+
+    mensaje +=
+      "\nLe agradecemos realizar su pago y enviar su comprobante para registrarlo.\n\n" +
+      "Muchas gracias por su compromiso y apoyo.\n" +
+      "Academia Tiburones Ensenada.";
+
+    window.open(
+      "https://wa.me/" + numero +
+      "?text=" + encodeURIComponent(mensaje),
+      "_blank"
+    );
+  }
+
+  function ctwrIniciar() {
+    const zona = document.getElementById("moduleContent");
+    if (!zona || zona.dataset.ctwrActivo === "1") return;
+
+    zona.dataset.ctwrActivo = "1";
+
+    const observador = new MutationObserver(() => {
+      const selector = document.getElementById("ctwDia");
+      const lista = document.getElementById("ctwLista");
+
+      if (selector && !selector.dataset.ctwrActivo) {
+        selector.dataset.ctwrActivo = "1";
+        selector.addEventListener("change", ctwrActualizarLista);
+      }
+
+      if (lista) ctwrActualizarLista();
+    });
+
+    observador.observe(zona, {
+      childList: true,
+      subtree: true
+    });
+
+    ctwrActualizarLista();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ctwrIniciar);
+  } else {
+    ctwrIniciar();
+  }
+
+})();
+</script>
+<!-- FIN DE RECORDATORIOS INDIVIDUALES -->
   
 </body>
   </html>
