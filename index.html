@@ -21638,6 +21638,239 @@ if (document.readyState === "loading") {
 })();
 </script>
 <!-- FIN DE LA CORRECCION -->
+
+<!-- =====================================================
+ CONTROL TIBURONES
+ MEJORA DE TELEFONOS Y RECORDATORIOS INDIVIDUALES
+ PEGAR ANTES DE </body>
+===================================================== -->
+<script>
+(function () {
+  "use strict";
+
+  function numeroLimpio(valor) {
+    return String(valor || "").replace(/\D/g, "");
+  }
+
+  function campoTelefono(tipo, datos) {
+    const mismo = datos.mismoWhatsapp !== false;
+    const telefono = datos.telefono || "";
+    const whatsapp = datos.whatsappTelefono || "";
+
+    return `
+      <div class="ctw-telefonos" id="${tipo}Telefonos">
+        <label>Teléfono para llamadas</label>
+        <input id="${tipo}TelefonoLlamadas" type="tel"
+          maxlength="25" placeholder="Número para llamadas"
+          value="${texto(datos.telefono || "")}">
+
+        <label>¿Utiliza el mismo número para WhatsApp?</label>
+        <select id="${tipo}MismoWhatsapp"
+          onchange="ctwMostrarOtroWhatsApp('${tipo}')">
+          <option value="si" ${mismo ? "selected" : ""}>Sí</option>
+          <option value="no" ${!mismo ? "selected" : ""}>No</option>
+        </select>
+
+        <div id="${tipo}OtroWhatsApp"
+          style="display:${mismo ? "none" : "block"}">
+          <label>Número exclusivo de WhatsApp</label>
+          <input id="${tipo}TelefonoWhatsApp" type="tel"
+            maxlength="25" placeholder="Número de WhatsApp"
+            value="${texto(whatsapp)}">
+        </div>
+      </div>`;
+  }
+
+  function texto(valor) {
+    if (typeof textoSeguro === "function") {
+      return textoSeguro(String(valor || ""));
+    }
+    return String(valor || "").replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;",
+      '"': "&quot;", "'": "&#39;"
+    })[c]);
+  }
+
+  window.ctwMostrarOtroWhatsApp = function(tipo) {
+    const selector = document.getElementById(tipo + "MismoWhatsapp");
+    const zona = document.getElementById(tipo + "OtroWhatsApp");
+    if (selector && zona) {
+      zona.style.display = selector.value === "no" ? "block" : "none";
+    }
+  };
+
+  function leerTelefonos(tipo) {
+    const telefono = document.getElementById(tipo + "TelefonoLlamadas")?.value.trim() || "";
+    const mismo = document.getElementById(tipo + "MismoWhatsapp")?.value !== "no";
+    const whatsapp = mismo
+      ? telefono
+      : (document.getElementById(tipo + "TelefonoWhatsApp")?.value.trim() || "");
+
+    return {
+      telefono: telefono,
+      mismoWhatsapp: mismo,
+      whatsappTelefono: whatsapp
+    };
+  }
+
+  function agregarCampos(tipo) {
+    const formulario = document.getElementById(
+      tipo === "jugador" ? "jugadorObservaciones" : "familiaObservaciones"
+    );
+    if (!formulario || document.getElementById(tipo + "Telefonos")) return;
+
+    const datos = tipo === "jugador"
+      ? (window.obtenerJugador?.(window.ctwEditandoJugador) || {})
+      : {};
+
+    const contenedor = document.createElement("div");
+    contenedor.innerHTML = campoTelefono(tipo, datos);
+    formulario.parentElement.insertBefore(contenedor.firstElementChild, formulario);
+  }
+
+  function observarFormularios() {
+    const zona = document.getElementById("moduleContent");
+    if (!zona || zona.dataset.ctwTelefonos === "1") return;
+
+    zona.dataset.ctwTelefonos = "1";
+
+    const observer = new MutationObserver(() => {
+      if (document.getElementById("jugadorObservaciones")) {
+        agregarCampos("jugador");
+      }
+      if (document.getElementById("familiaObservaciones")) {
+        agregarCampos("familia");
+      }
+    });
+
+    observer.observe(zona, { childList: true, subtree: true });
+    agregarCampos("jugador");
+    agregarCampos("familia");
+  }
+
+  // Guardar los nuevos teléfonos sin reemplazar las funciones originales.
+  const guardarJugadorOriginal = window.guardarJugador;
+  if (typeof guardarJugadorOriginal === "function") {
+    window.guardarJugador = function(id) {
+      const telefonos = leerTelefonos("jugador");
+      guardarJugadorOriginal.apply(this, arguments);
+
+      const jugador = id ? obtenerJugador(id) :
+        db.jugadores[db.jugadores.length - 1];
+
+      if (jugador) {
+        Object.assign(jugador, telefonos);
+        guardarDB();
+      }
+    };
+  }
+
+  const guardarFamiliaOriginal = window.guardarFamilia;
+  if (typeof guardarFamiliaOriginal === "function") {
+    window.guardarFamilia = function(id) {
+      const telefonos = leerTelefonos("familia");
+      guardarFamiliaOriginal.apply(this, arguments);
+
+      const familia = id ? obtenerFamilia(id) :
+        db.familias[db.familias.length - 1];
+
+      if (familia) {
+        Object.assign(familia, telefonos);
+        guardarDB();
+      }
+    };
+  }
+
+  // Recordatorios: usar WhatsApp de la familia o del jugador.
+  window.ctwWhatsAppFamilia = function(indice) {
+    const periodo = obtenerMesFinanciero();
+    const grupos = {};
+
+    db.cargos.forEach(cargo => {
+      if (cargo.periodo !== periodo ||
+          cargo.concepto !== "Mensualidad") return;
+
+      const saldo = obtenerSaldoCargo(cargo);
+      if (saldo <= 0) return;
+
+      const jugador = obtenerJugador(cargo.jugadorId);
+      if (!jugador || jugador.estado === "baja") return;
+
+      const familiaId = jugador.familiaId || cargo.familiaId || "";
+      const familia = familiaId ? obtenerFamilia(familiaId) : null;
+      const clave = familiaId || "jugador_" + jugador.id;
+
+      if (!grupos[clave]) {
+        grupos[clave] = {
+          responsable: familia?.responsable || jugador.nombre,
+          alumnos: [],
+          saldo: 0,
+          telefono: familia
+            ? (familia.mismoWhatsapp === false
+                ? familia.whatsappTelefono
+                : familia.telefono)
+            : (jugador.mismoWhatsapp === false
+                ? jugador.whatsappTelefono
+                : jugador.telefono)
+        };
+      }
+
+      grupos[clave].alumnos.push(jugador.nombre);
+      grupos[clave].saldo += saldo;
+    });
+
+    const pendientes = Object.values(grupos);
+    const familia = pendientes[indice];
+    if (!familia) {
+      alert("No se encontró este pendiente.");
+      return;
+    }
+
+    let numero = numeroLimpio(familia.telefono);
+    if (numero.length === 10) numero = "52" + numero;
+
+    if (numero.length < 12 || numero.length > 15) {
+      alert("Esta familia o jugador no tiene un WhatsApp válido registrado. Revisa sus datos.");
+      return;
+    }
+
+    let config = {};
+    try {
+      config = JSON.parse(localStorage.getItem("CTW_CONFIG_V1")) || {};
+    } catch (e) {}
+
+    let mensaje =
+      "Buenas tardes, " + familia.responsable + ". 👋\n\n" +
+      "Le compartimos un recordatorio de mensualidad de Academia Tiburones Ensenada. 🦈\n\n" +
+      "Alumnos: " + familia.alumnos.join(", ") + "\n" +
+      "Saldo pendiente: " +
+      Number(familia.saldo).toLocaleString("es-MX", {
+        style: "currency", currency: "MXN"
+      }) + "\n\n";
+
+    if (config.cuenta) mensaje += "Cuenta o tarjeta: " + config.cuenta + "\n";
+    if (config.beneficiario) mensaje += "Beneficiario: " + config.beneficiario + "\n";
+
+    mensaje +=
+      "\nDespués de realizar su pago, favor de enviar su comprobante.\n\n" +
+      "Muchas gracias por su compromiso y apoyo.\n" +
+      "Academia Tiburones Ensenada.";
+
+    window.open(
+      "https://wa.me/" + numero + "?text=" + encodeURIComponent(mensaje),
+      "_blank"
+    );
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", observarFormularios);
+  } else {
+    observarFormularios();
+  }
+
+})();
+</script>
+<!-- FIN DE LA MEJORA -->
   
 </body>
   </html>
