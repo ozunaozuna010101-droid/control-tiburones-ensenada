@@ -22157,12 +22157,20 @@ if (document.readyState === "loading") {
     });
   }
 
+
+  let ctwrUltimaVista = "";
+
   function ctwrActualizarLista() {
     const lista = document.getElementById("ctwLista");
     const dia = document.getElementById("ctwDia")?.value || "1";
+
     if (!lista) return;
 
     if (dia === "1") {
+     if (ctwrUltimaVista === "DIA1") return;
+ctwrUltimaVista = "DIA1"; 
+      lista.onclick = null;
+
       lista.innerHTML = `
         <div class="tarjeta">
           <strong>📢 Aviso general del día 1</strong>
@@ -22174,7 +22182,15 @@ if (document.readyState === "loading") {
 
     const pendientes = ctwrPendientes();
 
+    const firma = dia + "|" + pendientes.map(f =>
+      f.clave + ":" + f.saldo + ":" + f.telefono
+    ).join("|");
+
+    if (firma === ctwrUltimaVista) return;
+    ctwrUltimaVista = firma;
+
     if (!pendientes.length) {
+      lista.onclick = null;
       lista.innerHTML = `
         <div class="tarjeta">
           No hay mensualidades pendientes en este periodo. ¡Excelente!
@@ -22201,6 +22217,7 @@ if (document.readyState === "loading") {
       ctwrEnviar(boton.getAttribute("data-ctwr-clave"));
     };
   }
+  
 
   function ctwrEnviar(clave) {
     // Consultar nuevamente los saldos antes de preparar el mensaje.
