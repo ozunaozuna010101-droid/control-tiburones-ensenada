@@ -21522,6 +21522,56 @@ if (document.readyState === "loading") {
 </style>
 
 <!-- FIN DEL MODULO DE RECORDATORIOS -->
+
+<!-- ==========================================
+ CONTROL TIBURONES
+ AJUSTE: SOLO AVISOS GENERALES
+========================================== -->
+
+<script>
+(function () {
+    "use strict";
+
+    function ctwDejarSoloAvisoGeneral() {
+        const modulo = document.querySelector(".ctw-modulo");
+        if (!modulo) return;
+
+        const tituloFamilias = Array.from(
+            modulo.querySelectorAll("h3")
+        ).find(h => h.textContent.includes("Familias con mensualidad pendiente"));
+
+        const lista = modulo.querySelector("#ctwLista");
+
+        if (tituloFamilias) tituloFamilias.remove();
+        if (lista) lista.remove();
+    }
+
+    const observador = new MutationObserver(
+        ctwDejarSoloAvisoGeneral
+    );
+
+    function iniciarAjuste() {
+        const zona = document.getElementById("moduleContent");
+
+        if (zona) {
+            observador.observe(zona, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        ctwDejarSoloAvisoGeneral();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", iniciarAjuste);
+    } else {
+        iniciarAjuste();
+    }
+})();
+</script>
+
+<!-- FIN DEL AJUSTE -->
   
 </body>
   </html>
