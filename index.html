@@ -21520,6 +21520,124 @@ if (document.readyState === "loading") {
     }
 }
 </style>
+
+<!-- ==========================================
+ CONTROL TIBURONES
+ CORREGIR DESTINATARIO DE WHATSAPP INDIVIDUAL
+========================================== -->
+<script>
+(function () {
+    "use strict";
+
+    function ctwTelefonoValido(telefono) {
+        let numero = String(telefono || "").replace(/\D/g, "");
+
+        // Si tiene 10 dígitos, agregar clave de México.
+        if (numero.length === 10) {
+            numero = "52" + numero;
+        }
+
+        return numero.length >= 12 && numero.length <= 15
+            ? numero
+            : "";
+    }
+
+    function ctwObtenerFamiliasActualizadas() {
+        const periodo = obtenerMesFinanciero();
+        const grupos = {};
+
+        db.cargos.forEach(cargo => {
+            if (
+                cargo.periodo !== periodo ||
+                cargo.concepto !== "Mensualidad"
+            ) return;
+
+            const saldo = obtenerSaldoCargo(cargo);
+            if (saldo <= 0) return;
+
+            const jugador = obtenerJugador(cargo.jugadorId);
+            if (!jugador || jugador.estado === "baja") return;
+
+            const familiaId = jugador.familiaId || cargo.familiaId || "";
+            const familia = familiaId
+                ? obtenerFamilia(familiaId)
+                : null;
+
+            const clave = familiaId || "jugador_" + jugador.id;
+
+            if (!grupos[clave]) {
+                grupos[clave] = {
+                    responsable: familia?.responsable || jugador.nombre,
+                    telefono: familia?.telefono || "",
+                    alumnos: [],
+                    saldo: 0
+                };
+            }
+
+            grupos[clave].alumnos.push(jugador.nombre);
+            grupos[clave].saldo += saldo;
+        });
+
+        return Object.values(grupos);
+    }
+
+    window.ctwWhatsAppFamilia = function (indice) {
+        const familias = ctwObtenerFamiliasActualizadas();
+        const familia = familias[indice];
+
+        if (!familia) {
+            alert("No se encontró esta familia o ya no tiene mensualidad pendiente.");
+            return;
+        }
+
+        const numero = ctwTelefonoValido(familia.telefono);
+
+        if (!numero) {
+            alert(
+                "La familia " + familia.responsable +
+                " no tiene un teléfono válido registrado.\n\n" +
+                "Entra a Familias, edita sus datos y guarda el WhatsApp del responsable."
+            );
+            return;
+        }
+
+        let config = {};
+
+        try {
+            config = JSON.parse(
+                localStorage.getItem("CTW_CONFIG_V1")
+            ) || {};
+        } catch (e) {}
+
+        let mensaje =
+            "Buenas tardes, " + familia.responsable + ". 👋\n\n" +
+            "Le compartimos un recordatorio de mensualidad " +
+            "de Academia Tiburones Ensenada. 🦈\n\n";
+
+        if (config.cuenta) {
+            mensaje += "Cuenta o tarjeta: " + config.cuenta + "\n";
+        }
+
+        if (config.beneficiario) {
+            mensaje += "Beneficiario: " + config.beneficiario + "\n";
+        }
+
+        mensaje +=
+            "\nDespués de realizar su pago, favor de enviar " +
+            "su comprobante para poder registrarlo.\n\n" +
+            "Muchas gracias por su compromiso y apoyo.\n" +
+            "Academia Tiburones Ensenada.";
+
+        const enlace =
+            "https://wa.me/" + numero +
+            "?text=" + encodeURIComponent(mensaje);
+
+        window.open(enlace, "_blank");
+    };
+
+})();
+</script>
+<!-- FIN DE LA CORRECCION -->
   
 </body>
   </html>
