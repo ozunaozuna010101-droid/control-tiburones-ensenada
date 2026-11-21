@@ -21999,6 +21999,79 @@ if (document.readyState === "loading") {
 })();
 </script>
 <!-- FIN DE LA CORRECCION -->
+
+<!-- ==========================================
+ CONTROL TIBURONES
+ CORRECCION FINAL DE TELEFONOS DE FAMILIAS
+========================================== -->
+<script>
+(function () {
+  "use strict";
+
+  function corregirFamilia() {
+    const campoAntiguo = document.getElementById("familiaTelefono");
+    const campoNuevo = document.getElementById("familiaTelefonoLlamadas");
+
+    if (!campoAntiguo || !campoNuevo) return;
+
+    // Ocultar el campo antiguo para evitar duplicados.
+    const etiqueta = campoAntiguo.previousElementSibling;
+    if (etiqueta && etiqueta.tagName === "LABEL") {
+      etiqueta.style.display = "none";
+    }
+    campoAntiguo.style.display = "none";
+
+    // Recuperar el número anterior si existe.
+    if (!campoNuevo.value && campoAntiguo.value) {
+      campoNuevo.value = campoAntiguo.value;
+    }
+  }
+
+  const guardarFamiliaAnterior = window.guardarFamilia;
+
+  if (typeof guardarFamiliaAnterior === "function") {
+    window.guardarFamilia = function(id) {
+      const llamadas =
+        document.getElementById("familiaTelefonoLlamadas")?.value.trim() || "";
+
+      const antiguo =
+        document.getElementById("familiaTelefono")?.value.trim() || "";
+
+      const mismo =
+        document.getElementById("familiaMismoWhatsapp")?.value !== "no";
+
+      const whatsapp = mismo
+        ? (llamadas || antiguo)
+        : (document.getElementById("familiaTelefonoWhatsApp")?.value.trim() || "");
+
+      guardarFamiliaAnterior.apply(this, arguments);
+
+      const familia = id
+        ? obtenerFamilia(id)
+        : db.familias[db.familias.length - 1];
+
+      if (familia) {
+        familia.telefono = llamadas || antiguo;
+        familia.mismoWhatsapp = mismo;
+        familia.whatsappTelefono = whatsapp;
+        guardarDB();
+      }
+    };
+  }
+
+  const zona = document.getElementById("moduleContent");
+
+  if (zona) {
+    new MutationObserver(corregirFamilia).observe(zona, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  corregirFamilia();
+})();
+</script>
+<!-- FIN DE LA CORRECCION -->
   
 </body>
   </html>
