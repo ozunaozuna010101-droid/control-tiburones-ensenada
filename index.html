@@ -21871,6 +21871,134 @@ if (document.readyState === "loading") {
 })();
 </script>
 <!-- FIN DE LA MEJORA -->
+ 
+<!-- ==========================================
+ CONTROL TIBURONES
+ CORRECCION: RECUPERAR Y GUARDAR TELEFONOS
+ PEGAR ANTES DE </body>
+========================================== -->
+<script>
+(function () {
+  "use strict";
+
+  function ctwLeer(id) {
+    return document.getElementById(id)?.value?.trim() || "";
+  }
+
+  function ctwObtenerDatos(tipo, registro) {
+    const mismo = ctwLeer(tipo + "MismoWhatsapp") !== "no";
+    const telefono = ctwLeer(tipo + "TelefonoLlamadas");
+    const whatsapp = mismo
+      ? telefono
+      : ctwLeer(tipo + "TelefonoWhatsApp");
+
+    return {
+      telefono: telefono,
+      mismoWhatsapp: mismo,
+      whatsappTelefono: whatsapp
+    };
+  }
+
+  function ctwRellenar(tipo) {
+    const boton = document.querySelector(
+      tipo === "jugador"
+        ? 'button[onclick^="guardarJugador("]'
+        : 'button[onclick^="guardarFamilia("]'
+    );
+
+    if (!boton) return;
+
+    const coincidencia = boton.getAttribute("onclick").match(/guardar(?:Jugador|Familia)\('([^']*)'\)/);
+    if (!coincidencia) return;
+
+    const id = coincidencia[1];
+    if (!id) return;
+
+    const registro = tipo === "jugador"
+      ? obtenerJugador(id)
+      : obtenerFamilia(id);
+
+    if (!registro) return;
+
+    const telefono = document.getElementById(tipo + "TelefonoLlamadas");
+    const mismo = document.getElementById(tipo + "MismoWhatsapp");
+    const whatsapp = document.getElementById(tipo + "TelefonoWhatsApp");
+
+    if (!telefono || !mismo) return;
+
+    if (telefono.dataset.ctwCargado === "1") return;
+
+    telefono.value = registro.telefono || "";
+    mismo.value = registro.mismoWhatsapp === false ? "no" : "si";
+
+    if (whatsapp) {
+      whatsapp.value = registro.whatsappTelefono || "";
+    }
+
+    telefono.dataset.ctwCargado = "1";
+    window.ctwMostrarOtroWhatsApp(tipo);
+  }
+
+  function ctwRevisarFormularios() {
+    ctwRellenar("jugador");
+    ctwRellenar("familia");
+  }
+
+  const guardarJugadorAnterior = window.guardarJugador;
+
+  if (typeof guardarJugadorAnterior === "function") {
+    window.guardarJugador = function(id) {
+      const datos = ctwObtenerDatos("jugador");
+      const editando = id || "";
+
+      guardarJugadorAnterior.apply(this, arguments);
+
+      const jugador = editando
+        ? obtenerJugador(editando)
+        : db.jugadores[db.jugadores.length - 1];
+
+      if (jugador) {
+        Object.assign(jugador, datos);
+        guardarDB();
+      }
+    };
+  }
+
+  const guardarFamiliaAnterior = window.guardarFamilia;
+
+  if (typeof guardarFamiliaAnterior === "function") {
+    window.guardarFamilia = function(id) {
+      const datos = ctwObtenerDatos("familia");
+      const editando = id || "";
+
+      guardarFamiliaAnterior.apply(this, arguments);
+
+      const familia = editando
+        ? obtenerFamilia(editando)
+        : db.familias[db.familias.length - 1];
+
+      if (familia) {
+        Object.assign(familia, datos);
+        guardarDB();
+      }
+    };
+  }
+
+  const zona = document.getElementById("moduleContent");
+
+  if (zona) {
+    const observador = new MutationObserver(ctwRevisarFormularios);
+    observador.observe(zona, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  ctwRevisarFormularios();
+
+})();
+</script>
+<!-- FIN DE LA CORRECCION -->
   
 </body>
   </html>
